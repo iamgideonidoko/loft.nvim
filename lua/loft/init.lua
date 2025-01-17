@@ -1,15 +1,7 @@
----@class Loft
-local Loft = {}
+local M = {}
 
-function Loft:new()
-	self.__index = self
-	return setmetatable({}, self)
-end
-
-function Loft:setup()
+M.setup = function()
 	print("Hello Setup!")
 end
 
-local loft = Loft:new()
-
-return loft
+return M
