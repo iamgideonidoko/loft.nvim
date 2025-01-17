@@ -1,7 +1,7 @@
 local M = {}
 
 M.setup = function()
-	print("Hello Setup!")
+  print("Hello Setup!")
 end
 
 return M
