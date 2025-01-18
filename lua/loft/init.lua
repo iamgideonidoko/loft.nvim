@@ -1,7 +1,12 @@
-local M = {}
+local utils = require("loft.utils")
 
-M.setup = function()
-  print("Hello Setup!")
+local loft = {}
+
+loft.setup = function()
+  print("Setup initialized")
+  if utils.is_dev() then
+    require("loft.dev").create_reload_command()
+  end
 end
 
-return M
+return loft
