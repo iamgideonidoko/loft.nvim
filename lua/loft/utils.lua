@@ -34,9 +34,9 @@ utils.get_all_valid_buffers = function()
 end
 
 ---Merge two tables (arrays of integers) and return a final table with distinct values
----@param table1 number[]
----@param table2 number[]
----@return number[]
+---@param table1 integer[]
+---@param table2 integer[]
+---@return integer[]
 utils.merge_distinct = function(table1, table2)
   local result = {}
   local seen = {}
