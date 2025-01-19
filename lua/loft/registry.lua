@@ -15,6 +15,10 @@ function Registry:new()
   return instance
 end
 
+function Registry:get_registry()
+  return self._registry
+end
+
 ---Update registry to move the given or current buffer to last
 ---@param buffer integer?
 function Registry:update(buffer)
