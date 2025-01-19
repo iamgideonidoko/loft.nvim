@@ -20,4 +20,17 @@ utils.is_buffer_valid = function(buf)
   return 1 == vim.fn.buflisted(buf)
 end
 
+---Check if the given or current or window is a floating
+utils.get_all_valid_buffers = function()
+  ---@type integer[]
+  local all_valid_buffers = {}
+  local buffers = vim.api.nvim_list_bufs()
+  for _, buf in ipairs(buffers) do
+    if utils.is_buffer_valid(buf) then
+      table.insert(all_valid_buffers, buf)
+    end
+  end
+  return all_valid_buffers
+end
+
 return utils
