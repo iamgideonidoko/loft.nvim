@@ -50,4 +50,23 @@ function Registry:pause_update_one()
   self._update_paused_once = true
 end
 
+---Clean up invalid buffers from registry
+function Registry:clean()
+  local valid_buffers = {}
+  local current_buf = vim.api.nvim_get_current_buf()
+  local is_current_buf_in_registry = false
+  for _, buf in ipairs(self._registry) do
+    if 1 == vim.fn.buflisted(buf) then
+      table.insert(valid_buffers, buf)
+      if current_buf == buf then
+        is_current_buf_in_registry = true
+      end
+    end
+  end
+  if 1 == vim.fn.buflisted(current_buf) and not is_current_buf_in_registry then
+    table.insert(valid_buffers, current_buf)
+  end
+  self._registry = valid_buffers
+end
+
 return Registry:new()
