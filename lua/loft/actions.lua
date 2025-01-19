@@ -14,11 +14,11 @@ actions.close_buffer = function(opts)
   if not opts.force and vim.api.nvim_get_option_value("buftype", { buf = current_buf }) == "terminal" then
     return vim.api.nvim_err_writeln("Buffer is a terminal. Force required.")
   end
+  registry_instance:clean()
   local alt_buf = vim.fn.bufnr("#")
-  local all_valid_buffers = utils.get_all_valid_buffers()
   local next_buf = nil
   local found_current = false
-  for _, buf in ipairs(all_valid_buffers) do
+  for _, buf in ipairs(registry_instance:get_registry()) do
     if found_current then
       next_buf = buf
       break
@@ -27,9 +27,9 @@ actions.close_buffer = function(opts)
       found_current = true
     end
   end
-  if #all_valid_buffers > 1 and not next_buf then
+  if #registry_instance:get_registry() > 1 and not next_buf then
     -- The next valid buffer is likely the first
-    next_buf = all_valid_buffers[1]
+    next_buf = registry_instance:get_registry()[1]
   end
   registry_instance:pause_update()
   -- Replace current buffer with alt or next or empty buffer in all windows
@@ -43,8 +43,8 @@ actions.close_buffer = function(opts)
     end
   end
   pcall(vim.api.nvim_buf_delete, current_buf, { force = opts.force })
-  registry_instance:clean()
   registry_instance:resume_update()
+  registry_instance:clean()
 end
 
 return actions
