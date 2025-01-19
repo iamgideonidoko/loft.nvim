@@ -47,4 +47,28 @@ actions.close_buffer = function(opts)
   registry_instance:clean()
 end
 
+-- Navigate to the next buffer in registry
+actions.switch_to_next_buffer = function()
+  registry_instance:clean()
+  local next_buf = registry_instance:get_next_buffer()
+  if next_buf == nil then
+    return
+  end
+  registry_instance:pause_update()
+  vim.api.nvim_set_current_buf(next_buf)
+  registry_instance:resume_update()
+end
+
+-- Navigate to the previous buffer in registry
+actions.switch_to_prev_buffer = function()
+  registry_instance:clean()
+  local prev_buf = registry_instance:get_prev_buffer()
+  if prev_buf == nil then
+    return
+  end
+  registry_instance:pause_update()
+  vim.api.nvim_set_current_buf(prev_buf)
+  registry_instance:resume_update()
+end
+
 return actions
