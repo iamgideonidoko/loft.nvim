@@ -14,4 +14,10 @@ utils.is_floating_window = function(window)
   return win_config.relative ~= ""
 end
 
+---Check if the given buffer is valid (listed)
+---@param buf number
+utils.is_buffer_valid = function(buf)
+  return 1 == vim.fn.buflisted(buf)
+end
+
 return utils

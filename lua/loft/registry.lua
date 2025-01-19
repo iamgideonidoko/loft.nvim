@@ -32,7 +32,7 @@ function Registry:update(buffer)
       break
     end
   end
-  if 1 ~= vim.fn.buflisted(buf) then
+  if not utils.is_buffer_valid(buf) then
     return
   end
   table.insert(self._registry, buf)
@@ -56,14 +56,14 @@ function Registry:clean()
   local current_buf = vim.api.nvim_get_current_buf()
   local is_current_buf_in_registry = false
   for _, buf in ipairs(self._registry) do
-    if 1 == vim.fn.buflisted(buf) then
+    if utils.is_buffer_valid(buf) then
       table.insert(valid_buffers, buf)
       if current_buf == buf then
         is_current_buf_in_registry = true
       end
     end
   end
-  if 1 == vim.fn.buflisted(current_buf) and not is_current_buf_in_registry then
+  if utils.is_buffer_valid(current_buf) and not is_current_buf_in_registry then
     table.insert(valid_buffers, current_buf)
   end
   self._registry = valid_buffers
