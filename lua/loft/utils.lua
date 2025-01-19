@@ -33,4 +33,26 @@ utils.get_all_valid_buffers = function()
   return all_valid_buffers
 end
 
+---Merge two tables (arrays of integers) and return a final table with distinct values
+---@param table1 number[]
+---@param table2 number[]
+---@return number[]
+utils.merge_distinct = function(table1, table2)
+  local result = {}
+  local seen = {}
+  for _, v in ipairs(table1) do
+    if not seen[v] then
+      table.insert(result, v)
+      seen[v] = true
+    end
+  end
+  for _, v in ipairs(table2) do
+    if not seen[v] then
+      table.insert(result, v)
+      seen[v] = true
+    end
+  end
+  return result
+end
+
 return utils
