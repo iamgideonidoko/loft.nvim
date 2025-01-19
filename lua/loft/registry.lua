@@ -65,4 +65,47 @@ function Registry:clean()
   self._registry = utils.merge_distinct(valid_buffers, utils.get_all_valid_buffers())
 end
 
+---Get the next buffer in registry
+function Registry:get_next_buffer()
+  local current_buf = vim.api.nvim_get_current_buf()
+  ---@type integer|nil
+  local current_index
+  for i, buf in ipairs(self._registry) do
+    if buf == current_buf then
+      current_index = i
+      break
+    end
+  end
+  if current_index == nil then
+    return
+  end
+  -- Calculate the next index in a circular manner
+  local next_index = (current_index % #self._registry) + 1
+  local next_buf = self._registry[next_index]
+  return next_buf
+end
+
+---Get the previous buffer in registry
+function Registry:get_prev_buffer()
+  local current_buf = vim.api.nvim_get_current_buf()
+  ---@type integer|nil
+  local current_index
+  for i, buf in ipairs(self._registry) do
+    if buf == current_buf then
+      current_index = i
+      break
+    end
+  end
+  if current_index == nil then
+    return
+  end
+  -- Calculate the previous index in a circular manner
+  local prev_index = current_index - 1
+  if prev_index < 1 then
+    prev_index = #self._registry
+  end
+  local prev_buf = self._registry[prev_index]
+  return prev_buf
+end
+
 return Registry:new()
