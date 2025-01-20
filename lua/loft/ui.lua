@@ -14,9 +14,9 @@ function UI:new(registry_instance)
   return instance
 end
 
----Render a list of all the buffers in the registry in main UI buffer
+---Render a list of all the buffers in the registry (entries) in main UI buffer
 ---@private
-function UI:_render_registry()
+function UI:_render_entries()
   if utils.buffer_exists(self._buf_id) then
     utils.buffer_modifiable(self._buf_id, true)
     ---Lines to render
