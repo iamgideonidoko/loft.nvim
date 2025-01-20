@@ -55,4 +55,17 @@ utils.merge_distinct = function(table1, table2)
   return result
 end
 
+---Make buffer modifiable or not
+---@param buf integer
+---@param modifiable boolean
+utils.buffer_modifiable = function(buf, modifiable)
+  vim.api.nvim_set_option_value("modifiable", modifiable, { buf })
+end
+
+---Make buffer exists or not
+---@param buf integer|nil
+utils.buffer_exists = function(buf)
+  return (buf and vim.api.nvim_buf_is_valid(buf)) or false
+end
+
 return utils
