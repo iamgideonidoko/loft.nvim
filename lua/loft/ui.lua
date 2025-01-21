@@ -85,7 +85,8 @@ function UI:open()
   if last_buf_index then
     vim.api.nvim_win_set_cursor(self._win_id, { last_buf_index, 1 })
   end
-  UI:setup_autocmd()
+  UI:_setup_autocmd()
+  UI:_setup_keymaps()
 end
 
 function UI:close()
@@ -99,7 +100,8 @@ function UI:close()
   end
 end
 
-function UI:setup_autocmd()
+---@private
+function UI:_setup_autocmd()
   -- Prevent override
   vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter" }, {
     group = utils.get_augroup("PreventOverride", true),
@@ -112,6 +114,44 @@ function UI:setup_autocmd()
             vim.api.nvim_buf_delete(current_buf_id, { force = true })
           end
         end
+      end
+    end,
+  })
+end
+
+---@private
+function UI:_setup_keymaps()
+  -- Cyclic up movement
+  vim.api.nvim_buf_set_keymap(self._buf_id, "n", "k", "", {
+    noremap = true,
+    silent = true,
+    callback = function()
+      local current_line = vim.fn.line(".")
+      local no_of_entries = #self.registry_instance:get_registry()
+      if no_of_entries == 0 then
+        return
+      end
+      if current_line > 1 then
+        vim.api.nvim_win_set_cursor(self._win_id, { current_line - 1, 1 })
+      else
+        vim.api.nvim_win_set_cursor(self._win_id, { no_of_entries, 1 })
+      end
+    end,
+  })
+  -- Cyclic down movement
+  vim.api.nvim_buf_set_keymap(self._buf_id, "n", "j", "", {
+    noremap = true,
+    silent = true,
+    callback = function()
+      local current_line = vim.fn.line(".")
+      local no_of_entries = #self.registry_instance:get_registry()
+      if no_of_entries == 0 then
+        return
+      end
+      if current_line < no_of_entries then
+        vim.api.nvim_win_set_cursor(self._win_id, { current_line + 1, 1 })
+      else
+        vim.api.nvim_win_set_cursor(self._win_id, { 1, 1 })
       end
     end,
   })
