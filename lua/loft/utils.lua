@@ -68,4 +68,10 @@ utils.buffer_exists = function(buf)
   return (buf and vim.api.nvim_buf_is_valid(buf)) or false
 end
 
+---Check if window exists or not
+---@param win integer|nil
+utils.window_exists = function(win)
+  return (win and vim.api.nvim_win_is_valid(win)) or false
+end
+
 return utils
