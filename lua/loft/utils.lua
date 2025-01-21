@@ -86,4 +86,16 @@ utils.get_index = function(table, item)
   return nil
 end
 
+---Check if a table (array) includes a given value
+---@param table any[]
+---@param value any
+utils.table_includes = function(table, value)
+  for _, buf in ipairs(table) do
+    if buf == value then
+      return true
+    end
+  end
+  return false
+end
+
 return utils
