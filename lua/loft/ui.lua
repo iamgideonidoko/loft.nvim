@@ -1,9 +1,10 @@
 local utils = require("loft.utils")
+local constants = require("loft.constants")
 
 ---@class loft.UI
 ---@field private _win_id integer
 ---@field private _buf_id integer
----@field private registry_instance loft.Registry
+---@field registry_instance loft.Registry
 local UI = {}
 UI.__index = UI
 
@@ -38,6 +39,51 @@ function UI:_render_entries()
     end
     vim.api.nvim_buf_set_lines(self._buf_id, 0, -1, false, buf_lines)
     utils.buffer_modifiable(self._buf_id, false)
+  end
+end
+
+function UI:open()
+  local last_win_before_loft = vim.api.nvim_get_current_win()
+  local last_buf_before_loft = vim.api.nvim_get_current_buf()
+  self.registry_instance:clean()
+  -- Focus existing window
+  if utils.window_exists(self._win_id) then
+    return vim.api.nvim_set_current_win(self._win_id)
+  end
+  local max_height = vim.o.lines - 2
+  local max_width = vim.o.columns - 4
+  local win_height =
+    math.min(#self.registry_instance:get_registry() > 0 and #self.registry_instance:get_registry() or 1, max_height)
+  local win_width = math.max(math.ceil(max_width * 0.8), 50)
+  self._buf_id = vim.api.nvim_create_buf(false, true)
+  ---@type vim.api.keyset.win_config
+  local win_opts = {
+    relative = "editor",
+    width = win_width,
+    height = win_height,
+    row = (vim.o.lines - win_height) / 2,
+    col = (vim.o.columns - win_width) / 2,
+    style = "minimal",
+    border = "rounded",
+    title = constants.DISPLAY_NAME,
+    title_pos = "center",
+    noautocmd = true,
+  }
+  self._win_id = vim.api.nvim_open_win(self._buf_id, true, win_opts)
+  vim.api.nvim_set_option_value("cursorline", true, {
+    win = self._win_id,
+  })
+  vim.api.nvim_set_option_value("modifiable", false, {
+    buf = self._buf_id,
+  })
+  vim.api.nvim_set_option_value("wrap", false, {
+    win = self._win_id,
+  })
+  self:_render_entries()
+  -- Move cursor to current entry
+  local last_buf_index = utils.get_index(self.registry_instance:get_registry(), last_buf_before_loft)
+  if last_buf_index then
+    vim.api.nvim_win_set_cursor(self._win_id, { last_buf_index, 1 })
   end
 end
 
