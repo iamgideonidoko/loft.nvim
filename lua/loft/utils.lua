@@ -59,7 +59,7 @@ end
 ---@param buf integer
 ---@param modifiable boolean
 utils.buffer_modifiable = function(buf, modifiable)
-  vim.api.nvim_set_option_value("modifiable", modifiable, { buf })
+  vim.api.nvim_set_option_value("modifiable", modifiable, { buf = buf })
 end
 
 ---Check if buffer exists or not
@@ -102,7 +102,7 @@ end
 ---@param name string
 ---@param clear boolean
 utils.get_augroup = function(name, clear)
-  return vim.api.nvim_create_augroup(constants.DISPLAY_NAME .. name, { clear })
+  return vim.api.nvim_create_augroup(constants.DISPLAY_NAME .. name, { clear = clear })
 end
 
 return utils
