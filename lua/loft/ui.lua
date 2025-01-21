@@ -179,6 +179,13 @@ function UI:_setup_keymaps()
       end,
     })
   end
+  vim.api.nvim_buf_set_keymap(self._buf_id, "n", "<C-d>", "", {
+    noremap = true,
+    silent = true,
+    callback = function()
+      self:_delete_entry()
+    end,
+  })
 end
 
 ---Move entry up in cyclic manner
