@@ -155,6 +155,20 @@ function UI:_setup_keymaps()
       end
     end,
   })
+  vim.api.nvim_buf_set_keymap(self._buf_id, "n", "<C-k>", "", {
+    noremap = true,
+    silent = true,
+    callback = function()
+      self:_move_entry_up()
+    end,
+  })
+  vim.api.nvim_buf_set_keymap(self._buf_id, "n", "<C-j>", "", {
+    noremap = true,
+    silent = true,
+    callback = function()
+      self:_move_entry_down()
+    end,
+  })
 end
 
 ---Move entry up in cyclic manner
