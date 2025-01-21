@@ -5,6 +5,8 @@ local actions = require("loft.actions")
 ---@class loft.UI
 ---@field private _win_id integer
 ---@field private _buf_id integer
+---@field private _last_win_before_loft integer|nil
+---@field private _last_buf_before_loft integer|nil
 ---@field registry_instance loft.Registry
 local UI = {}
 UI.__index = UI
@@ -44,8 +46,8 @@ function UI:_render_entries()
 end
 
 function UI:open()
-  local last_win_before_loft = vim.api.nvim_get_current_win()
-  local last_buf_before_loft = vim.api.nvim_get_current_buf()
+  self._last_win_before_loft = vim.api.nvim_get_current_win()
+  self._last_buf_before_loft = vim.api.nvim_get_current_buf()
   self.registry_instance:clean()
   -- Focus existing window
   if utils.window_exists(self._win_id) then
@@ -82,7 +84,7 @@ function UI:open()
   })
   self:_render_entries()
   -- Move cursor to current entry
-  local last_buf_index = utils.get_index(self.registry_instance:get_registry(), last_buf_before_loft)
+  local last_buf_index = utils.get_index(self.registry_instance:get_registry(), self._last_buf_before_loft)
   if last_buf_index then
     vim.api.nvim_win_set_cursor(self._win_id, { last_buf_index, 1 })
   end
@@ -239,6 +241,18 @@ function UI:_delete_entry()
   local no_of_entries = #self.registry_instance:get_registry()
   win_config.height = math.min(no_of_entries > 0 and no_of_entries or 1, vim.o.lines - 2)
   vim.api.nvim_win_set_config(self._win_id, win_config)
+end
+
+---@private
+function UI:_select_entry()
+  self.registry_instance:pause_update()
+  local current_line = vim.fn.line(".")
+  self:close()
+  local selected_buffer = self.registry_instance:get_registry()[current_line]
+  if selected_buffer ~= nil and utils.window_exists(self._last_win_before_loft) then
+    vim.api.nvim_win_set_buf(self._last_win_before_loft, self.registry_instance:get_registry()[current_line])
+  end
+  self.registry_instance:resume_update()
 end
 
 return UI:new(require("loft.registry"))
