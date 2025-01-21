@@ -129,16 +129,7 @@ function UI:_setup_keymaps()
     noremap = true,
     silent = true,
     callback = function()
-      local current_line = vim.fn.line(".")
-      local no_of_entries = #self.registry_instance:get_registry()
-      if no_of_entries == 0 then
-        return
-      end
-      if current_line > 1 then
-        vim.api.nvim_win_set_cursor(self._win_id, { current_line - 1, 1 })
-      else
-        vim.api.nvim_win_set_cursor(self._win_id, { no_of_entries, 1 })
-      end
+      UI:_move_up()
     end,
   })
   -- Cyclic down movement
@@ -146,16 +137,7 @@ function UI:_setup_keymaps()
     noremap = true,
     silent = true,
     callback = function()
-      local current_line = vim.fn.line(".")
-      local no_of_entries = #self.registry_instance:get_registry()
-      if no_of_entries == 0 then
-        return
-      end
-      if current_line < no_of_entries then
-        vim.api.nvim_win_set_cursor(self._win_id, { current_line + 1, 1 })
-      else
-        vim.api.nvim_win_set_cursor(self._win_id, { 1, 1 })
-      end
+      UI:_move_down()
     end,
   })
   vim.api.nvim_buf_set_keymap(self._buf_id, "n", "<C-k>", "", {
@@ -195,6 +177,36 @@ function UI:_setup_keymaps()
       self:_select_entry()
     end,
   })
+end
+
+---Move cursor up in cyclic manner
+---@private
+function UI:_move_up()
+  local current_line = vim.fn.line(".")
+  local no_of_entries = #self.registry_instance:get_registry()
+  if no_of_entries == 0 then
+    return
+  end
+  if current_line > 1 then
+    vim.api.nvim_win_set_cursor(self._win_id, { current_line - 1, 1 })
+  else
+    vim.api.nvim_win_set_cursor(self._win_id, { no_of_entries, 1 })
+  end
+end
+
+---Move cursor down in cyclic manner
+---@private
+function UI:_move_down()
+  local current_line = vim.fn.line(".")
+  local no_of_entries = #self.registry_instance:get_registry()
+  if no_of_entries == 0 then
+    return
+  end
+  if current_line < no_of_entries then
+    vim.api.nvim_win_set_cursor(self._win_id, { current_line + 1, 1 })
+  else
+    vim.api.nvim_win_set_cursor(self._win_id, { 1, 1 })
+  end
 end
 
 ---Move entry up in cyclic manner
