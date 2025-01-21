@@ -108,4 +108,34 @@ function Registry:get_prev_buffer()
   return prev_buf
 end
 
+---Swap given buffer with the previous buffer in registry
+---@param buf_idx integer: Index of buffer
+---@param cyclic boolean?: Should swap be cyclic or not i.e from first to last
+function Registry:move_buffer_up(buf_idx, cyclic)
+  if buf_idx > 1 then
+    local buffer = self._registry[buf_idx]
+    self._registry[buf_idx] = self._registry[buf_idx - 1]
+    self._registry[buf_idx - 1] = buffer
+  elseif cyclic then
+    local first_buffer = self._registry[1]
+    table.remove(self._registry, 1)
+    table.insert(self._registry, first_buffer)
+  end
+end
+
+---Swap given buffer with the next buffer in registry
+---@param buf_idx integer: Index of buffer
+---@param cyclic boolean?: Whether the swap should be cyclic or not i.e from last to first
+function Registry:move_buffer_down(buf_idx, cyclic)
+  if buf_idx > 1 then
+    local buffer = self._registry[buf_idx]
+    self._registry[buf_idx] = self._registry[buf_idx + 1]
+    self._registry[buf_idx + 1] = buffer
+  elseif cyclic then
+    local last_buffer = self._registry[#self._registry]
+    table.remove(self._registry)
+    table.insert(self._registry, 1, last_buffer)
+  end
+end
+
 return Registry:new()
