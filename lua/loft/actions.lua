@@ -1,5 +1,6 @@
 local registry_instance = require("loft.registry")
 local utils = require("loft.utils")
+local ui_instance = require("loft.ui")
 
 local actions = {}
 
@@ -69,6 +70,10 @@ actions.switch_to_prev_buffer = function()
   registry_instance:pause_update()
   vim.api.nvim_set_current_buf(prev_buf)
   registry_instance:resume_update()
+end
+
+actions.open_loft = function()
+  ui_instance:open()
 end
 
 return actions
