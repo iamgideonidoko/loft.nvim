@@ -157,4 +157,38 @@ function UI:_setup_keymaps()
   })
 end
 
+---Move entry up in cyclic manner
+---@private
+function UI:_move_entry_up()
+  local current_line = vim.fn.line(".")
+  local no_of_entries = #self.registry_instance:get_registry()
+  if no_of_entries == 0 then
+    return
+  end
+  self.registry_instance:move_buffer_up(current_line, true)
+  local new_line = no_of_entries
+  if current_line > 1 then
+    new_line = current_line - 1
+  end
+  vim.api.nvim_win_set_cursor(self._win_id, { new_line, 1 })
+  self:_render_entries()
+end
+
+---Move entry down in cyclic manner
+---@private
+function UI:_move_entry_down()
+  local current_line = vim.fn.line(".")
+  local no_of_entries = #self.registry_instance:get_registry()
+  if no_of_entries == 0 then
+    return
+  end
+  self.registry_instance:move_buffer_down(current_line, true)
+  local new_line = 1
+  if current_line < no_of_entries then
+    new_line = current_line + 1
+  end
+  vim.api.nvim_win_set_cursor(self._win_id, { new_line, 1 })
+  self:_render_entries()
+end
+
 return UI:new(require("loft.registry"))
