@@ -85,6 +85,7 @@ function UI:open()
   if last_buf_index then
     vim.api.nvim_win_set_cursor(self._win_id, { last_buf_index, 1 })
   end
+  UI:setup_autocmd()
 end
 
 function UI:close()
@@ -96,6 +97,24 @@ function UI:close()
     vim.api.nvim_win_close(self._win_id, true)
     self._win_id = nil
   end
+end
+
+function UI:setup_autocmd()
+  -- Prevent override
+  vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter" }, {
+    group = utils.get_augroup("PreventOverride", true),
+    callback = function()
+      if vim.api.nvim_get_current_win() == self._win_id then
+        local current_buf_id = vim.api.nvim_get_current_buf()
+        if current_buf_id ~= self._buf_id then
+          vim.api.nvim_set_current_buf(self._buf_id)
+          if not utils.table_includes(self.registry_instance:get_registry(), current_buf_id) then
+            vim.api.nvim_buf_delete(current_buf_id, { force = true })
+          end
+        end
+      end
+    end,
+  })
 end
 
 return UI:new(require("loft.registry"))

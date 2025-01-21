@@ -98,4 +98,11 @@ utils.table_includes = function(table, value)
   return false
 end
 
+---Get safe autocommand group
+---@param name string
+---@param clear boolean
+utils.get_augroup = function(name, clear)
+  return vim.api.nvim_create_augroup(constants.DISPLAY_NAME .. name, { clear })
+end
+
 return utils
