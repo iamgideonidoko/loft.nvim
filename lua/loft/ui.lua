@@ -169,6 +169,15 @@ function UI:_setup_keymaps()
       self:_move_entry_down()
     end,
   })
+  for _, value in ipairs({ "<Esc>", "q" }) do
+    vim.api.nvim_buf_set_keymap(self._buf_id, "n", value, "", {
+      noremap = true,
+      silent = true,
+      callback = function()
+        self:close()
+      end,
+    })
+  end
 end
 
 ---Move entry up in cyclic manner
