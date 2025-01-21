@@ -1,5 +1,6 @@
 local utils = require("loft.utils")
 local constants = require("loft.constants")
+local actions = require("loft.actions")
 
 ---@class loft.UI
 ---@field private _win_id integer
@@ -212,6 +213,25 @@ function UI:_move_entry_down()
   end
   vim.api.nvim_win_set_cursor(self._win_id, { new_line, 1 })
   self:_render_entries()
+end
+
+---Delete an entry (with its buffer)
+---@private
+function UI:_delete_entry()
+  local current_line = vim.fn.line(".")
+  if #self.registry_instance:get_registry() == 0 then
+    return
+  end
+  local buf = self.registry_instance:get_registry()[current_line]
+  if buf == nil then
+    return
+  end
+  actions.close_buffer({ force = false, buffer = buf })
+  self:_render_entries()
+  local win_config = vim.api.nvim_win_get_config(self._win_id)
+  local no_of_entries = #self.registry_instance:get_registry()
+  win_config.height = math.min(no_of_entries > 0 and no_of_entries or 1, vim.o.lines - 2)
+  vim.api.nvim_win_set_config(self._win_id, win_config)
 end
 
 return UI:new(require("loft.registry"))
