@@ -21,7 +21,8 @@ end
 
 ---Update registry to move the given or current buffer to last
 ---@param buffer integer?
-function Registry:update(buffer)
+---@private
+function Registry:_update(buffer)
   local buf = buffer or vim.api.nvim_get_current_buf()
   if utils.is_floating_window() or self._update_paused then
     return
@@ -136,6 +137,16 @@ function Registry:move_buffer_down(buf_idx, cyclic)
     table.remove(self._registry)
     table.insert(self._registry, 1, last_buffer)
   end
+end
+
+function Registry:setup()
+  -- Called on plugin setup
+  vim.api.nvim_create_autocmd("BufEnter", {
+    group = utils.get_augroup("UpdateRegistry", true),
+    callback = function()
+      self:_update()
+    end,
+  })
 end
 
 return Registry:new()
