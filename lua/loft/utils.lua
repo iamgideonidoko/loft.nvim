@@ -74,4 +74,16 @@ utils.window_exists = function(win)
   return (win and vim.api.nvim_win_is_valid(win)) or false
 end
 
+---Get the index of a given item in an table (array)
+---@param table any[]
+---@param item any
+utils.get_index = function(table, item)
+  for index, value in ipairs(table) do
+    if value == item then
+      return index
+    end
+  end
+  return nil
+end
+
 return utils
