@@ -1,7 +1,7 @@
 local actions = require("loft.actions")
 
----@alias oil.UIKeymapsActions 'move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'
----@alias loft.UIKeymapsConfig table<string, oil.UIKeymapsActions>
+---@alias loft.UIKeymapsActions 'move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'|'close'
+---@alias loft.UIKeymapsConfig table<string, loft.UIKeymapsActions|function|false>
 ---@alias  loft.GeneralKeymapsConfig table<string, { callback: function, desc: string }|function|false>: For keys mapped outside of Loft in `normal` mode
 
 ---@class (exact) loft.SetupConfig
@@ -21,6 +21,7 @@ local default_config = {
       ["<C-j>"] = "move_entry_down",
       ["<C-d>"] = "delete_entry",
       ["<CR>"] = "select_entry",
+      ["<Esc>"] = "close",
     },
     general = {
       ["<leader>l"] = { callback = actions.open_loft, desc = "Open Loft" },

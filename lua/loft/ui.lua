@@ -130,59 +130,44 @@ end
 
 ---@private
 function UI:_setup_keymaps()
-  -- Cyclic up movement
-  vim.api.nvim_buf_set_keymap(self._buf_id, "n", "k", "", {
-    noremap = true,
-    silent = true,
-    callback = function()
-      UI:_move_up()
+  if not self._keymaps then
+    return
+  end
+  ---@type table<loft.UIKeymapsActions, function>
+  local mappings = {
+    ["move_up"] = function()
+      self:_move_up()
     end,
-  })
-  -- Cyclic down movement
-  vim.api.nvim_buf_set_keymap(self._buf_id, "n", "j", "", {
-    noremap = true,
-    silent = true,
-    callback = function()
-      UI:_move_down()
+    ["move_down"] = function()
+      self:_move_down()
     end,
-  })
-  vim.api.nvim_buf_set_keymap(self._buf_id, "n", "<C-k>", "", {
-    noremap = true,
-    silent = true,
-    callback = function()
+    ["move_entry_up"] = function()
       self:_move_entry_up()
     end,
-  })
-  vim.api.nvim_buf_set_keymap(self._buf_id, "n", "<C-j>", "", {
-    noremap = true,
-    silent = true,
-    callback = function()
+    ["move_entry_down"] = function()
       self:_move_entry_down()
     end,
-  })
-  for _, value in ipairs({ "<Esc>", "q" }) do
-    vim.api.nvim_buf_set_keymap(self._buf_id, "n", value, "", {
-      noremap = true,
-      silent = true,
-      callback = function()
-        self:close()
-      end,
-    })
-  end
-  vim.api.nvim_buf_set_keymap(self._buf_id, "n", "<C-d>", "", {
-    noremap = true,
-    silent = true,
-    callback = function()
+    ["delete_entry"] = function()
       self:_delete_entry()
     end,
-  })
-  vim.api.nvim_buf_set_keymap(self._buf_id, "n", "<CR>", "", {
-    noremap = true,
-    silent = true,
-    callback = function()
+    ["select_entry"] = function()
       self:_select_entry()
     end,
-  })
+    ["close"] = function()
+      self:close()
+    end,
+  }
+  for key, value in pairs(self._keymaps) do
+    if value == false then
+      return
+    end
+    local action = type(value) == "function" and value or mappings[value]
+    vim.api.nvim_buf_set_keymap(self._buf_id, "n", key, "", {
+      noremap = true,
+      silent = true,
+      callback = action,
+    })
+  end
 end
 
 ---Move cursor up in cyclic manner

@@ -139,14 +139,15 @@ function Registry:move_buffer_down(buf_idx, cyclic)
   end
 end
 
+---Called on plugin setup
 function Registry:setup()
-  -- Called on plugin setup
   vim.api.nvim_create_autocmd("BufEnter", {
     group = utils.get_augroup("UpdateRegistry", true),
     callback = function()
       self:_update()
     end,
   })
+  self:clean()
 end
 
 return Registry:new()
