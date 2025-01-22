@@ -1,6 +1,5 @@
 local registry_instance = require("loft.registry")
 local utils = require("loft.utils")
-local ui_instance = require("loft.ui")
 
 local actions = {}
 
@@ -73,7 +72,7 @@ actions.switch_to_prev_buffer = function()
 end
 
 actions.open_loft = function()
-  ui_instance:open()
+  require("loft.ui"):open()
 end
 
 return actions

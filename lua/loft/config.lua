@@ -1,12 +1,13 @@
 local actions = require("loft.actions")
 
 ---@alias oil.UIKeymapsActions 'move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'
+---@alias loft.UIKeymapsConfig table<string, oil.UIKeymapsActions>
 
 ---@class (exact) loft.SetupConfig
 ---@field  keymaps loft.KeymapConfig?
 
 ---@class (exact) loft.KeymapConfig
----@field  ui table<string, oil.UIKeymapsActions>?
+---@field  ui loft.UIKeymapsConfig?
 ---@field  general table<string, function>?
 
 ---@type loft.SetupConfig

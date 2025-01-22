@@ -1,13 +1,15 @@
+local config = require("loft.config")
 local utils = require("loft.utils")
 local registry_instance = require("loft.registry")
-local config = require("loft.config")
+local ui_instance = require("loft.ui")
 
 local loft = {}
 
 ---@type fun(opts: loft.SetupConfig?)
 loft.setup = function(opts)
-  registry_instance:setup()
   config.setup(opts)
+  registry_instance:setup()
+  ui_instance:setup({ config = config.all })
   if utils.is_dev() then
     require("loft.dev").create_reload_command()
   end
