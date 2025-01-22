@@ -2,13 +2,14 @@ local actions = require("loft.actions")
 
 ---@alias oil.UIKeymapsActions 'move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'
 ---@alias loft.UIKeymapsConfig table<string, oil.UIKeymapsActions>
+---@alias  loft.GeneralKeymapsConfig table<'n'|'i', table<string, function>>
 
 ---@class (exact) loft.SetupConfig
 ---@field  keymaps loft.KeymapConfig?
 
 ---@class (exact) loft.KeymapConfig
 ---@field  ui loft.UIKeymapsConfig?
----@field  general table<string, function>?
+---@field  general loft.GeneralKeymapsConfig?
 
 ---@type loft.SetupConfig
 local default_config = {
@@ -22,13 +23,15 @@ local default_config = {
       ["<CR>"] = "select_entry",
     },
     general = {
-      ["<leader>l"] = actions.open_loft,
-      ["<Tab>"] = actions.switch_to_next_buffer,
-      ["<S-Tab>"] = actions.switch_to_next_buffer,
-      ["<leader>x"] = actions.close_buffer,
-      ["<leader>X"] = function()
-        actions.close_buffer({ force = true })
-      end,
+      n = {
+        ["<leader>l"] = actions.open_loft,
+        ["<Tab>"] = actions.switch_to_next_buffer,
+        ["<S-Tab>"] = actions.switch_to_next_buffer,
+        ["<leader>x"] = actions.close_buffer,
+        ["<leader>X"] = function()
+          actions.close_buffer({ force = true })
+        end,
+      },
     },
   },
 }

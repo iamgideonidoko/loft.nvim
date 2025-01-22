@@ -8,7 +8,7 @@ local actions = require("loft.actions")
 ---@field private _last_win_before_loft integer|nil
 ---@field private _last_buf_before_loft integer|nil
 ---@field registry_instance loft.Registry
----@field private _setup_config loft.SetupConfig|nil
+---@field private _ui_keymaps loft.UIKeymapsConfig|nil
 local UI = {}
 UI.__index = UI
 
@@ -19,9 +19,9 @@ function UI:new(registry_instance)
   return instance
 end
 
----@param opts  { config: loft.SetupConfig }
+---@param opts  { keymaps: loft.UIKeymapsConfig }
 function UI:setup(opts)
-  self._setup_config = opts.config
+  self._ui_keymaps = opts.keymaps
 end
 
 ---Render a list of all the buffers in the registry (entries) in main UI buffer
