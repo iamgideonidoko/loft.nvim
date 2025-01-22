@@ -10,10 +10,10 @@ loft.setup = function(opts)
   config.setup(opts)
   registry_instance:setup()
   ui_instance:setup({ keymaps = config.all.keymaps.ui })
-  for mode, keymaps in pairs(config.all.keymaps.general) do
-    for key, action in pairs(keymaps) do
-      vim.keymap.set(mode, key, action, { noremap = true, silent = true })
-    end
+  for key, value in pairs(config.all.keymaps.general) do
+    local action = type(value) == "function" and value or value.callback
+    local desc = type(value) == "table" and value.desc or ""
+    vim.keymap.set("n", key, action, { noremap = true, silent = true, desc = desc })
   end
   if utils.is_dev() then
     require("loft.dev").create_reload_command()
