@@ -2,7 +2,7 @@ local actions = require("loft.actions")
 
 ---@alias oil.UIKeymapsActions 'move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'
 ---@alias loft.UIKeymapsConfig table<string, oil.UIKeymapsActions>
----@alias  loft.GeneralKeymapsConfig table<string, { callback: function, desc: string }|function>: For keys mapped outside of Loft in `normal` mode
+---@alias  loft.GeneralKeymapsConfig table<string, { callback: function, desc: string }|function|false>: For keys mapped outside of Loft in `normal` mode
 
 ---@class (exact) loft.SetupConfig
 ---@field  keymaps loft.KeymapConfig?
