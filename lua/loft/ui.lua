@@ -8,7 +8,7 @@ local actions = require("loft.actions")
 ---@field private _last_win_before_loft integer|nil
 ---@field private _last_buf_before_loft integer|nil
 ---@field registry_instance loft.Registry
----@field private _ui_keymaps loft.UIKeymapsConfig|nil
+---@field private _keymaps loft.UIKeymapsConfig|nil
 local UI = {}
 UI.__index = UI
 
@@ -21,7 +21,7 @@ end
 
 ---@param opts  { keymaps: loft.UIKeymapsConfig }
 function UI:setup(opts)
-  self._ui_keymaps = opts.keymaps
+  self._keymaps = opts.keymaps
 end
 
 ---Render a list of all the buffers in the registry (entries) in main UI buffer
@@ -94,8 +94,8 @@ function UI:open()
   if last_buf_index then
     vim.api.nvim_win_set_cursor(self._win_id, { last_buf_index, 1 })
   end
-  UI:_setup_autocmd()
-  UI:_setup_keymaps()
+  self:_setup_autocmd()
+  self:_setup_keymaps()
 end
 
 function UI:close()
