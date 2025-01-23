@@ -128,7 +128,7 @@ end
 ---@param buf_idx integer: Index of buffer
 ---@param cyclic boolean?: Whether the swap should be cyclic or not i.e from last to first
 function Registry:move_buffer_down(buf_idx, cyclic)
-  if buf_idx > 1 then
+  if buf_idx < #self._registry then
     local buffer = self._registry[buf_idx]
     self._registry[buf_idx] = self._registry[buf_idx + 1]
     self._registry[buf_idx + 1] = buffer
