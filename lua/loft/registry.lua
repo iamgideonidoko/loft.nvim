@@ -4,6 +4,7 @@ local utils = require("loft.utils")
 ---@field private _registry integer[]
 ---@field private _update_paused boolean
 ---@field private _update_paused_once boolean
+---@field private _telescope_selected boolean
 local Registry = {}
 Registry.__index = Registry
 
@@ -12,6 +13,7 @@ function Registry:new()
   instance._registry = {}
   instance._update_paused = false
   instance._update_paused_once = false
+  instance._telescope_selected = false
   return instance
 end
 
@@ -49,10 +51,6 @@ end
 
 function Registry:resume_update()
   self._update_paused = false
-end
-
-function Registry:pause_update_once()
-  self._update_paused_once = true
 end
 
 ---Clean up invalid buffers from registry
@@ -149,14 +147,33 @@ function Registry:setup()
   })
   local prevent_update_after_floating_window = utils.safe_debounce(function()
     if utils.is_floating_window() then
-      self:pause_update_once()
+      if self._is_telescope_selected then
+        self._is_telescope_selected = false
+        self._update_paused_once = false
+      else
+        self._update_paused_once = true
+      end
     end
   end, 1000)
   vim.api.nvim_create_autocmd("WinClosed", {
     group = utils.get_augroup("PreventUpdateAfterFloatingWindow", true),
     callback = prevent_update_after_floating_window,
   })
+  self:_overwrite_telescope_select()
   self:clean()
+end
+
+---@private
+function Registry:_overwrite_telescope_select()
+  local ok, actions = pcall(require, "telescope.actions")
+  if not ok then
+    return
+  end
+  local original_select_default = actions.select_default
+  actions.select_default = function(prompt_bufnr)
+    self._telescope_selected = true
+    original_select_default(prompt_bufnr)
+  end
 end
 
 return Registry:new()

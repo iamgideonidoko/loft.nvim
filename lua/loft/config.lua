@@ -22,6 +22,7 @@ local default_config = {
       ["<C-d>"] = "delete_entry",
       ["<CR>"] = "select_entry",
       ["<Esc>"] = "close",
+      ["q"] = "close",
     },
     general = {
       ["<leader>l"] = { callback = actions.open_loft, desc = "Open Loft" },

@@ -57,7 +57,6 @@ actions.switch_to_next_buffer = function()
   registry_instance:pause_update()
   vim.api.nvim_set_current_buf(next_buf)
   registry_instance:resume_update()
-  print(vim.inspect(registry_instance:get_registry()))
 end
 
 -- Navigate to the previous buffer in registry
@@ -70,7 +69,6 @@ actions.switch_to_prev_buffer = function()
   registry_instance:pause_update()
   vim.api.nvim_set_current_buf(prev_buf)
   registry_instance:resume_update()
-  print(vim.inspect(registry_instance:get_registry()))
 end
 
 actions.open_loft = function()
