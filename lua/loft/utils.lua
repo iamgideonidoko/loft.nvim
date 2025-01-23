@@ -105,4 +105,19 @@ utils.get_augroup = function(name, clear)
   return vim.api.nvim_create_augroup(constants.DISPLAY_NAME .. name, { clear = clear })
 end
 
+---Ensure that a function is called only once in a given time frame
+---@param func function
+---@param timeout number: Time in milliseconds
+utils.safe_debounce = function(func, timeout)
+  ---@diagnostic disable-next-line: redefined-local
+  local last_closed_time = 0
+  return function()
+    local current_time = vim.fn.reltimefloat(vim.fn.reltime()) * 1000
+    if current_time - last_closed_time > timeout then
+      last_closed_time = current_time
+      func()
+    end
+  end
+end
+
 return utils

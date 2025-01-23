@@ -51,7 +51,7 @@ function Registry:resume_update()
   self._update_paused = false
 end
 
-function Registry:pause_update_one()
+function Registry:pause_update_once()
   self._update_paused_once = true
 end
 
@@ -146,6 +146,15 @@ function Registry:setup()
     callback = function()
       self:_update()
     end,
+  })
+  local prevent_update_after_floating_window = utils.safe_debounce(function()
+    if utils.is_floating_window() then
+      self:pause_update_once()
+    end
+  end, 1000)
+  vim.api.nvim_create_autocmd("WinClosed", {
+    group = utils.get_augroup("PreventUpdateAfterFloatingWindow", true),
+    callback = prevent_update_after_floating_window,
   })
   self:clean()
 end
