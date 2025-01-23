@@ -165,14 +165,15 @@ end
 
 ---@private
 function Registry:_overwrite_telescope_select()
-  local ok, actions = pcall(require, "telescope.actions")
+  local ok, action_set = pcall(require, "telescope.actions.set")
   if not ok then
     return
   end
-  local original_select_default = actions.select_default
-  actions.select_default = function(prompt_bufnr)
+  local original_select = action_set.select
+  ---@diagnostic disable-next-line: duplicate-set-field
+  action_set.select = function(prompt_bufnr, type)
     self._is_telescope_item_selected = true
-    original_select_default(prompt_bufnr)
+    original_select(prompt_bufnr, type)
   end
 end
 
