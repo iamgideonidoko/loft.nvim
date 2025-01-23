@@ -4,7 +4,7 @@ local utils = require("loft.utils")
 ---@field private _registry integer[]
 ---@field private _update_paused boolean
 ---@field private _update_paused_once boolean
----@field private _telescope_selected boolean
+---@field private _is_telescope_item_selected boolean
 local Registry = {}
 Registry.__index = Registry
 
@@ -13,7 +13,7 @@ function Registry:new()
   instance._registry = {}
   instance._update_paused = false
   instance._update_paused_once = false
-  instance._telescope_selected = false
+  instance._is_telescope_item_selected = false
   return instance
 end
 
@@ -147,8 +147,8 @@ function Registry:setup()
   })
   local prevent_update_after_floating_window = utils.safe_debounce(function()
     if utils.is_floating_window() then
-      if self._is_telescope_selected then
-        self._is_telescope_selected = false
+      if self._is_telescope_item_selected then
+        self._is_telescope_item_selected = false
         self._update_paused_once = false
       else
         self._update_paused_once = true
@@ -171,7 +171,7 @@ function Registry:_overwrite_telescope_select()
   end
   local original_select_default = actions.select_default
   actions.select_default = function(prompt_bufnr)
-    self._telescope_selected = true
+    self._is_telescope_item_selected = true
     original_select_default(prompt_bufnr)
   end
 end

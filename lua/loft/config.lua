@@ -27,7 +27,7 @@ local default_config = {
     general = {
       ["<leader>l"] = { callback = actions.open_loft, desc = "Open Loft" },
       ["<Tab>"] = actions.switch_to_next_buffer,
-      ["<S-Tab>"] = actions.switch_to_next_buffer,
+      ["<S-Tab>"] = actions.switch_to_prev_buffer,
       ["<leader>x"] = { callback = actions.close_buffer, desc = "Close buffer" },
       ["<leader>X"] = {
         callback = function()
