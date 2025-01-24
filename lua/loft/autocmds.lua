@@ -9,9 +9,8 @@ autocmds.setup = function()
       local buf = vim.api.nvim_get_current_buf()
       vim.defer_fn(function()
         if utils.buf_has_deleted_file(buf) then
-          return
+          actions.close_buffer({ buf = buf, force = true })
         end
-        actions.close_buffer({ buf = buf, force = true })
       end, 0)
     end,
   })

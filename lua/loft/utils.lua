@@ -17,7 +17,7 @@ end
 ---Check if the given buffer is valid (listed)
 ---@param buf number
 utils.is_buffer_valid = function(buf)
-  return 1 == vim.fn.buflisted(buf)
+  return 1 == vim.fn.buflisted(buf) and not utils.buf_has_deleted_file(buf)
 end
 
 ---Check if the given or current or window is a floating
@@ -124,7 +124,10 @@ end
 ---@param buffer integer?
 utils.buf_has_deleted_file = function(buffer)
   local buf = buffer or vim.api.nvim_get_current_buf()
-  local buftype = vim.api.nvim_get_option_value("buftype", { buf = buf })
+  local ok, buftype = pcall(vim.api.nvim_get_option_value, "buftype", { buf = buf })
+  if not ok then
+    return false
+  end
   local file_path = vim.api.nvim_buf_get_name(buf)
   local stat = vim.loop.fs_stat(file_path)
   return not (
@@ -132,7 +135,7 @@ utils.buf_has_deleted_file = function(buffer)
     or file_path == ""
     or stat
     or vim.fn.filereadable(file_path) == 1
-    or not utils.is_buffer_valid(buf)
+    or 0 == vim.fn.buflisted(buf)
   )
 end
 
