@@ -120,4 +120,20 @@ utils.safe_debounce = function(func, timeout)
   end
 end
 
+---Check if the given or current buffer has a deleted or missing file
+---@param buffer integer?
+utils.buf_has_deleted_file = function(buffer)
+  local buf = buffer or vim.api.nvim_get_current_buf()
+  local buftype = vim.api.nvim_get_option_value("buftype", { buf = buf })
+  local file_path = vim.api.nvim_buf_get_name(buf)
+  local stat = vim.loop.fs_stat(file_path)
+  return not (
+    buftype ~= ""
+    or file_path == ""
+    or stat
+    or vim.fn.filereadable(file_path) == 1
+    or not utils.is_buffer_valid(buf)
+  )
+end
+
 return utils
