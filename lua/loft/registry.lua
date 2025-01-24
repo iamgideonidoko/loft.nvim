@@ -62,6 +62,14 @@ function Registry:clean()
     end
   end
   self._registry = utils.merge_distinct(valid_buffers, utils.get_all_valid_buffers())
+  -- Clean up buffers with missing files
+  local current_buf = vim.api.nvim_get_current_buf()
+  for _, buf in ipairs(self._registry) do
+    if utils.buf_has_deleted_file(buf) and buf ~= current_buf then
+      -- Skip the current buffer since it's safely handled by autocmd (like switching to next. see lua/loft/autocmds.lua)
+      pcall(vim.api.nvim_buf_delete, buf, { force = true })
+    end
+  end
 end
 
 ---Get the next buffer in registry
