@@ -190,4 +190,31 @@ function Registry:_overwrite_telescope_select()
   action_set.select = action_set_clone.select
 end
 
+---Store a given buffer's mark state in b:scoped variables
+---@param buffer integer
+---@param mark_state boolean
+---@private
+function Registry:_mark_buffer(buffer, mark_state)
+  if mark_state then
+    vim.api.nvim_buf_set_var(buffer, "mark_state", mark_state)
+  else
+    pcall(vim.api.nvim_buf_del_var, buffer, "mark_state")
+  end
+end
+
+---Check if a given buffer is marked
+---@param buffer integer
+function Registry:is_buffer_marked(buffer)
+  local ok, mark_state = pcall(vim.api.nvim_buf_get_var, buffer, "mark_state")
+  if ok and mark_state then
+    return mark_state
+  end
+  return false
+end
+
+---Toggle the mark state of a given buffer
+function Registry:toggle_mark_buffer(buffer)
+  self:_mark_buffer(buffer, not self:is_buffer_marked(buffer))
+end
+
 return Registry:new()

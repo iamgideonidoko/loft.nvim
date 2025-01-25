@@ -38,6 +38,10 @@ function UI:_render_entries()
         local bufname = buffer.name ~= "" and buffer.name or "[No Name]"
         local bufnr = buffer.bufnr
         local flags = ""
+        local is_marked = self.registry_instance:is_buffer_marked(bufnr)
+        if is_marked then
+          flags = flags .. "(✓)"
+        end
         local is_modified = vim.api.nvim_get_option_value("modified", { buf = bufnr })
         if is_modified then
           flags = flags .. "[+]"
@@ -160,6 +164,9 @@ function UI:_setup_keymaps()
     ["close"] = function()
       self:close()
     end,
+    ["toggle_mark_entry"] = function()
+      self:_toggle_mark_entry()
+    end,
   }
   for key, value in pairs(self._keymaps) do
     if value == false then
@@ -267,6 +274,17 @@ function UI:_select_entry()
     pcall(vim.api.nvim_win_set_buf, self._last_win_before_loft, self.registry_instance:get_registry()[current_line])
   end
   self.registry_instance:resume_update()
+end
+
+---@private
+function UI:_toggle_mark_entry()
+  local current_line = vim.fn.line(".")
+  local buf = self.registry_instance:get_registry()[current_line]
+  if buf == nil then
+    return
+  end
+  self.registry_instance:toggle_mark_buffer(buf)
+  self:_render_entries()
 end
 
 return UI:new(require("loft.registry"))
