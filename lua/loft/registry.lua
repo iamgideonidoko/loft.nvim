@@ -171,10 +171,12 @@ function Registry:setup()
   self:clean()
 end
 
+---Safely overwrite telescope's select to track selection
 ---@private
 function Registry:_overwrite_telescope_select()
-  local ok, action_set = pcall(require, "telescope.actions.set")
-  if not ok then
+  local action_set_ok, action_set = pcall(require, "telescope.actions.set")
+  local mt_ok, mt = pcall(require, "telescope.actions.mt")
+  if not action_set_ok or not mt_ok then
     return
   end
   local original_select = action_set.select
@@ -183,6 +185,9 @@ function Registry:_overwrite_telescope_select()
     self._is_telescope_item_selected = true
     original_select(prompt_bufnr, type)
   end
+  local action_set_clone = vim.tbl_deep_extend("force", {}, action_set)
+  action_set_clone = mt.transform_mod(action_set_clone)
+  action_set.select = action_set_clone.select
 end
 
 return Registry:new()
