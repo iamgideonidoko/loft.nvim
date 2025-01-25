@@ -26,7 +26,7 @@ local default_config = {
       ["x"] = "toggle_mark_entry",
     },
     general = {
-      ["<leader>l"] = { callback = actions.open_loft, desc = "Open Loft" },
+      ["<leader>lf"] = { callback = actions.open_loft, desc = "Open Loft" },
       ["<Tab>"] = actions.switch_to_next_buffer,
       ["<S-Tab>"] = actions.switch_to_prev_buffer,
       ["<leader>x"] = { callback = actions.close_buffer, desc = "Close buffer" },
@@ -36,6 +36,8 @@ local default_config = {
         end,
         desc = "Force close buffer",
       },
+      ["<leader>ln"] = { callback = actions.switch_to_next_marked_buffer, desc = "Next marked buffer" },
+      ["<leader>lp"] = { callback = actions.switch_to_prev_marked_buffer, desc = "Previous marked buffer" },
     },
   },
 }

@@ -217,4 +217,30 @@ function Registry:toggle_mark_buffer(buffer)
   self:_mark_buffer(buffer, not self:is_buffer_marked(buffer))
 end
 
+---Get the next or prev marked buffer in registry
+---@param direction  'next'|'prev'
+function Registry:get_marked_buffer(direction)
+  local current_buf = vim.api.nvim_get_current_buf()
+  local current_index = nil
+  for i, buf in ipairs(self._registry) do
+    if buf == current_buf then
+      current_index = i
+      break
+    end
+  end
+  local count = #self._registry
+  for i = 1, count do
+    local j = i
+    if direction == "prev" then
+      j = -1 * i
+    end
+    local index = ((current_index or 1) + j - 1) % count + 1
+    local buf = self._registry[index]
+    if self:is_buffer_marked(buf) then
+      return buf
+    end
+  end
+  return nil
+end
+
 return Registry:new()

@@ -75,4 +75,28 @@ actions.open_loft = function()
   require("loft.ui"):open()
 end
 
+-- Navigate to the next marked buffer in registry
+actions.switch_to_next_marked_buffer = function()
+  registry_instance:clean()
+  local next_marked_buf = registry_instance:get_marked_buffer("next")
+  if next_marked_buf == nil then
+    return
+  end
+  registry_instance:pause_update()
+  vim.api.nvim_set_current_buf(next_marked_buf)
+  registry_instance:resume_update()
+end
+
+-- Navigate to the prev marked buffer in registry
+actions.switch_to_prev_marked_buffer = function()
+  registry_instance:clean()
+  local prev_marked_buf = registry_instance:get_marked_buffer("prev")
+  if prev_marked_buf == nil then
+    return
+  end
+  registry_instance:pause_update()
+  vim.api.nvim_set_current_buf(prev_marked_buf)
+  registry_instance:resume_update()
+end
+
 return actions
