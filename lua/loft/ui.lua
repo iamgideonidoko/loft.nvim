@@ -42,8 +42,12 @@ function UI:_render_entries()
         if is_modified then
           flags = flags .. "[+]"
         end
+        local is_current_buf = self._last_buf_before_loft == bufnr
+        if is_current_buf then
+          flags = flags .. "●"
+        end
         local relative_path = vim.fn.fnamemodify(bufname, ":.")
-        table.insert(buf_lines, string.format("%s%d>%s", flags, bufnr, relative_path))
+        table.insert(buf_lines, string.format("%s>{%d}%s", flags, bufnr, relative_path))
       end
     end
     vim.api.nvim_buf_set_lines(self._buf_id, 0, -1, false, buf_lines)
