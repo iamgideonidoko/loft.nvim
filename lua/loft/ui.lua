@@ -260,7 +260,7 @@ function UI:_select_entry()
   self:close()
   local selected_buffer = self.registry_instance:get_registry()[current_line]
   if selected_buffer ~= nil and utils.window_exists(self._last_win_before_loft) then
-    vim.api.nvim_win_set_buf(self._last_win_before_loft, self.registry_instance:get_registry()[current_line])
+    pcall(vim.api.nvim_win_set_buf, self._last_win_before_loft, self.registry_instance:get_registry()[current_line])
   end
   self.registry_instance:resume_update()
 end
