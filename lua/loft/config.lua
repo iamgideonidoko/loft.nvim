@@ -40,6 +40,7 @@ local default_config = {
       },
       ["<leader>ln"] = actions.switch_to_next_marked_buffer,
       ["<leader>lp"] = actions.switch_to_prev_marked_buffer,
+      ["<leader>lm"] = actions.toggle_mark_current_buffer,
     },
   },
 }

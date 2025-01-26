@@ -224,8 +224,11 @@ function Registry:is_buffer_marked(buffer)
 end
 
 ---Toggle the mark state of a given buffer
+---@param buffer integer
+---@return boolean: New mark state of given buffer
 function Registry:toggle_mark_buffer(buffer)
   self:_mark_buffer(buffer, not self:is_buffer_marked(buffer))
+  return self:is_buffer_marked(buffer)
 end
 
 ---Get the next or prev marked buffer in registry

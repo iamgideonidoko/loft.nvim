@@ -129,6 +129,23 @@ actions.switch_to_prev_marked_buffer = {
   end,
 }
 
+---Toggle mark the current buffer
+---@type fun()
+actions.toggle_mark_current_buffer = {
+  desc = "Toggle mark current buffer",
+  func = function()
+    local current_buf = vim.api.nvim_get_current_buf()
+    if utils.is_buffer_valid(current_buf) then
+      local new_mark_state = registry_instance:toggle_mark_buffer(current_buf)
+      if new_mark_state then
+        vim.notify("Marked", vim.log.levels.INFO)
+      else
+        vim.notify("Unmarked", vim.log.levels.INFO)
+      end
+    end
+  end,
+}
+
 for _, action in pairs(actions) do
   setmetatable(action, {
     __call = function(_, ...)
