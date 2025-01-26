@@ -82,7 +82,7 @@ function UI:open()
     col = (vim.o.columns - win_width) / 2,
     style = "minimal",
     border = "rounded",
-    title = constants.DISPLAY_NAME,
+    title = " ⨳⨳ " .. string.upper(constants.DISPLAY_NAME) .. " ⨳⨳ ",
     title_pos = "center",
     noautocmd = true,
   }
