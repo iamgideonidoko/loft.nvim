@@ -349,7 +349,9 @@ function UI:_show_help()
     if value == false then
       return
     end
-    local desc = type(value) == "table" and value.desc or "No description"
+    local desc = type(value) == "table" and value.desc
+      or type(value) == "table" and type(value.callback) == "table" and value.callback.desc
+      or "No description"
     table.insert(content, string.format("  %s: %s", key, desc))
   end
   self._help_buf_id = vim.api.nvim_create_buf(false, true)
