@@ -94,6 +94,7 @@ function UI:open()
     noautocmd = true,
     footer = self:_get_footer(),
     footer_pos = "center",
+    zindex = 200,
   }
   self._win_id = vim.api.nvim_open_win(self._buf_id, true, win_opts)
   vim.api.nvim_set_option_value("cursorline", true, {
@@ -364,6 +365,7 @@ function UI:_show_help()
     style = "minimal",
     border = "rounded",
     noautocmd = true,
+    zindex = 210,
   }
   self._help_win_id = vim.api.nvim_open_win(self._help_buf_id, true, opts)
   vim.api.nvim_buf_set_lines(self._help_buf_id, 0, -1, false, content)
