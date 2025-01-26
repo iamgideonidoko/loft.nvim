@@ -183,6 +183,12 @@ function UI:_setup_keymaps()
     ["show_help"] = function()
       self:_show_help()
     end,
+    ["move_up_to_marked_entry"] = function()
+      self:_move_to_marked_entry("up")
+    end,
+    ["move_down_to_marked_entry"] = function()
+      self:_move_to_marked_entry("down")
+    end,
   }
   for key, value in pairs(self._keymaps) do
     if value == false then
@@ -419,6 +425,30 @@ end
 ---Check if the main UI window is open
 function UI:is_open()
   return utils.window_exists(self._win_id)
+end
+
+---Move up to next marked entry in the main UI window
+---@param direction  'up'|'down'
+---@private
+function UI:_move_to_marked_entry(direction)
+  local current_line = vim.fn.line(".")
+  local registry = self.registry_instance:get_registry()
+  local current_buf = registry[current_line]
+  if current_buf == nil then
+    return
+  end
+  local goto_buf = self.registry_instance:get_marked_buffer(direction == "up" and "prev" or "next", current_buf)
+  ---@type integer|nil
+  local goto_line
+  for i, buf in ipairs(registry) do
+    if buf == goto_buf then
+      goto_line = i
+      break
+    end
+  end
+  if goto_line then
+    vim.api.nvim_win_set_cursor(self._win_id, { goto_line, 1 })
+  end
 end
 
 return UI:new(require("loft.registry"))

@@ -234,8 +234,9 @@ end
 
 ---Get the next or prev marked buffer in registry
 ---@param direction  'next'|'prev'
-function Registry:get_marked_buffer(direction)
-  local current_buf = vim.api.nvim_get_current_buf()
+---@param buffer  integer?
+function Registry:get_marked_buffer(direction, buffer)
+  local current_buf = buffer or vim.api.nvim_get_current_buf()
   local current_index = nil
   for i, buf in ipairs(self._registry) do
     if buf == current_buf then
