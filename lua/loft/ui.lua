@@ -75,18 +75,18 @@ function UI:open()
   end
   local height = math.min(
     #self.registry_instance:get_registry() > 0 and #self.registry_instance:get_registry() or 1,
-    math.ceil(vim.o.lines * 0.8)
+    math.floor(vim.o.lines * 0.8)
   )
-  local width = math.ceil(vim.o.columns * 0.8)
   self._buf_id = vim.api.nvim_create_buf(false, true)
+  local width = math.floor(vim.o.columns * 0.8)
   local title = " ⨳⨳ " .. string.upper(constants.DISPLAY_NAME) .. " ⨳⨳ "
   ---@type vim.api.keyset.win_config
   local win_opts = {
     relative = "editor",
     width = width,
     height = height,
-    row = math.ceil((vim.o.lines - height) * 0.5),
-    col = math.ceil((vim.o.columns - width) * 0.5),
+    row = math.floor((vim.o.lines - height) * 0.5),
+    col = math.floor((vim.o.columns - width) * 0.5),
     style = "minimal",
     border = "rounded",
     title = title,
@@ -94,7 +94,7 @@ function UI:open()
     noautocmd = true,
     footer = self:_get_footer(),
     footer_pos = "center",
-    zindex = 200,
+    zindex = 100,
   }
   self._win_id = vim.api.nvim_open_win(self._buf_id, true, win_opts)
   vim.api.nvim_set_option_value("cursorline", true, {
@@ -328,6 +328,10 @@ end
 
 ---@private
 function UI:_show_help()
+  -- Focus existing window
+  if utils.window_exists(self._help_win_id) then
+    return vim.api.nvim_set_current_win(self._help_win_id)
+  end
   local content = {
     "Help (v" .. constants.PLUGIN_VERSION .. "):",
     "`loft.nvim` streamlines buffer management while you focus on your code",
@@ -365,20 +369,31 @@ function UI:_show_help()
       or "No description"
     table.insert(content, string.format("  %s: %s", key, desc))
   end
+  for _, value in pairs({
+    "",
+    "Commands:",
+    " :LoftToggle - Toggle the Loft UI",
+    " :LoftToggleSmartOrder - Toggle Smart Order ON and OFF",
+    "",
+    "Custom Event Patterns:",
+    " LoftBufferMark - Triggered when a buffer is marked or unmarked",
+  }) do
+    table.insert(content, value)
+  end
   self._help_buf_id = vim.api.nvim_create_buf(false, true)
   local width = 70
-  local height = #content + 2
+  local height = math.min(#content + 1, math.floor(vim.o.lines * 0.8))
   ---@type vim.api.keyset.win_config
   local opts = {
     relative = "editor",
     width = width,
     height = height,
-    row = math.floor((vim.o.lines - height) / 2),
-    col = math.floor((vim.o.columns - width) / 2),
+    row = math.floor((vim.o.lines - height) * 0.5),
+    col = math.floor((vim.o.columns - width) * 0.5),
     style = "minimal",
     border = "rounded",
     noautocmd = true,
-    zindex = 210,
+    zindex = 110,
   }
   self._help_win_id = vim.api.nvim_open_win(self._help_buf_id, true, opts)
   vim.api.nvim_buf_set_lines(self._help_buf_id, 0, -1, false, content)
