@@ -1,5 +1,6 @@
 local utils = require("loft.utils")
 local events = require("loft.events")
+local constants = require("loft.constants")
 
 ---@class loft.Registry
 ---@field private _registry integer[]
@@ -206,9 +207,9 @@ end
 ---@private
 function Registry:_mark_buffer(buffer, mark_state)
   if mark_state then
-    vim.api.nvim_buf_set_var(buffer, "mark_state", mark_state)
+    vim.api.nvim_buf_set_var(buffer, constants.MARK_STATE_ID, mark_state)
   else
-    pcall(vim.api.nvim_buf_del_var, buffer, "mark_state")
+    pcall(vim.api.nvim_buf_del_var, buffer, constants.MARK_STATE_ID)
   end
   events.buffer_mark(buffer, self:is_buffer_marked(buffer))
 end
@@ -216,7 +217,7 @@ end
 ---Check if a given buffer is marked
 ---@param buffer integer
 function Registry:is_buffer_marked(buffer)
-  local ok, mark_state = pcall(vim.api.nvim_buf_get_var, buffer, "mark_state")
+  local ok, mark_state = pcall(vim.api.nvim_buf_get_var, buffer, constants.MARK_STATE_ID)
   if ok and mark_state then
     return mark_state
   end
