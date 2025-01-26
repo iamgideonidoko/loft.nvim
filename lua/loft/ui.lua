@@ -3,8 +3,8 @@ local constants = require("loft.constants")
 local actions = require("loft.actions")
 
 ---@class loft.UI
----@field private _win_id integer
----@field private _buf_id integer
+---@field private _win_id integer|nil
+---@field private _buf_id integer|nil
 ---@field private _last_win_before_loft integer|nil
 ---@field private _last_buf_before_loft integer|nil
 ---@field registry_instance loft.Registry
