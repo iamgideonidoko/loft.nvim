@@ -8,7 +8,7 @@ end
 dev.create_reload_command = function()
   vim.api.nvim_create_user_command("ReloadLoft", function()
     dev.reload_loft()
-    print("Loft.nvim reloaded!")
+    vim.notify("Loft.nvim reloaded!", vim.log.levels.INFO)
   end, {})
 end
 

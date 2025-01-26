@@ -10,9 +10,9 @@ commands.setup = function()
     local new_state = ui_instance:toggle_smart_order()
     if not ui_instance:is_open() then
       if new_state then
-        vim.notify("Smart Order is ON")
+        vim.notify("Smart Order is ON", vim.log.levels.INFO)
       else
-        vim.notify("Smart Order is OFF")
+        vim.notify("Smart Order is OFF", vim.log.levels.INFO)
       end
     end
   end, { desc = "Toggle Smart Order ON and OFF" })
