@@ -157,7 +157,8 @@ function Registry:move_buffer_down(buf_idx, cyclic)
 end
 
 ---Called on plugin setup
-function Registry:setup()
+---@param opts  { track_telescope_select: boolean }
+function Registry:setup(opts)
   vim.api.nvim_create_autocmd("BufEnter", {
     group = utils.get_augroup("UpdateRegistry", true),
     callback = function()
@@ -178,7 +179,9 @@ function Registry:setup()
     group = utils.get_augroup("PreventUpdateAfterFloatingWindow", true),
     callback = prevent_update_after_floating_window,
   })
-  self:_overwrite_telescope_select()
+  if opts.track_telescope_select then
+    self:_overwrite_telescope_select()
+  end
   self:clean()
 end
 
