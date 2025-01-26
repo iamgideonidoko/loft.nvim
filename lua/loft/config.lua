@@ -1,6 +1,6 @@
 local actions = require("loft.actions")
 
----@alias loft.UIKeymapsActions 'move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'|'close'|'toggle_mark_entry'
+---@alias loft.UIKeymapsActions 'move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'
 ---@alias loft.UIKeymapsConfig table<string, loft.UIKeymapsActions|function|false>
 ---@alias  loft.GeneralKeymapsConfig table<string, { callback: function, desc: string }|function|false>: For keys mapped outside of Loft in `normal` mode
 
@@ -24,6 +24,7 @@ local default_config = {
       ["<Esc>"] = "close",
       ["q"] = "close",
       ["x"] = "toggle_mark_entry",
+      ["<C-s>"] = "toggle_smart_order",
     },
     general = {
       ["<leader>lf"] = { callback = actions.open_loft, desc = "Open Loft" },

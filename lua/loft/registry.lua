@@ -5,6 +5,7 @@ local utils = require("loft.utils")
 ---@field private _update_paused boolean
 ---@field private _update_paused_once boolean
 ---@field private _is_telescope_item_selected boolean
+---@field private _is_smart_order_on boolean
 local Registry = {}
 Registry.__index = Registry
 
@@ -14,6 +15,7 @@ function Registry:new()
   instance._update_paused = false
   instance._update_paused_once = false
   instance._is_telescope_item_selected = false
+  instance._is_smart_order_on = true
   return instance
 end
 
@@ -33,13 +35,20 @@ function Registry:_update(buffer)
     self._update_paused_once = false
     return
   end
+  local is_buffer_in_registry = false
   for i, b in ipairs(self._registry) do
     if b == buf then
-      table.remove(self._registry, i)
+      is_buffer_in_registry = true
+      if self._is_smart_order_on then
+        table.remove(self._registry, i)
+      end
       break
     end
   end
   if not utils.is_buffer_valid(buf) then
+    return
+  end
+  if is_buffer_in_registry and not self._is_smart_order_on then
     return
   end
   table.insert(self._registry, buf)
@@ -241,6 +250,14 @@ function Registry:get_marked_buffer(direction)
     end
   end
   return nil
+end
+
+function Registry:is_smart_order_on()
+  return self._is_smart_order_on
+end
+
+function Registry:toggle_smart_order()
+  self._is_smart_order_on = not self._is_smart_order_on
 end
 
 return Registry:new()

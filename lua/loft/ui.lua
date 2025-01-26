@@ -73,18 +73,21 @@ function UI:open()
     math.min(#self.registry_instance:get_registry() > 0 and #self.registry_instance:get_registry() or 1, max_height)
   local win_width = math.max(math.ceil(max_width * 0.8), 50)
   self._buf_id = vim.api.nvim_create_buf(false, true)
+  local title = " ⨳⨳ " .. string.upper(constants.DISPLAY_NAME) .. " ⨳⨳ "
   ---@type vim.api.keyset.win_config
   local win_opts = {
     relative = "editor",
     width = win_width,
     height = win_height,
-    row = (vim.o.lines - win_height) / 2,
-    col = (vim.o.columns - win_width) / 2,
+    row = (vim.o.lines - win_height) * 0.5,
+    col = (vim.o.columns - win_width) * 0.5,
     style = "minimal",
     border = "rounded",
-    title = " ⨳⨳ " .. string.upper(constants.DISPLAY_NAME) .. " ⨳⨳ ",
+    title = title,
     title_pos = "center",
     noautocmd = true,
+    footer = self:_get_footer(),
+    footer_pos = "center",
   }
   self._win_id = vim.api.nvim_open_win(self._buf_id, true, win_opts)
   vim.api.nvim_set_option_value("cursorline", true, {
@@ -166,6 +169,9 @@ function UI:_setup_keymaps()
     end,
     ["toggle_mark_entry"] = function()
       self:_toggle_mark_entry()
+    end,
+    ["toggle_smart_order"] = function()
+      self:_toggle_smart_order()
     end,
   }
   for key, value in pairs(self._keymaps) do
@@ -285,6 +291,20 @@ function UI:_toggle_mark_entry()
   end
   self.registry_instance:toggle_mark_buffer(buf)
   self:_render_entries()
+end
+
+---@private
+function UI:_get_footer()
+  return " Smart Order: " .. (self.registry_instance:is_smart_order_on() and "ON" or "OFF") .. " "
+end
+
+---@private
+function UI:_toggle_smart_order()
+  self.registry_instance:toggle_smart_order()
+  vim.api.nvim_win_set_config(self._win_id, {
+    footer = self:_get_footer(),
+    footer_pos = "center",
+  })
 end
 
 return UI:new(require("loft.registry"))
