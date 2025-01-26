@@ -57,7 +57,7 @@ actions.close_buffer = {
   end,
 }
 
--- Navigate to the next buffer in registry
+---Navigate to the next buffer in registry
 ---@type fun()
 actions.switch_to_next_buffer = {
   desc = "Switch to next buffer",
@@ -73,7 +73,7 @@ actions.switch_to_next_buffer = {
   end,
 }
 
--- Navigate to the previous buffer in registry
+---Navigate to the previous buffer in registry
 ---@type fun()
 actions.switch_to_prev_buffer = {
   desc = "Switch to previous buffer",
@@ -97,7 +97,7 @@ actions.open_loft = {
   end,
 }
 
--- Navigate to the next marked buffer in registry
+---Navigate to the next marked buffer in registry
 ---@type fun()
 actions.switch_to_next_marked_buffer = {
   desc = "Switch to next marked buffer",
@@ -113,7 +113,7 @@ actions.switch_to_next_marked_buffer = {
   end,
 }
 
--- Navigate to the prev marked buffer in registry
+---Navigate to the prev marked buffer in registry
 ---@type fun()
 actions.switch_to_prev_marked_buffer = {
   desc = "Switch to previous marked buffer",
