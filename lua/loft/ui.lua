@@ -9,6 +9,9 @@ local actions = require("loft.actions")
 ---@field private _last_buf_before_loft integer|nil
 ---@field registry_instance loft.Registry
 ---@field private _keymaps loft.UIKeymapsConfig|nil
+---@field private _general_keymaps loft.GeneralKeymapsConfig|nil
+---@field private _help_win_id integer|nil
+---@field private _help_buf_id integer|nil
 local UI = {}
 UI.__index = UI
 
@@ -16,12 +19,15 @@ UI.__index = UI
 function UI:new(registry_instance)
   local instance = setmetatable({}, self)
   instance.registry_instance = registry_instance
+  instance._keymaps = {}
+  instance._general_keymaps = {}
   return instance
 end
 
----@param opts  { keymaps: loft.UIKeymapsConfig }
+---@param opts  { keymaps: loft.UIKeymapsConfig, general_keymaps: loft.GeneralKeymapsConfig }
 function UI:setup(opts)
   self._keymaps = opts.keymaps
+  self._general_keymaps = opts.general_keymaps
 end
 
 ---Render a list of all the buffers in the registry (entries) in main UI buffer
@@ -173,6 +179,9 @@ function UI:_setup_keymaps()
     ["toggle_smart_order"] = function()
       self:_toggle_smart_order()
     end,
+    ["show_help"] = function()
+      self:_show_help()
+    end,
   }
   for key, value in pairs(self._keymaps) do
     if value == false then
@@ -305,6 +314,90 @@ function UI:_toggle_smart_order()
     footer = self:_get_footer(),
     footer_pos = "center",
   })
+end
+
+---@private
+function UI:_show_help()
+  local content = {
+    "Help (v" .. constants.PLUGIN_VERSION .. "):",
+    "`loft.nvim` streamlines buffer management while you focus on your code",
+    "",
+    "Keymaps:",
+  }
+  ---@type table<loft.UIKeymapsActions, string>
+  local ui_keymaps_desc = {
+    ["move_up"] = "Move cursor up",
+    ["move_down"] = "Move cursor down",
+    ["move_entry_up"] = "Move entry up",
+    ["move_entry_down"] = "Move entry down",
+    ["delete_entry"] = "Delete entry (+buffer)",
+    ["select_entry"] = "Select entry (+buffer)",
+    ["close"] = "Close Loft",
+    ["toggle_mark_entry"] = "Toggle entry mark status",
+    ["toggle_smart_order"] = "Toggle smart order status",
+    ["show_help"] = "Show this help",
+  }
+  for key, value in pairs(self._keymaps) do
+    if value == false or type(value) ~= "string" then
+      return
+    end
+    local desc = ui_keymaps_desc[value]
+    table.insert(content, string.format("  %s: %s", key, desc))
+  end
+  for key, value in pairs(self._general_keymaps) do
+    if value == false then
+      return
+    end
+    local desc = type(value) == "table" and value.desc or "No description"
+    table.insert(content, string.format("  %s: %s", key, desc))
+  end
+  self._help_buf_id = vim.api.nvim_create_buf(false, true)
+  local width = 70
+  local height = #content + 2
+  ---@type vim.api.keyset.win_config
+  local opts = {
+    relative = "editor",
+    width = width,
+    height = height,
+    row = math.floor((vim.o.lines - height) / 2),
+    col = math.floor((vim.o.columns - width) / 2),
+    style = "minimal",
+    border = "rounded",
+    noautocmd = true,
+  }
+  self._help_win_id = vim.api.nvim_open_win(self._help_buf_id, true, opts)
+  vim.api.nvim_buf_set_lines(self._help_buf_id, 0, -1, false, content)
+  vim.api.nvim_set_option_value("wrap", false, {
+    win = self._help_win_id,
+  })
+  vim.api.nvim_set_option_value("wrap", true, {
+    scope = "local",
+    win = self._help_win_id,
+  })
+  vim.api.nvim_set_option_value("modifiable", false, {
+    buf = self._help_buf_id,
+  })
+  for _, key in ipairs({ "?", "q", "<CR>", "<Esc>" }) do
+    vim.api.nvim_buf_set_keymap(self._help_buf_id, "n", key, "", {
+      noremap = true,
+      silent = true,
+      callback = function()
+        self:_close_help()
+      end,
+    })
+  end
+end
+
+---@private
+function UI:_close_help()
+  if utils.buffer_exists(self._help_buf_id) then
+    vim.api.nvim_buf_delete(self._help_buf_id, { force = true })
+    self._help_buf_id = nil
+  end
+  if utils.window_exists(self._help_win_id) then
+    vim.api.nvim_win_close(self._help_win_id, true)
+    self._help_win_id = nil
+  end
 end
 
 return UI:new(require("loft.registry"))

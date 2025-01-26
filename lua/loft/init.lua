@@ -22,7 +22,7 @@ end
 loft.setup = function(opts)
   config.setup(opts)
   registry_instance:setup()
-  ui_instance:setup({ keymaps = config.all.keymaps.ui })
+  ui_instance:setup({ keymaps = config.all.keymaps.ui, general_keymaps = config.all.keymaps.general })
   setup_general_keymap(config.all.keymaps.general)
   autocmds.setup()
   if utils.is_dev() then

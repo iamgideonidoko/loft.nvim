@@ -1,6 +1,6 @@
 local actions = require("loft.actions")
 
----@alias loft.UIKeymapsActions 'move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'
+---@alias loft.UIKeymapsActions 'move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'|'show_help'
 ---@alias loft.UIKeymapsConfig table<string, loft.UIKeymapsActions|function|false>
 ---@alias  loft.GeneralKeymapsConfig table<string, { callback: function, desc: string }|function|false>: For keys mapped outside of Loft in `normal` mode
 
@@ -25,11 +25,12 @@ local default_config = {
       ["q"] = "close",
       ["x"] = "toggle_mark_entry",
       ["<C-s>"] = "toggle_smart_order",
+      ["?"] = "show_help",
     },
     general = {
       ["<leader>lf"] = { callback = actions.open_loft, desc = "Open Loft" },
-      ["<Tab>"] = actions.switch_to_next_buffer,
-      ["<S-Tab>"] = actions.switch_to_prev_buffer,
+      ["<Tab>"] = { callback = actions.switch_to_next_buffer, desc = "Switch to next buffer" },
+      ["<S-Tab>"] = { callback = actions.switch_to_prev_buffer, desc = "Switch to previous buffer" },
       ["<leader>x"] = { callback = actions.close_buffer, desc = "Close buffer" },
       ["<leader>X"] = {
         callback = function()
@@ -37,8 +38,8 @@ local default_config = {
         end,
         desc = "Force close buffer",
       },
-      ["<leader>ln"] = { callback = actions.switch_to_next_marked_buffer, desc = "Next marked buffer" },
-      ["<leader>lp"] = { callback = actions.switch_to_prev_marked_buffer, desc = "Previous marked buffer" },
+      ["<leader>ln"] = { callback = actions.switch_to_next_marked_buffer, desc = "Switch to next marked buffer" },
+      ["<leader>lp"] = { callback = actions.switch_to_prev_marked_buffer, desc = "Switch to previous marked buffer" },
     },
   },
 }
