@@ -346,6 +346,8 @@ function UI:_show_help()
     ["toggle_mark_entry"] = "Toggle entry mark status",
     ["toggle_smart_order"] = "Toggle smart order status",
     ["show_help"] = "Show this help",
+    ["move_up_to_marked_entry"] = "Move up to the next marked entry",
+    ["move_down_to_marked_entry"] = "Move down to the next marked entry",
   }
   for key, value in pairs(self._keymaps) do
     if value == false or type(value) ~= "string" then
