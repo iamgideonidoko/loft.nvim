@@ -67,20 +67,20 @@ function UI:open()
   if utils.window_exists(self._win_id) then
     return vim.api.nvim_set_current_win(self._win_id)
   end
-  local max_height = vim.o.lines - 2
-  local max_width = vim.o.columns - 4
-  local win_height =
-    math.min(#self.registry_instance:get_registry() > 0 and #self.registry_instance:get_registry() or 1, max_height)
-  local win_width = math.max(math.ceil(max_width * 0.8), 50)
+  local height = math.min(
+    #self.registry_instance:get_registry() > 0 and #self.registry_instance:get_registry() or 1,
+    math.ceil(vim.o.lines * 0.8)
+  )
+  local width = math.ceil(vim.o.columns * 0.8)
   self._buf_id = vim.api.nvim_create_buf(false, true)
   local title = " ⨳⨳ " .. string.upper(constants.DISPLAY_NAME) .. " ⨳⨳ "
   ---@type vim.api.keyset.win_config
   local win_opts = {
     relative = "editor",
-    width = win_width,
-    height = win_height,
-    row = (vim.o.lines - win_height) * 0.5,
-    col = (vim.o.columns - win_width) * 0.5,
+    width = width,
+    height = height,
+    row = math.ceil((vim.o.lines - height) * 0.5),
+    col = math.ceil((vim.o.columns - width) * 0.5),
     style = "minimal",
     border = "rounded",
     title = title,
