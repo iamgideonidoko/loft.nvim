@@ -134,11 +134,20 @@ function UI:_setup_autocmd()
     group = utils.get_augroup("PreventOverride", true),
     callback = function()
       if vim.api.nvim_get_current_win() == self._win_id then
-        local current_buf_id = vim.api.nvim_get_current_buf()
-        if current_buf_id ~= self._buf_id then
+        local current_buf = vim.api.nvim_get_current_buf()
+        if current_buf ~= self._buf_id then
           vim.api.nvim_set_current_buf(self._buf_id)
-          if not utils.table_includes(self.registry_instance:get_registry(), current_buf_id) then
-            vim.api.nvim_buf_delete(current_buf_id, { force = true })
+          if not utils.table_includes(self.registry_instance:get_registry(), current_buf) then
+            vim.api.nvim_buf_delete(current_buf, { force = true })
+          end
+        end
+      end
+      if vim.api.nvim_get_current_win() == self._help_win_id then
+        local current_buf = vim.api.nvim_get_current_buf()
+        if current_buf ~= self._help_buf_id then
+          vim.api.nvim_set_current_buf(self._help_buf_id)
+          if not utils.table_includes(self.registry_instance:get_registry(), current_buf) then
+            vim.api.nvim_buf_delete(current_buf, { force = true })
           end
         end
       end
