@@ -256,8 +256,10 @@ function Registry:is_smart_order_on()
   return self._is_smart_order_on
 end
 
+---@return boolean: New state of smart order
 function Registry:toggle_smart_order()
   self._is_smart_order_on = not self._is_smart_order_on
+  return self._is_smart_order_on
 end
 
 return Registry:new()

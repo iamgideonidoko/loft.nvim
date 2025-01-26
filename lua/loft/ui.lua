@@ -178,7 +178,7 @@ function UI:_setup_keymaps()
       self:_toggle_mark_entry()
     end,
     ["toggle_smart_order"] = function()
-      self:_toggle_smart_order()
+      self:toggle_smart_order()
     end,
     ["show_help"] = function()
       self:_show_help()
@@ -308,13 +308,16 @@ function UI:_get_footer()
   return " Smart Order: " .. (self.registry_instance:is_smart_order_on() and "ON" or "OFF") .. " "
 end
 
----@private
-function UI:_toggle_smart_order()
-  self.registry_instance:toggle_smart_order()
-  vim.api.nvim_win_set_config(self._win_id, {
-    footer = self:_get_footer(),
-    footer_pos = "center",
-  })
+---@return boolean: New state of smart order
+function UI:toggle_smart_order()
+  local new_state = self.registry_instance:toggle_smart_order()
+  if utils.window_exists(self._win_id) then
+    vim.api.nvim_win_set_config(self._win_id, {
+      footer = self:_get_footer(),
+      footer_pos = "center",
+    })
+  end
+  return new_state
 end
 
 ---@private
@@ -402,6 +405,20 @@ function UI:_close_help()
     vim.api.nvim_win_close(self._help_win_id, true)
     self._help_win_id = nil
   end
+end
+
+---Toggle the main UI window
+function UI:toggle()
+  if utils.window_exists(self._win_id) then
+    self:close()
+  else
+    self:open()
+  end
+end
+
+---Check if the main UI window is open
+function UI:is_open()
+  return utils.window_exists(self._win_id)
 end
 
 return UI:new(require("loft.registry"))

@@ -3,6 +3,7 @@ local utils = require("loft.utils")
 local registry_instance = require("loft.registry")
 local ui_instance = require("loft.ui")
 local autocmds = require("loft.autocmds")
+local commands = require("loft.commands")
 
 local loft = {}
 
@@ -27,6 +28,7 @@ loft.setup = function(opts)
   ui_instance:setup({ keymaps = config.all.keymaps.ui, general_keymaps = config.all.keymaps.general })
   setup_general_keymap(config.all.keymaps.general)
   autocmds.setup()
+  commands.setup()
   if utils.is_dev() then
     require("loft.dev").create_reload_command()
   end
