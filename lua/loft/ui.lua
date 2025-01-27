@@ -46,10 +46,7 @@ function UI:_render_entries()
         local bufname = buffer.name ~= "" and buffer.name or "[No Name]"
         local bufnr = buffer.bufnr
         local flags = ""
-        local is_marked = self.registry_instance:is_buffer_marked(bufnr)
-        if is_marked then
-          flags = flags .. "(✓)"
-        end
+        flags = flags .. self:get_buffer_mark(bufnr)
         local is_modified = vim.api.nvim_get_option_value("modified", { buf = bufnr })
         if is_modified then
           flags = flags .. "[+]"
@@ -478,6 +475,14 @@ function UI:_move_to_marked_entry(direction)
   if goto_line then
     vim.api.nvim_win_set_cursor(self._win_id, { goto_line, 1 })
   end
+end
+
+---Get the mark (string) of the given or current buffer
+---@param buffer integer?
+function UI:get_buffer_mark(buffer)
+  local buf = buffer or vim.api.nvim_get_current_buf()
+  local is_marked = self.registry_instance:is_buffer_marked(buf)
+  return is_marked and "(✓)" or ""
 end
 
 return UI:new(require("loft.registry"))
