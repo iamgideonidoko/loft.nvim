@@ -158,9 +158,10 @@ function Registry:move_buffer_down(buf_idx, cyclic)
 end
 
 ---Called on plugin setup
----@param opts  { track_telescope_select: boolean, close_invalid_buf_on_switch: boolean }
+---@param opts  { track_telescope_select: boolean, close_invalid_buf_on_switch: boolean, enable_smart_order_by_default: boolean }
 function Registry:setup(opts)
   self.close_invalid_buf_on_switch = opts.close_invalid_buf_on_switch
+  self._is_smart_order_on = opts.enable_smart_order_by_default
   vim.api.nvim_create_autocmd("BufEnter", {
     group = utils.get_augroup("UpdateRegistry", true),
     callback = function()

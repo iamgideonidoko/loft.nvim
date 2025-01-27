@@ -27,6 +27,7 @@ loft.setup = function(opts)
   registry_instance:setup({
     track_telescope_select = config.all.move_curr_buf_on_telescope_select,
     close_invalid_buf_on_switch = config.all.close_invalid_buf_on_switch,
+    enable_smart_order_by_default = config.all.enable_smart_order_by_default,
   })
   ui_instance:setup({ keymaps = config.all.keymaps.ui, general_keymaps = config.all.keymaps.general })
   setup_general_keymap(config.all.keymaps.general)
