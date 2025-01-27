@@ -24,7 +24,10 @@ end
 ---@param opts loft.SetupConfig?
 loft.setup = function(opts)
   config.setup(opts)
-  registry_instance:setup({ track_telescope_select = config.all.move_curr_buf_on_telescope_select })
+  registry_instance:setup({
+    track_telescope_select = config.all.move_curr_buf_on_telescope_select,
+    close_invalid_buf_on_switch = config.all.close_invalid_buf_on_switch,
+  })
   ui_instance:setup({ keymaps = config.all.keymaps.ui, general_keymaps = config.all.keymaps.general })
   setup_general_keymap(config.all.keymaps.general)
   autocmds.setup()

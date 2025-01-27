@@ -8,6 +8,7 @@ local constants = require("loft.constants")
 ---@field private _update_paused_once boolean
 ---@field private _is_telescope_item_selected boolean
 ---@field private _is_smart_order_on boolean
+---@field close_invalid_buf_on_switch boolean
 local Registry = {}
 Registry.__index = Registry
 
@@ -157,8 +158,9 @@ function Registry:move_buffer_down(buf_idx, cyclic)
 end
 
 ---Called on plugin setup
----@param opts  { track_telescope_select: boolean }
+---@param opts  { track_telescope_select: boolean, close_invalid_buf_on_switch: boolean }
 function Registry:setup(opts)
+  self.close_invalid_buf_on_switch = opts.close_invalid_buf_on_switch
   vim.api.nvim_create_autocmd("BufEnter", {
     group = utils.get_augroup("UpdateRegistry", true),
     callback = function()

@@ -7,6 +7,7 @@ local actions = require("loft.actions")
 ---@class (exact) loft.SetupConfig
 ---@field  keymaps loft.KeymapConfig?
 ---@field  move_curr_buf_on_telescope_select boolean?: Whether to move the current buffer to the last of the registry during Telescope selection just before the selected buffer
+---@field  close_invalid_buf_on_switch boolean?: Whether to close invalid buffers when switching buffers
 
 ---@class (exact) loft.KeymapConfig
 ---@field  ui loft.UIKeymapsConfig?
@@ -15,6 +16,7 @@ local actions = require("loft.actions")
 ---@type loft.SetupConfig
 local default_config = {
   move_curr_buf_on_telescope_select = true,
+  close_invalid_buf_on_switch = true,
   keymaps = {
     ui = {
       ["k"] = "move_up",

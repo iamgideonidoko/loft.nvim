@@ -65,6 +65,10 @@ actions.switch_to_next_buffer = {
     registry_instance:clean()
     local next_buf = registry_instance:get_next_buffer()
     if next_buf == nil then
+      local current_buf = vim.api.nvim_get_current_buf()
+      if not utils.is_buffer_valid(current_buf) and registry_instance.close_invalid_buf_on_switch then
+        actions.close_buffer({ force = true })
+      end
       return
     end
     registry_instance:pause_update()
@@ -81,6 +85,10 @@ actions.switch_to_prev_buffer = {
     registry_instance:clean()
     local prev_buf = registry_instance:get_prev_buffer()
     if prev_buf == nil then
+      local current_buf = vim.api.nvim_get_current_buf()
+      if not utils.is_buffer_valid(current_buf) and registry_instance.close_invalid_buf_on_switch then
+        actions.close_buffer({ force = true })
+      end
       return
     end
     registry_instance:pause_update()
