@@ -3,7 +3,11 @@ local constants = require("loft.constants")
 local utils = {}
 
 utils.is_dev = function()
-  return require("lazy.core.config").plugins[constants.PLUGIN_NAME].dev
+  local lazy_config_ok, lazy_config = pcall(require, "lazy.core.config")
+  if not lazy_config_ok then
+    return false
+  end
+  return lazy_config.plugins[constants.PLUGIN_NAME].dev
 end
 
 ---Check if the given or current or window is a floating
