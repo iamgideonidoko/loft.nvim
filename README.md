@@ -13,8 +13,11 @@
 - [Configuration](#configuration)
   - [Default Options](#default-options)
 - [Commands](#commands)
+- [Roadmap](#roadmap)
 
 ## Introduction
+
+https://github.com/user-attachments/assets/312a06be-a2c0-4f4f-9fd2-e404c737cb89
 
 `loft.nvim`, a powerful yet lightweight Neovim plugin for efficient buffer management with an intuitive UI and cool features like:
 
