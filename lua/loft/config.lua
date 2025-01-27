@@ -9,6 +9,14 @@ local actions = require("loft.actions")
 ---@field move_curr_buf_on_telescope_select boolean?: Whether to move the current buffer to the last of the registry during Telescope selection just before the selected buffer
 ---@field close_invalid_buf_on_switch boolean?: Whether to close invalid buffers when switching buffers
 ---@field enable_smart_order_by_default boolean?: Whether to enable smart order by default
+---@field window loft.WinOpts?
+
+---@class (exact) loft.WinOpts
+---@field width integer?: Defaults to calculated width
+---@field height integer?: Defaults to calculated height
+---@field zindex integer?
+---@field title_pos "left"|"right"|"center"?
+---@field border "none"|"single"|"double"|"rounded"|"solid"|"shadow"|string[]?
 
 ---@class (exact) loft.KeymapConfig
 ---@field ui loft.UIKeymapsConfig?
@@ -19,6 +27,13 @@ local default_config = {
   move_curr_buf_on_telescope_select = true,
   close_invalid_buf_on_switch = true,
   enable_smart_order_by_default = true,
+  window = {
+    width = nil,
+    height = nil,
+    zindex = 100,
+    title_pos = "center",
+    border = "rounded",
+  },
   keymaps = {
     ui = {
       ["k"] = "move_up",

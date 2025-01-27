@@ -12,6 +12,7 @@ local actions = require("loft.actions")
 ---@field private _general_keymaps loft.GeneralKeymapsConfig|nil
 ---@field private _help_win_id integer|nil
 ---@field private _help_buf_id integer|nil
+---@field private _window loft.WinOpts|nil
 local UI = {}
 UI.__index = UI
 
@@ -24,10 +25,11 @@ function UI:new(registry_instance)
   return instance
 end
 
----@param opts  { keymaps: loft.UIKeymapsConfig, general_keymaps: loft.GeneralKeymapsConfig }
+---@param opts  { keymaps: loft.UIKeymapsConfig, general_keymaps: loft.GeneralKeymapsConfig, window: loft.WinOpts }
 function UI:setup(opts)
   self._keymaps = opts.keymaps
   self._general_keymaps = opts.general_keymaps
+  self._window = opts.window
 end
 
 ---Render a list of all the buffers in the registry (entries) in main UI buffer
@@ -73,12 +75,13 @@ function UI:open()
   if utils.window_exists(self._win_id) then
     return vim.api.nvim_set_current_win(self._win_id)
   end
-  local height = math.min(
-    #self.registry_instance:get_registry() > 0 and #self.registry_instance:get_registry() or 1,
-    math.floor(vim.o.lines * 0.8)
-  )
+  local height = self._window.height
+    or math.min(
+      #self.registry_instance:get_registry() > 0 and #self.registry_instance:get_registry() or 1,
+      math.floor(vim.o.lines * 0.8)
+    )
   self._buf_id = vim.api.nvim_create_buf(false, true)
-  local width = math.floor(vim.o.columns * 0.8)
+  local width = self._window.width or math.floor(vim.o.columns * 0.8)
   local title = " ⨳⨳ " .. string.upper(constants.DISPLAY_NAME) .. " ⨳⨳ "
   ---@type vim.api.keyset.win_config
   local win_opts = {
@@ -88,13 +91,13 @@ function UI:open()
     row = math.floor((vim.o.lines - height) * 0.5),
     col = math.floor((vim.o.columns - width) * 0.5),
     style = "minimal",
-    border = "rounded",
+    border = self._window.border,
     title = title,
-    title_pos = "center",
+    title_pos = self._window.title_pos,
     noautocmd = true,
     footer = self:_get_footer(),
-    footer_pos = "center",
-    zindex = 100,
+    footer_pos = self._window.title_pos,
+    zindex = self._window.zindex,
   }
   self._win_id = vim.api.nvim_open_win(self._buf_id, true, win_opts)
   vim.api.nvim_set_option_value("cursorline", true, {
@@ -400,9 +403,9 @@ function UI:_show_help()
     row = math.floor((vim.o.lines - height) * 0.5),
     col = math.floor((vim.o.columns - width) * 0.5),
     style = "minimal",
-    border = "rounded",
+    border = self._window.border,
     noautocmd = true,
-    zindex = 110,
+    zindex = self._window.zindex + 10,
   }
   self._help_win_id = vim.api.nvim_open_win(self._help_buf_id, true, opts)
   vim.api.nvim_buf_set_lines(self._help_buf_id, 0, -1, false, content)
