@@ -218,6 +218,7 @@ function Registry:_mark_buffer(buffer, mark_state)
     pcall(vim.api.nvim_buf_del_var, buffer, constants.MARK_STATE_ID)
   end
   events.buffer_mark(buffer, self:is_buffer_marked(buffer))
+  self:keymap_recent_marked_buffers()
 end
 
 ---Check if a given buffer is marked
@@ -273,6 +274,46 @@ end
 function Registry:toggle_smart_order()
   self._is_smart_order_on = not self._is_smart_order_on
   return self._is_smart_order_on
+end
+
+---@private
+---@return integer[]: Marked buffers
+function Registry:_get_marked_buffers()
+  local marked_buffers = {}
+  for _, buf in ipairs(self._registry) do
+    if self:is_buffer_marked(buf) then
+      table.insert(marked_buffers, buf)
+    end
+  end
+  return marked_buffers
+end
+
+---Set navigation keymaps for the 9 most recent marked buffers
+function Registry:keymap_recent_marked_buffers()
+  local pre_key = "<leader>l"
+  local marked_buffers = self:_get_marked_buffers()
+  for i = 1, 9 do
+    local key = pre_key .. i
+    pcall(vim.keymap.del, "n", key)
+  end
+  local count = 1
+  for i = #marked_buffers, math.max(1, #marked_buffers - 1), -1 do
+    print("index: ", 1)
+    local buf = marked_buffers[i]
+    if utils.is_buffer_valid(buf) then
+      local buffer = vim.fn.getbufinfo(buf)[1]
+      local bufname = buffer.name ~= "" and buffer.name or "[No Name]"
+      local relative_path = vim.fn.fnamemodify(bufname, ":.")
+      local key = pre_key .. count
+      vim.keymap.set("n", key, function()
+        self:pause_update()
+        vim.api.nvim_set_current_buf(buf)
+        pcall(vim.api.nvim_set_current_buf, buf)
+        self:resume_update()
+      end, { desc = "⨳⨳]> " .. relative_path, noremap = true, silent = true })
+    end
+    count = count + 1
+  end
 end
 
 return Registry:new()
