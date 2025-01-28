@@ -65,7 +65,6 @@ function UI:_render_entries()
 end
 
 function UI:open()
-  vim.notify(self:smart_order_indicator())
   self._last_win_before_loft = vim.api.nvim_get_current_win()
   self._last_buf_before_loft = vim.api.nvim_get_current_buf()
   self.registry_instance:clean()
