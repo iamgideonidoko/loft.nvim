@@ -120,9 +120,10 @@ require("loft").setup({
 
 Loft user autocmds:
 
-| Event                 | Description                                    | Argument                                  |
-| --------------------- | ---------------------------------------------- | ----------------------------------------- |
-| `User LoftBufferMark` | Triggered when a buffer is marked or unmarked. | `{ mark_state: boolean, buffer: number }` |
+| Event                       | Description                                    | Argument                                  |
+| --------------------------- | ---------------------------------------------- | ----------------------------------------- |
+| `User LoftBufferMark`       | Triggered when a buffer is marked or unmarked. | `{ mark_state: boolean, buffer: number }` |
+| `User LoftSmartOrderToggle` | Triggered when smart order state is toggled.   | `smart_order_state: number`               |
 
 ## Roadmap
 
