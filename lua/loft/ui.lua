@@ -65,6 +65,7 @@ function UI:_render_entries()
 end
 
 function UI:open()
+  vim.notify(self:smart_order_indicator())
   self._last_win_before_loft = vim.api.nvim_get_current_win()
   self._last_buf_before_loft = vim.api.nvim_get_current_buf()
   self.registry_instance:clean()
@@ -483,6 +484,14 @@ function UI:get_buffer_mark(buffer)
   local buf = buffer or vim.api.nvim_get_current_buf()
   local is_marked = self.registry_instance:is_buffer_marked(buf)
   return is_marked and "(✓)" or ""
+end
+
+---Get the smart order indicator (string)
+function UI:smart_order_indicator()
+  local is_smart_order_on = self.registry_instance:is_smart_order_on()
+  local pre_status = "[⨳⨳]"
+  local status = is_smart_order_on and "ON" or "OFF"
+  return pre_status .. ": " .. status
 end
 
 return UI:new(require("loft.registry"))
