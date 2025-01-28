@@ -384,8 +384,6 @@ function UI:_show_help()
     " :LoftToggle - Toggle the Loft UI",
     " :LoftToggleSmartOrder - Toggle Smart Order ON and OFF",
     "",
-    "Custom Event Patterns:",
-    " LoftBufferMark - Triggered when a buffer is marked or unmarked",
   }) do
     table.insert(content, value)
   end
