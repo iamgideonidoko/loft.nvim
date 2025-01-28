@@ -55,6 +55,7 @@ function Registry:_update(buffer)
     return
   end
   table.insert(self._registry, buf)
+  self:on_change()
 end
 
 function Registry:pause_update()
@@ -82,6 +83,7 @@ function Registry:clean()
       pcall(vim.api.nvim_buf_delete, buf, { force = true })
     end
   end
+  self:on_change()
 end
 
 ---Get the next buffer in registry
@@ -140,6 +142,7 @@ function Registry:move_buffer_up(buf_idx, cyclic)
     table.remove(self._registry, 1)
     table.insert(self._registry, first_buffer)
   end
+  self:on_change()
 end
 
 ---Swap given buffer with the next buffer in registry
@@ -155,6 +158,7 @@ function Registry:move_buffer_down(buf_idx, cyclic)
     table.remove(self._registry)
     table.insert(self._registry, 1, last_buffer)
   end
+  self:on_change()
 end
 
 ---Called on plugin setup
@@ -218,7 +222,6 @@ function Registry:_mark_buffer(buffer, mark_state)
     pcall(vim.api.nvim_buf_del_var, buffer, constants.MARK_STATE_ID)
   end
   events.buffer_mark(buffer, self:is_buffer_marked(buffer))
-  self:keymap_recent_marked_buffers()
 end
 
 ---Check if a given buffer is marked
@@ -298,7 +301,6 @@ function Registry:keymap_recent_marked_buffers()
   end
   local count = 1
   for i = #marked_buffers, math.max(1, #marked_buffers - 1), -1 do
-    print("index: ", 1)
     local buf = marked_buffers[i]
     if utils.is_buffer_valid(buf) then
       local buffer = vim.fn.getbufinfo(buf)[1]
@@ -315,5 +317,8 @@ function Registry:keymap_recent_marked_buffers()
     count = count + 1
   end
 end
+
+---Called at the end of all methods that mutate registry
+function Registry:on_change() end
 
 return Registry:new()
