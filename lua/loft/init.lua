@@ -13,7 +13,7 @@ local function setup_general_keymap(keymaps)
     if value == false then
       return
     end
-    local action = (type(value) == "function" or value["func"]) and value or value.callback
+    local action = (type(value) == "function" or (value["func"] and not value["callback"])) and value or value.callback
     local desc = type(value) == "table" and value.desc or ""
     vim.keymap.set("n", key, function()
       action()
