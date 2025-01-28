@@ -222,6 +222,7 @@ function Registry:_mark_buffer(buffer, mark_state)
     pcall(vim.api.nvim_buf_del_var, buffer, constants.MARK_STATE_ID)
   end
   events.buffer_mark(buffer, self:is_buffer_marked(buffer))
+  self:keymap_recent_marked_buffers()
 end
 
 ---Check if a given buffer is marked
@@ -319,6 +320,8 @@ function Registry:keymap_recent_marked_buffers()
 end
 
 ---Called at the end of all methods that mutate registry
-function Registry:on_change() end
+function Registry:on_change()
+  self:keymap_recent_marked_buffers()
+end
 
 return Registry:new()
