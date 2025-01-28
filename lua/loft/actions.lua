@@ -154,6 +154,27 @@ actions.toggle_mark_current_buffer = {
   end,
 }
 
+---Toggle the smart order status
+---@type fun(notify: boolean?)
+actions.toggle_smart_order = {
+  desc = "Toggle Smart Order ON and OFF",
+  ---@param notify boolean?
+  func = function(notify)
+    if notify == nil then
+      notify = true
+    end
+    local ui_instance = require("loft.ui")
+    local new_state = ui_instance:toggle_smart_order()
+    if not ui_instance:is_open() and notify then
+      if new_state then
+        vim.notify("Smart Order is ON", vim.log.levels.INFO)
+      else
+        vim.notify("Smart Order is OFF", vim.log.levels.INFO)
+      end
+    end
+  end,
+}
+
 for _, action in pairs(actions) do
   setmetatable(action, {
     __call = function(_, ...)
