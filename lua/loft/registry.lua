@@ -172,7 +172,7 @@ function Registry:setup(opts)
       self:_update()
     end,
   })
-  local prevent_update_after_floating_window = utils.safe_debounce(function()
+  local prevent_update_after_floating_window = utils.greedy_debounce(function()
     if utils.is_floating_window() then
       if self._is_telescope_item_selected then
         self._is_telescope_item_selected = false

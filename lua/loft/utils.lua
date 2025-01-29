@@ -112,7 +112,7 @@ end
 ---Ensure that a function is called only once in a given time frame
 ---@param func function
 ---@param timeout number: Time in milliseconds
-utils.safe_debounce = function(func, timeout)
+utils.greedy_debounce = function(func, timeout)
   ---@diagnostic disable-next-line: redefined-local
   local last_closed_time = 0
   return function(...)
