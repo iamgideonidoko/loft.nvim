@@ -310,7 +310,7 @@ function Registry:keymap_recent_marked_buffers()
     pcall(vim.keymap.del, "n", key)
   end
   local count = 1
-  for i = #marked_buffers, math.max(1, #marked_buffers - 1), -1 do
+  for i = #marked_buffers, math.max(1, #marked_buffers - 8), -1 do
     local buf = marked_buffers[i]
     if utils.is_buffer_valid(buf) then
       local buffer = vim.fn.getbufinfo(buf)[1]
