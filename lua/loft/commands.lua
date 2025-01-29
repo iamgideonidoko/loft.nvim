@@ -10,7 +10,7 @@ commands.setup = function()
   vim.api.nvim_create_user_command(
     "LoftToggleSmartOrder",
     actions.toggle_smart_order.func,
-    { desc = "Toggle Smart Order ON and OFF" }
+    { desc = actions.toggle_smart_order.desc }
   )
 end
 
