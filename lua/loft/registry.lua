@@ -211,6 +211,14 @@ function Registry:_overwrite_telescope_select()
   action_set.select = action_set_clone.select
 end
 
+local debounced_keymap_recent_marked_buffers = utils.debounce(
+  ---@param self loft.Registry
+  function(self)
+    self:keymap_recent_marked_buffers()
+  end,
+  800
+)
+
 ---Store a given buffer's mark state in b:scoped variables
 ---@param buffer integer
 ---@param mark_state boolean
@@ -222,7 +230,7 @@ function Registry:_mark_buffer(buffer, mark_state)
     pcall(vim.api.nvim_buf_del_var, buffer, constants.MARK_STATE_ID)
   end
   events.buffer_mark(buffer, self:is_buffer_marked(buffer))
-  self:keymap_recent_marked_buffers()
+  debounced_keymap_recent_marked_buffers(self)
 end
 
 ---Check if a given buffer is marked
@@ -322,7 +330,7 @@ end
 
 ---Called at the end of all methods that mutate registry
 function Registry:on_change()
-  self:keymap_recent_marked_buffers()
+  debounced_keymap_recent_marked_buffers(self)
 end
 
 return Registry:new()
