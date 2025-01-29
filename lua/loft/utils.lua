@@ -115,11 +115,11 @@ end
 utils.safe_debounce = function(func, timeout)
   ---@diagnostic disable-next-line: redefined-local
   local last_closed_time = 0
-  return function()
+  return function(...)
     local current_time = vim.fn.reltimefloat(vim.fn.reltime()) * 1000
     if current_time - last_closed_time > timeout then
       last_closed_time = current_time
-      func()
+      func(...)
     end
   end
 end
