@@ -383,6 +383,7 @@ function UI:_show_help()
     "Commands:",
     " :LoftToggle - Toggle the Loft UI",
     " :LoftToggleSmartOrder - Toggle Smart Order ON and OFF",
+    " :LoftToggleMark - Toggle mark current buffer",
     "",
   }) do
     table.insert(content, value)
