@@ -183,6 +183,17 @@ actions.toggle_smart_order = {
   end,
 }
 
+---Switch to the alternate buffer without updating the registry
+---@type fun()
+actions.switch_to_alt_buffer = {
+  desc = "Switch to alternate buffer (no registry update)",
+  func = function()
+    registry_instance:pause_update()
+    vim.cmd("e #")
+    registry_instance:resume_update()
+  end,
+}
+
 for _, action in pairs(actions) do
   setmetatable(action, {
     __call = function(_, ...)
