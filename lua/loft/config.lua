@@ -65,6 +65,7 @@ local default_config = {
       ["<leader>lp"] = actions.switch_to_prev_marked_buffer,
       ["<leader>lm"] = actions.toggle_mark_current_buffer,
       ["<leader>ls"] = actions.toggle_smart_order,
+      ["<leader>la"] = actions.switch_to_alt_buffer,
     },
   },
 }
