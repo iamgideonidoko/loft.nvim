@@ -189,7 +189,11 @@ actions.switch_to_alt_buffer = {
   desc = "Switch to alternate buffer (no registry update)",
   func = function()
     registry_instance:pause_update()
-    vim.cmd("e #")
+    ---@diagnostic disable-next-line: param-type-mismatch
+    local ok = pcall(vim.cmd, "e #")
+    if not ok then
+      vim.notify("No alternate buffer", vim.log.levels.ERROR)
+    end
     registry_instance:resume_update()
   end,
 }
