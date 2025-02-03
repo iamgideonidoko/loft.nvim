@@ -1,0 +1,418 @@
+==============================================================================
+------------------------------------------------------------------------------
+                                                        *setup_general_keymap()*
+                       `setup_general_keymap`({keymaps})
+Parameters ~
+{keymaps} loft.GeneralKeymapsConfig
+
+------------------------------------------------------------------------------
+                                                                  *loft.setup()*
+                              `loft.setup`({opts})
+Parameters ~
+{opts} `(optional)` loft.SetupConfig
+
+
+==============================================================================
+------------------------------------------------------------------------------
+                                                             *registry_instance*
+                              `registry_instance`
+
+------------------------------------------------------------------------------
+Class ~
+{(exact)} loft.Action
+Fields ~
+{desc} `(string)`
+{func} `(function)`
+
+------------------------------------------------------------------------------
+                                                                       *actions*
+                                   `actions`
+Type ~
+`(table<string, loft.Action>)`
+
+------------------------------------------------------------------------------
+                                                          *actions.close_buffer*
+                             `actions.close_buffer`
+Delete a buffer without closing splits
+Type ~
+`(fun(opts: { force?: boolean, buffer?: integer }))`
+
+------------------------------------------------------------------------------
+                                                 *actions.switch_to_next_buffer*
+                        `actions.switch_to_next_buffer`
+to the next buffer in registry
+Type ~
+`(fun())`
+
+------------------------------------------------------------------------------
+                                                 *actions.switch_to_prev_buffer*
+                        `actions.switch_to_prev_buffer`
+to the previous buffer in registry
+Type ~
+`(fun())`
+
+------------------------------------------------------------------------------
+                                                             *actions.open_loft*
+                              `actions.open_loft`
+Type ~
+`(fun())`
+
+------------------------------------------------------------------------------
+                                          *actions.switch_to_next_marked_buffer*
+                     `actions.switch_to_next_marked_buffer`
+to the next marked buffer in registry
+Type ~
+`(fun())`
+
+------------------------------------------------------------------------------
+                                          *actions.switch_to_prev_marked_buffer*
+                     `actions.switch_to_prev_marked_buffer`
+to the prev marked buffer in registry
+Type ~
+`(fun())`
+
+------------------------------------------------------------------------------
+                                            *actions.toggle_mark_current_buffer*
+                      `actions.toggle_mark_current_buffer`
+mark the current buffer
+Type ~
+`(fun(opts?: { notify?: boolean }))`
+
+------------------------------------------------------------------------------
+                                                    *actions.toggle_smart_order*
+                          `actions.toggle_smart_order`
+the smart order status
+Type ~
+`(fun(opts: { notify?: boolean }))`
+
+------------------------------------------------------------------------------
+                                                  *actions.switch_to_alt_buffer*
+                         `actions.switch_to_alt_buffer`
+to the alternate buffer without updating the registry
+Type ~
+`(fun())`
+
+
+==============================================================================
+------------------------------------------------------------------------------
+Class ~
+{(exact)} loft.SetupConfig
+Fields ~
+{keymaps} `(optional)` loft.KeymapConfig
+{move_curr_buf_on_telescope_select} `(optional)` `(boolean)` Whether to move the current buffer to the last of the registry during Telescope selection just before the selected buffer
+{close_invalid_buf_on_switch} `(optional)` `(boolean)` Whether to close invalid buffers when switching buffers
+{enable_smart_order_by_default} `(optional)` `(boolean)` Whether to enable smart order by default
+{window} `(optional)` loft.WinOpts
+
+------------------------------------------------------------------------------
+Class ~
+{(exact)} loft.WinOpts
+Fields ~
+{width} `(optional)` `(integer)` Defaults to calculated width
+{height} `(optional)` `(integer)` Defaults to calculated height
+{zindex} `(optional)` `(integer)`
+{title_pos} `(optional)` "left"|"right"|"center"
+{border} `(optional)` `("none"|"single"|"double"|"rounded"|"solid"|"shadow"|string[])`
+
+------------------------------------------------------------------------------
+Class ~
+{(exact)} loft.KeymapConfig
+Fields ~
+{ui} `(optional)` `(table<string, 'move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'|'show_help'|'move_up_to_marked_entry'|'move_down_to_marked_entry'|function|false>)`
+{general} `(optional)` `(table<string, { callback: function|loft.Action, desc: string }|function|loft.Action|false>)` For keys mapped outside of Loft in `normal` mode
+
+------------------------------------------------------------------------------
+                                                                *default_config*
+                                `default_config`
+Type ~
+loft.SetupConfig
+
+------------------------------------------------------------------------------
+                                                                        *config*
+                                    `config`
+Class ~
+{loft.Config}
+Fields ~
+{all} `(optional)` loft.SetupConfig
+
+------------------------------------------------------------------------------
+                                                                    *config.all*
+                                  `config.all`
+Type ~
+loft.SetupConfig
+
+------------------------------------------------------------------------------
+                                                                *config.setup()*
+                             `config.setup`({opts})
+Type ~
+`(fun(opts?: loft.SetupConfig))`
+
+
+==============================================================================
+------------------------------------------------------------------------------
+                                                          *events.buffer_mark()*
+                  `events.buffer_mark`({buffer}, {mark_state})
+Parameters ~
+{buffer} `(integer)`
+{mark_state} `(boolean)`
+
+------------------------------------------------------------------------------
+                                                   *events.smart_order_toggle()*
+                `events.smart_order_toggle`({smart_order_state})
+Parameters ~
+{smart_order_state} `(boolean)`
+
+
+==============================================================================
+------------------------------------------------------------------------------
+                                                                      *Registry*
+                                   `Registry`
+Class ~
+{loft.Registry}
+Fields ~
+{private} _registry `(integer[])`
+{private} _update_paused `(boolean)`
+{private} _update_paused_once `(boolean)`
+{private} _is_telescope_item_selected `(boolean)`
+{private} _is_smart_order_on `(boolean)`
+{close_invalid_buf_on_switch} `(boolean)`
+
+------------------------------------------------------------------------------
+                                                              *Registry:clean()*
+                               `Registry:clean`()
+up invalid buffers from registry
+
+------------------------------------------------------------------------------
+                                                    *Registry:get_next_buffer()*
+                          `Registry:get_next_buffer`()
+the next buffer in registry
+
+------------------------------------------------------------------------------
+                                                    *Registry:get_prev_buffer()*
+                          `Registry:get_prev_buffer`()
+the previous buffer in registry
+
+------------------------------------------------------------------------------
+                                                     *Registry:move_buffer_up()*
+                 `Registry:move_buffer_up`({buf_idx}, {cyclic})
+given buffer with the previous buffer in registry
+Parameters ~
+{buf_idx} `(integer)` Index of buffer
+{cyclic} `(optional)` `(boolean)` Should swap be cyclic or not i.e from first to last
+
+------------------------------------------------------------------------------
+                                                   *Registry:move_buffer_down()*
+                `Registry:move_buffer_down`({buf_idx}, {cyclic})
+given buffer with the next buffer in registry
+Parameters ~
+{buf_idx} `(integer)` Index of buffer
+{cyclic} `(optional)` `(boolean)` Whether the swap should be cyclic or not i.e from last to first
+
+------------------------------------------------------------------------------
+                                                              *Registry:setup()*
+                            `Registry:setup`({opts})
+on plugin setup
+Parameters ~
+{opts}  { track_telescope_select: `(boolean,)` close_invalid_buf_on_switch: boolean, enable_smart_order_by_default: boolean }
+
+------------------------------------------------------------------------------
+                                                   *Registry:is_buffer_marked()*
+                     `Registry:is_buffer_marked`({buffer})
+if a given buffer is marked
+Parameters ~
+{buffer} `(integer)`
+
+------------------------------------------------------------------------------
+                                                 *Registry:toggle_mark_buffer()*
+                    `Registry:toggle_mark_buffer`({buffer})
+the mark state of a given buffer
+Parameters ~
+{buffer} `(integer)`
+Return ~
+`(boolean)` New mark state of given buffer
+
+------------------------------------------------------------------------------
+                                                  *Registry:get_marked_buffer()*
+              `Registry:get_marked_buffer`({direction}, {buffer})
+the next or prev marked buffer in registry
+Parameters ~
+{direction}  'next'|'prev'
+{buffer} `(optional)`  `(integer)`
+
+------------------------------------------------------------------------------
+                                                 *Registry:toggle_smart_order()*
+                        `Registry:toggle_smart_order`()
+Return ~
+`(boolean)` New state of smart order
+
+------------------------------------------------------------------------------
+                                       *Registry:keymap_recent_marked_buffers()*
+                   `Registry:keymap_recent_marked_buffers`()
+navigation keymaps for the 9 most recent marked buffers
+
+------------------------------------------------------------------------------
+                                                          *Registry:on_change()*
+                             `Registry:on_change`()
+at the end of all methods that mutate registry
+
+
+==============================================================================
+------------------------------------------------------------------------------
+                                                                            *UI*
+                                      `UI`
+Class ~
+{loft.UI}
+Fields ~
+{private} _win_id `(integer|nil)`
+{private} _buf_id `(integer|nil)`
+{private} _last_win_before_loft `(integer|nil)`
+{private} _last_buf_before_loft `(integer|nil)`
+{registry_instance} loft.Registry
+{private} _keymaps `(table<string, 'move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'|'show_help'|'move_up_to_marked_entry'|'move_down_to_marked_entry'|function|false>|nil)`
+{private} _general_keymaps `(table<string, { callback: function|loft.Action, desc: string }|function|loft.Action|false>)` For keys mapped outside of Loft in `normal` mode|nil
+{private} _help_win_id `(integer|nil)`
+{private} _help_buf_id `(integer|nil)`
+{private} _window `(loft.WinOpts|nil)`
+
+------------------------------------------------------------------------------
+                                                                      *UI:new()*
+                         `UI:new`({registry_instance})
+Parameters ~
+{registry_instance} loft.Registry
+
+------------------------------------------------------------------------------
+                                                                    *UI:setup()*
+                               `UI:setup`({opts})
+Parameters ~
+{opts}  { keymaps: `(table<string, 'move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'|'show_help'|'move_up_to_marked_entry'|'move_down_to_marked_entry'|function|false>,)` general_keymaps: table<string, { callback: function|loft.Action, desc: string }|function|loft.Action|false> For keys mapped outside of Loft in `normal` mode, window: loft.WinOpts }
+
+------------------------------------------------------------------------------
+                                                       *UI:toggle_smart_order()*
+                           `UI:toggle_smart_order`()
+Return ~
+`(boolean)` New state of smart order
+
+------------------------------------------------------------------------------
+                                                                   *UI:toggle()*
+                                 `UI:toggle`()
+the main UI window
+
+------------------------------------------------------------------------------
+                                                                  *UI:is_open()*
+                                 `UI:is_open`()
+if the main UI window is open
+
+------------------------------------------------------------------------------
+                                                          *UI:get_buffer_mark()*
+                         `UI:get_buffer_mark`({buffer})
+the mark (string) of the given or current buffer
+Parameters ~
+{buffer} `(optional)` `(integer)`
+
+------------------------------------------------------------------------------
+                                                    *UI:smart_order_indicator()*
+                          `UI:smart_order_indicator`()
+the smart order indicator (string)
+
+
+==============================================================================
+------------------------------------------------------------------------------
+                                                    *utils.is_floating_window()*
+                      `utils.is_floating_window`({window})
+if the given or current or window is a floating
+Parameters ~
+{window} `(optional)` `(number)`
+
+------------------------------------------------------------------------------
+                                                       *utils.is_buffer_valid()*
+                         `utils.is_buffer_valid`({buf})
+if the given buffer is valid (listed)
+Parameters ~
+{buf} `(number)`
+
+------------------------------------------------------------------------------
+                                                 *utils.get_all_valid_buffers()*
+                        `utils.get_all_valid_buffers`()
+if the given or current or window is a floating
+
+------------------------------------------------------------------------------
+                                                        *utils.merge_distinct()*
+                   `utils.merge_distinct`({table1}, {table2})
+two tables (arrays of integers) and return a final table with distinct values
+Parameters ~
+{table1} `(integer[])`
+{table2} `(integer[])`
+Return ~
+`(integer[])`
+
+------------------------------------------------------------------------------
+                                                     *utils.buffer_modifiable()*
+                 `utils.buffer_modifiable`({buf}, {modifiable})
+buffer modifiable or not
+Parameters ~
+{buf} `(integer)`
+{modifiable} `(boolean)`
+
+------------------------------------------------------------------------------
+                                                         *utils.buffer_exists()*
+                          `utils.buffer_exists`({buf})
+if buffer exists or not
+Parameters ~
+{buf} `(integer|nil)`
+
+------------------------------------------------------------------------------
+                                                         *utils.window_exists()*
+                          `utils.window_exists`({win})
+if window exists or not
+Parameters ~
+{win} `(integer|nil)`
+
+------------------------------------------------------------------------------
+                                                             *utils.get_index()*
+                       `utils.get_index`({table}, {item})
+the index of a given item in an table (array)
+Parameters ~
+{table} `(any[])`
+{item} `(any)`
+
+------------------------------------------------------------------------------
+                                                        *utils.table_includes()*
+                    `utils.table_includes`({table}, {value})
+if a table (array) includes a given value
+Parameters ~
+{table} `(any[])`
+{value} `(any)`
+
+------------------------------------------------------------------------------
+                                                           *utils.get_augroup()*
+                      `utils.get_augroup`({name}, {clear})
+safe autocommand group
+Parameters ~
+{name} `(string)`
+{clear} `(boolean)`
+
+------------------------------------------------------------------------------
+                                                       *utils.greedy_debounce()*
+                   `utils.greedy_debounce`({func}, {timeout})
+that a function is greedily called only once in a given time frame
+Parameters ~
+{func} `(function)`
+{timeout} `(number)` Time in milliseconds
+
+------------------------------------------------------------------------------
+                                                  *utils.buf_has_deleted_file()*
+                     `utils.buf_has_deleted_file`({buffer})
+if the given or current buffer has a deleted or missing file
+Parameters ~
+{buffer} `(optional)` `(integer)`
+
+------------------------------------------------------------------------------
+                                                              *utils.debounce()*
+                      `utils.debounce`({func}, {timeout})
+that a function is called only once in a given time frame
+Parameters ~
+{func} `(function)`
+{timeout} `(number)` Time in milliseconds
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:
