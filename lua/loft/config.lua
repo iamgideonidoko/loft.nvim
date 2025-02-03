@@ -2,25 +2,25 @@ local actions = require("loft.actions")
 
 ---@alias loft.UIKeymapsActions 'move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'|'show_help'|'move_up_to_marked_entry'|'move_down_to_marked_entry'
 ---@alias loft.UIKeymapsConfig table<string, loft.UIKeymapsActions|function|false>
----@alias loft.GeneralKeymapsConfig table<string, { callback: function|loft.Action, desc: string }|function|loft.Action|false>: For keys mapped outside of Loft in `normal` mode
+---@alias loft.GeneralKeymapsConfig table<string, { callback: function|loft.Action, desc: string }|function|loft.Action|false> For keys mapped outside of Loft in `normal` mode
 
 ---@class (exact) loft.SetupConfig
----@field keymaps loft.KeymapConfig?
----@field move_curr_buf_on_telescope_select boolean?: Whether to move the current buffer to the last of the registry during Telescope selection just before the selected buffer
----@field close_invalid_buf_on_switch boolean?: Whether to close invalid buffers when switching buffers
----@field enable_smart_order_by_default boolean?: Whether to enable smart order by default
----@field window loft.WinOpts?
+---@field keymaps? loft.KeymapConfig
+---@field move_curr_buf_on_telescope_select? boolean Whether to move the current buffer to the last of the registry during Telescope selection just before the selected buffer
+---@field close_invalid_buf_on_switch? boolean Whether to close invalid buffers when switching buffers
+---@field enable_smart_order_by_default? boolean Whether to enable smart order by default
+---@field window? loft.WinOpts
 
 ---@class (exact) loft.WinOpts
----@field width integer?: Defaults to calculated width
----@field height integer?: Defaults to calculated height
----@field zindex integer?
----@field title_pos "left"|"right"|"center"?
----@field border "none"|"single"|"double"|"rounded"|"solid"|"shadow"|string[]?
+---@field width? integer Defaults to calculated width
+---@field height? integer Defaults to calculated height
+---@field zindex? integer
+---@field title_pos? "left"|"right"|"center"
+---@field border? "none"|"single"|"double"|"rounded"|"solid"|"shadow"|string[]
 
 ---@class (exact) loft.KeymapConfig
----@field ui loft.UIKeymapsConfig?
----@field general loft.GeneralKeymapsConfig?
+---@field ui? loft.UIKeymapsConfig
+---@field general? loft.GeneralKeymapsConfig
 
 ---@type loft.SetupConfig
 local default_config = {
@@ -71,13 +71,13 @@ local default_config = {
 }
 
 ---@class loft.Config
----@field all loft.SetupConfig?
+---@field all? loft.SetupConfig
 local config = {}
 
 ---@type loft.SetupConfig
 config.all = default_config
 
----@type fun(opts: loft.SetupConfig?)
+---@type fun(opts?: loft.SetupConfig)
 config.setup = function(opts)
   local user_config = vim.tbl_deep_extend("keep", opts or {}, default_config)
   for k, v in pairs(user_config) do

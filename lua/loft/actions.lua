@@ -9,11 +9,11 @@ local utils = require("loft.utils")
 ---@type table<string, loft.Action>
 local actions = {}
 
----Delete a buffer without closing splits
----@type fun(opts: { force: boolean?, buffer: integer? }?)
+--- Delete a buffer without closing splits
+---@type fun(opts: { force?: boolean, buffer?: integer })
 actions.close_buffer = {
   desc = "Close buffer",
-  ---@param opts { force: boolean?, buffer: integer? }?
+  ---@param opts { force?: boolean, buffer?: integer }
   func = function(opts)
     opts = opts or {}
     local current_buf = opts.buffer or vim.api.nvim_get_current_buf()
@@ -138,10 +138,10 @@ actions.switch_to_prev_marked_buffer = {
 }
 
 ---Toggle mark the current buffer
----@type fun(opts: { notify: boolean? }?)
+---@type fun(opts?: { notify?: boolean })
 actions.toggle_mark_current_buffer = {
   desc = "Toggle mark current buffer",
-  ---@param opts { notify: boolean? }?
+  ---@param opts? { notify?: boolean }
   func = function(opts)
     opts = opts or {}
     if opts.notify == nil then
@@ -162,10 +162,10 @@ actions.toggle_mark_current_buffer = {
 }
 
 ---Toggle the smart order status
----@type fun(opts: { notify: boolean? }?)
+---@type fun(opts: { notify?: boolean })
 actions.toggle_smart_order = {
   desc = "Toggle Smart Order ON and OFF",
-  ---@type fun(opts: { notify: boolean? }?)
+  ---@type fun(opts?: { notify?: boolean })
   func = function(opts)
     opts = opts or {}
     if opts.notify == nil then

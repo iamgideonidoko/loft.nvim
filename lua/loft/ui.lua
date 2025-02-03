@@ -323,7 +323,7 @@ function UI:_get_footer()
   return " Smart Order: " .. (self.registry_instance:is_smart_order_on() and "ON" or "OFF") .. " "
 end
 
----@return boolean: New state of smart order
+---@return boolean New state of smart order
 function UI:toggle_smart_order()
   local new_state = self.registry_instance:toggle_smart_order()
   if utils.window_exists(self._win_id) then
@@ -477,7 +477,7 @@ function UI:_move_to_marked_entry(direction)
 end
 
 ---Get the mark (string) of the given or current buffer
----@param buffer integer?
+---@param buffer? integer
 function UI:get_buffer_mark(buffer)
   local buf = buffer or vim.api.nvim_get_current_buf()
   local is_marked = self.registry_instance:is_buffer_marked(buf)

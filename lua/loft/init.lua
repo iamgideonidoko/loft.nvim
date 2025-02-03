@@ -21,7 +21,7 @@ local function setup_general_keymap(keymaps)
   end
 end
 
----@param opts loft.SetupConfig?
+---@param opts? loft.SetupConfig
 loft.setup = function(opts)
   config.setup(opts)
   registry_instance:setup({

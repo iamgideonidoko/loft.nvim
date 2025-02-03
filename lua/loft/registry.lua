@@ -27,7 +27,7 @@ function Registry:get_registry()
 end
 
 ---Update registry to move the given or current buffer to last
----@param buffer integer?
+---@param buffer? integer
 ---@private
 function Registry:_update(buffer)
   local buf = buffer or vim.api.nvim_get_current_buf()
@@ -130,8 +130,8 @@ function Registry:get_prev_buffer()
 end
 
 ---Swap given buffer with the previous buffer in registry
----@param buf_idx integer: Index of buffer
----@param cyclic boolean?: Should swap be cyclic or not i.e from first to last
+---@param buf_idx integer Index of buffer
+---@param cyclic? boolean Should swap be cyclic or not i.e from first to last
 function Registry:move_buffer_up(buf_idx, cyclic)
   if buf_idx > 1 then
     local buffer = self._registry[buf_idx]
@@ -146,8 +146,8 @@ function Registry:move_buffer_up(buf_idx, cyclic)
 end
 
 ---Swap given buffer with the next buffer in registry
----@param buf_idx integer: Index of buffer
----@param cyclic boolean?: Whether the swap should be cyclic or not i.e from last to first
+---@param buf_idx integer Index of buffer
+---@param cyclic? boolean Whether the swap should be cyclic or not i.e from last to first
 function Registry:move_buffer_down(buf_idx, cyclic)
   if buf_idx < #self._registry then
     local buffer = self._registry[buf_idx]
@@ -245,7 +245,7 @@ end
 
 ---Toggle the mark state of a given buffer
 ---@param buffer integer
----@return boolean: New mark state of given buffer
+---@return boolean New mark state of given buffer
 function Registry:toggle_mark_buffer(buffer)
   self:_mark_buffer(buffer, not self:is_buffer_marked(buffer))
   return self:is_buffer_marked(buffer)
@@ -253,7 +253,7 @@ end
 
 ---Get the next or prev marked buffer in registry
 ---@param direction  'next'|'prev'
----@param buffer  integer?
+---@param buffer?  integer
 function Registry:get_marked_buffer(direction, buffer)
   local current_buf = buffer or vim.api.nvim_get_current_buf()
   local current_index = nil
@@ -282,7 +282,7 @@ function Registry:is_smart_order_on()
   return self._is_smart_order_on
 end
 
----@return boolean: New state of smart order
+---@return boolean New state of smart order
 function Registry:toggle_smart_order()
   self._is_smart_order_on = not self._is_smart_order_on
   events.smart_order_toggle(self._is_smart_order_on)

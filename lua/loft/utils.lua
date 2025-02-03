@@ -11,7 +11,7 @@ utils.is_dev = function()
 end
 
 ---Check if the given or current or window is a floating
----@param window number?
+---@param window? number
 utils.is_floating_window = function(window)
   local win_id = window or vim.api.nvim_get_current_win()
   local win_config = vim.api.nvim_win_get_config(win_id)
@@ -111,7 +111,7 @@ end
 
 ---Ensure that a function is greedily called only once in a given time frame
 ---@param func function
----@param timeout number: Time in milliseconds
+---@param timeout number Time in milliseconds
 utils.greedy_debounce = function(func, timeout)
   ---@diagnostic disable-next-line: redefined-local
   local last_closed_time = 0
@@ -125,7 +125,7 @@ utils.greedy_debounce = function(func, timeout)
 end
 
 ---Check if the given or current buffer has a deleted or missing file
----@param buffer integer?
+---@param buffer? integer
 utils.buf_has_deleted_file = function(buffer)
   local buf = buffer or vim.api.nvim_get_current_buf()
   local ok, buftype = pcall(vim.api.nvim_get_option_value, "buftype", { buf = buf })
@@ -145,7 +145,7 @@ end
 
 ---Ensure that a function is called only once in a given time frame
 ---@param func function
----@param timeout number: Time in milliseconds
+---@param timeout number Time in milliseconds
 utils.debounce = function(func, timeout)
   local timer = nil
   return function(...)
