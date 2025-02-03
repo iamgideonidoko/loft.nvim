@@ -9,6 +9,7 @@ local actions = require("loft.actions")
 ---@field move_curr_buf_on_telescope_select? boolean Whether to move the current buffer to the last of the registry during Telescope selection just before the selected buffer
 ---@field close_invalid_buf_on_switch? boolean Whether to close invalid buffers when switching buffers
 ---@field enable_smart_order_by_default? boolean Whether to enable smart order by default
+---@field smart_order_marked_bufs? boolean Whether smart order should reposition marked buffers
 ---@field window? loft.WinOpts
 
 ---@class (exact) loft.WinOpts
@@ -27,6 +28,7 @@ local default_config = {
   move_curr_buf_on_telescope_select = true,
   close_invalid_buf_on_switch = true,
   enable_smart_order_by_default = true,
+  smart_order_marked_bufs = true,
   window = {
     width = nil,
     height = nil,

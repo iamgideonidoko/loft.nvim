@@ -28,6 +28,7 @@ loft.setup = function(opts)
     track_telescope_select = config.all.move_curr_buf_on_telescope_select,
     close_invalid_buf_on_switch = config.all.close_invalid_buf_on_switch,
     enable_smart_order_by_default = config.all.enable_smart_order_by_default,
+    smart_order_marked_bufs = config.all.smart_order_marked_bufs,
   })
   ui_instance:setup({
     keymaps = config.all.keymaps.ui,

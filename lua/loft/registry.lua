@@ -8,6 +8,7 @@ local constants = require("loft.constants")
 ---@field private _update_paused_once boolean
 ---@field private _is_telescope_item_selected boolean
 ---@field private _is_smart_order_on boolean
+---@field private _smart_order_marked_bufs boolean
 ---@field close_invalid_buf_on_switch boolean
 local Registry = {}
 Registry.__index = Registry
@@ -19,6 +20,7 @@ function Registry:new()
   instance._update_paused_once = false
   instance._is_telescope_item_selected = false
   instance._is_smart_order_on = true
+  instance._smart_order_marked_bufs = true
   return instance
 end
 
@@ -39,10 +41,12 @@ function Registry:_update(buffer)
     return
   end
   local is_buffer_in_registry = false
+  local should_smart_order = self._is_smart_order_on
+    and (not self:is_buffer_marked(buf) or (self._smart_order_marked_bufs and self:is_buffer_marked(buf)))
   for i, b in ipairs(self._registry) do
     if b == buf then
       is_buffer_in_registry = true
-      if self._is_smart_order_on then
+      if should_smart_order then
         table.remove(self._registry, i)
       end
       break
@@ -51,7 +55,7 @@ function Registry:_update(buffer)
   if not utils.is_buffer_valid(buf) then
     return
   end
-  if is_buffer_in_registry and not self._is_smart_order_on then
+  if is_buffer_in_registry and not should_smart_order then
     return
   end
   table.insert(self._registry, buf)
@@ -162,10 +166,11 @@ function Registry:move_buffer_down(buf_idx, cyclic)
 end
 
 ---Called on plugin setup
----@param opts  { track_telescope_select: boolean, close_invalid_buf_on_switch: boolean, enable_smart_order_by_default: boolean }
+---@param opts  { track_telescope_select: boolean, close_invalid_buf_on_switch: boolean, enable_smart_order_by_default: boolean, smart_order_marked_bufs: boolean }
 function Registry:setup(opts)
   self.close_invalid_buf_on_switch = opts.close_invalid_buf_on_switch
   self._is_smart_order_on = opts.enable_smart_order_by_default
+  self._smart_order_marked_bufs = opts.smart_order_marked_bufs
   vim.api.nvim_create_autocmd("BufEnter", {
     group = utils.get_augroup("UpdateRegistry", true),
     callback = function()
