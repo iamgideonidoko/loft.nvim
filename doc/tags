@@ -37,7 +37,6 @@ events.buffer_mark()	loft.txt	/*events.buffer_mark()*
 events.smart_order_toggle()	loft.txt	/*events.smart_order_toggle()*
 loft.setup()	loft.txt	/*loft.setup()*
 registry_instance	loft.txt	/*registry_instance*
-setup_general_keymap()	loft.txt	/*setup_general_keymap()*
 utils.buf_has_deleted_file()	loft.txt	/*utils.buf_has_deleted_file()*
 utils.buffer_exists()	loft.txt	/*utils.buffer_exists()*
 utils.buffer_modifiable()	loft.txt	/*utils.buffer_modifiable()*

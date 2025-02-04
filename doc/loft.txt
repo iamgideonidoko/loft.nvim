@@ -1,11 +1,5 @@
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                        *setup_general_keymap()*
-                       `setup_general_keymap`({keymaps})
-Parameters ~
-{keymaps} loft.GeneralKeymapsConfig
-
-------------------------------------------------------------------------------
                                                                   *loft.setup()*
                               `loft.setup`({opts})
 Parameters ~
@@ -40,14 +34,14 @@ Type ~
 ------------------------------------------------------------------------------
                                                  *actions.switch_to_next_buffer*
                         `actions.switch_to_next_buffer`
-to the next buffer in registry
+Navigate to the next buffer in registry
 Type ~
 `(fun())`
 
 ------------------------------------------------------------------------------
                                                  *actions.switch_to_prev_buffer*
                         `actions.switch_to_prev_buffer`
-to the previous buffer in registry
+Navigate to the previous buffer in registry
 Type ~
 `(fun())`
 
@@ -60,35 +54,35 @@ Type ~
 ------------------------------------------------------------------------------
                                           *actions.switch_to_next_marked_buffer*
                      `actions.switch_to_next_marked_buffer`
-to the next marked buffer in registry
+Navigate to the next marked buffer in registry
 Type ~
 `(fun())`
 
 ------------------------------------------------------------------------------
                                           *actions.switch_to_prev_marked_buffer*
                      `actions.switch_to_prev_marked_buffer`
-to the prev marked buffer in registry
+Navigate to the prev marked buffer in registry
 Type ~
 `(fun())`
 
 ------------------------------------------------------------------------------
                                             *actions.toggle_mark_current_buffer*
                       `actions.toggle_mark_current_buffer`
-mark the current buffer
+Toggle mark the current buffer
 Type ~
 `(fun(opts?: { notify?: boolean }))`
 
 ------------------------------------------------------------------------------
                                                     *actions.toggle_smart_order*
                           `actions.toggle_smart_order`
-the smart order status
+Toggle the smart order status
 Type ~
 `(fun(opts: { notify?: boolean }))`
 
 ------------------------------------------------------------------------------
                                                   *actions.switch_to_alt_buffer*
                          `actions.switch_to_alt_buffer`
-to the alternate buffer without updating the registry
+Switch to the alternate buffer without updating the registry
 Type ~
 `(fun())`
 
@@ -102,6 +96,9 @@ Fields ~
 {move_curr_buf_on_telescope_select} `(optional)` `(boolean)` Whether to move the current buffer to the last of the registry during Telescope selection just before the selected buffer
 {close_invalid_buf_on_switch} `(optional)` `(boolean)` Whether to close invalid buffers when switching buffers
 {enable_smart_order_by_default} `(optional)` `(boolean)` Whether to enable smart order by default
+{smart_order_marked_bufs} `(optional)` `(boolean)` Whether smart order should reposition marked buffers
+{enable_recent_marked_mapping} `(optional)` `(boolean)` Whether the 9 most recently marked buffers should be switched to with a mapping (with keymaps)
+{post_leader_marked_mapping} `(optional)` `(string)` The character to use after leader when assigning keymap to the 9 most recently marked buffers
 {window} `(optional)` loft.WinOpts
 
 ------------------------------------------------------------------------------
@@ -165,6 +162,17 @@ Parameters ~
 
 ==============================================================================
 ------------------------------------------------------------------------------
+Class ~
+{(exact)} loft.RegistrySetupOpts
+Fields ~
+{track_telescope_select} `(boolean)`
+{close_invalid_buf_on_switch} `(boolean)`
+{smart_order_marked_bufs} `(boolean)`
+{enable_smart_order_by_default} `(boolean)`
+{enable_recent_marked_mapping} `(boolean)`
+{post_leader_marked_mapping} `(string)`
+
+------------------------------------------------------------------------------
                                                                       *Registry*
                                    `Registry`
 Class ~
@@ -175,27 +183,27 @@ Fields ~
 {private} _update_paused_once `(boolean)`
 {private} _is_telescope_item_selected `(boolean)`
 {private} _is_smart_order_on `(boolean)`
-{close_invalid_buf_on_switch} `(boolean)`
+{opts} loft.RegistrySetupOpts
 
 ------------------------------------------------------------------------------
                                                               *Registry:clean()*
                                `Registry:clean`()
-up invalid buffers from registry
+Clean up invalid buffers from registry
 
 ------------------------------------------------------------------------------
                                                     *Registry:get_next_buffer()*
                           `Registry:get_next_buffer`()
-the next buffer in registry
+Get the next buffer in registry
 
 ------------------------------------------------------------------------------
                                                     *Registry:get_prev_buffer()*
                           `Registry:get_prev_buffer`()
-the previous buffer in registry
+Get the previous buffer in registry
 
 ------------------------------------------------------------------------------
                                                      *Registry:move_buffer_up()*
                  `Registry:move_buffer_up`({buf_idx}, {cyclic})
-given buffer with the previous buffer in registry
+Swap given buffer with the previous buffer in registry
 Parameters ~
 {buf_idx} `(integer)` Index of buffer
 {cyclic} `(optional)` `(boolean)` Should swap be cyclic or not i.e from first to last
@@ -203,7 +211,7 @@ Parameters ~
 ------------------------------------------------------------------------------
                                                    *Registry:move_buffer_down()*
                 `Registry:move_buffer_down`({buf_idx}, {cyclic})
-given buffer with the next buffer in registry
+Swap given buffer with the next buffer in registry
 Parameters ~
 {buf_idx} `(integer)` Index of buffer
 {cyclic} `(optional)` `(boolean)` Whether the swap should be cyclic or not i.e from last to first
@@ -211,30 +219,30 @@ Parameters ~
 ------------------------------------------------------------------------------
                                                               *Registry:setup()*
                             `Registry:setup`({opts})
-on plugin setup
+Called on plugin setup
 Parameters ~
-{opts}  { track_telescope_select: `(boolean,)` close_invalid_buf_on_switch: boolean, enable_smart_order_by_default: boolean }
+{opts} loft.RegistrySetupOpts
 
 ------------------------------------------------------------------------------
                                                    *Registry:is_buffer_marked()*
                      `Registry:is_buffer_marked`({buffer})
-if a given buffer is marked
+Check if a given buffer is marked
 Parameters ~
 {buffer} `(integer)`
 
 ------------------------------------------------------------------------------
                                                  *Registry:toggle_mark_buffer()*
                     `Registry:toggle_mark_buffer`({buffer})
-the mark state of a given buffer
+Toggle the mark state of a given buffer
 Parameters ~
 {buffer} `(integer)`
 Return ~
-`(boolean)` New mark state of given buffer
+`(boolean:)` New mark state of given buffer
 
 ------------------------------------------------------------------------------
                                                   *Registry:get_marked_buffer()*
               `Registry:get_marked_buffer`({direction}, {buffer})
-the next or prev marked buffer in registry
+Get the next or prev marked buffer in registry
 Parameters ~
 {direction}  'next'|'prev'
 {buffer} `(optional)`  `(integer)`
@@ -243,17 +251,17 @@ Parameters ~
                                                  *Registry:toggle_smart_order()*
                         `Registry:toggle_smart_order`()
 Return ~
-`(boolean)` New state of smart order
+`(boolean:)` New state of smart order
 
 ------------------------------------------------------------------------------
                                        *Registry:keymap_recent_marked_buffers()*
                    `Registry:keymap_recent_marked_buffers`()
-navigation keymaps for the 9 most recent marked buffers
+Set navigation keymaps for the 9 most recent marked buffers
 
 ------------------------------------------------------------------------------
                                                           *Registry:on_change()*
                              `Registry:on_change`()
-at the end of all methods that mutate registry
+Called at the end of all methods that mutate registry
 
 
 ==============================================================================
@@ -290,55 +298,55 @@ Parameters ~
                                                        *UI:toggle_smart_order()*
                            `UI:toggle_smart_order`()
 Return ~
-`(boolean)` New state of smart order
+`(boolean:)` New state of smart order
 
 ------------------------------------------------------------------------------
                                                                    *UI:toggle()*
                                  `UI:toggle`()
-the main UI window
+Toggle the main UI window
 
 ------------------------------------------------------------------------------
                                                                   *UI:is_open()*
                                  `UI:is_open`()
-if the main UI window is open
+Check if the main UI window is open
 
 ------------------------------------------------------------------------------
                                                           *UI:get_buffer_mark()*
                          `UI:get_buffer_mark`({buffer})
-the mark (string) of the given or current buffer
+Get the mark (string) of the given or current buffer
 Parameters ~
 {buffer} `(optional)` `(integer)`
 
 ------------------------------------------------------------------------------
                                                     *UI:smart_order_indicator()*
                           `UI:smart_order_indicator`()
-the smart order indicator (string)
+Get the smart order indicator (string)
 
 
 ==============================================================================
 ------------------------------------------------------------------------------
                                                     *utils.is_floating_window()*
                       `utils.is_floating_window`({window})
-if the given or current or window is a floating
+Check if the given or current or window is a floating
 Parameters ~
 {window} `(optional)` `(number)`
 
 ------------------------------------------------------------------------------
                                                        *utils.is_buffer_valid()*
                          `utils.is_buffer_valid`({buf})
-if the given buffer is valid (listed)
+Check if the given buffer is valid (listed)
 Parameters ~
 {buf} `(number)`
 
 ------------------------------------------------------------------------------
                                                  *utils.get_all_valid_buffers()*
                         `utils.get_all_valid_buffers`()
-if the given or current or window is a floating
+Check if the given or current or window is a floating
 
 ------------------------------------------------------------------------------
                                                         *utils.merge_distinct()*
                    `utils.merge_distinct`({table1}, {table2})
-two tables (arrays of integers) and return a final table with distinct values
+Merge two tables (arrays of integers) and return a final table with distinct values
 Parameters ~
 {table1} `(integer[])`
 {table2} `(integer[])`
@@ -348,7 +356,7 @@ Return ~
 ------------------------------------------------------------------------------
                                                      *utils.buffer_modifiable()*
                  `utils.buffer_modifiable`({buf}, {modifiable})
-buffer modifiable or not
+Make buffer modifiable or not
 Parameters ~
 {buf} `(integer)`
 {modifiable} `(boolean)`
@@ -356,21 +364,21 @@ Parameters ~
 ------------------------------------------------------------------------------
                                                          *utils.buffer_exists()*
                           `utils.buffer_exists`({buf})
-if buffer exists or not
+Check if buffer exists or not
 Parameters ~
 {buf} `(integer|nil)`
 
 ------------------------------------------------------------------------------
                                                          *utils.window_exists()*
                           `utils.window_exists`({win})
-if window exists or not
+Check if window exists or not
 Parameters ~
 {win} `(integer|nil)`
 
 ------------------------------------------------------------------------------
                                                              *utils.get_index()*
                        `utils.get_index`({table}, {item})
-the index of a given item in an table (array)
+Get the index of a given item in an table (array)
 Parameters ~
 {table} `(any[])`
 {item} `(any)`
@@ -378,7 +386,7 @@ Parameters ~
 ------------------------------------------------------------------------------
                                                         *utils.table_includes()*
                     `utils.table_includes`({table}, {value})
-if a table (array) includes a given value
+Check if a table (array) includes a given value
 Parameters ~
 {table} `(any[])`
 {value} `(any)`
@@ -386,7 +394,7 @@ Parameters ~
 ------------------------------------------------------------------------------
                                                            *utils.get_augroup()*
                       `utils.get_augroup`({name}, {clear})
-safe autocommand group
+Get safe autocommand group
 Parameters ~
 {name} `(string)`
 {clear} `(boolean)`
@@ -394,7 +402,7 @@ Parameters ~
 ------------------------------------------------------------------------------
                                                        *utils.greedy_debounce()*
                    `utils.greedy_debounce`({func}, {timeout})
-that a function is greedily called only once in a given time frame
+Ensure that a function is greedily called only once in a given time frame
 Parameters ~
 {func} `(function)`
 {timeout} `(number)` Time in milliseconds
@@ -402,14 +410,14 @@ Parameters ~
 ------------------------------------------------------------------------------
                                                   *utils.buf_has_deleted_file()*
                      `utils.buf_has_deleted_file`({buffer})
-if the given or current buffer has a deleted or missing file
+Check if the given or current buffer has a deleted or missing file
 Parameters ~
 {buffer} `(optional)` `(integer)`
 
 ------------------------------------------------------------------------------
                                                               *utils.debounce()*
                       `utils.debounce`({func}, {timeout})
-that a function is called only once in a given time frame
+Ensure that a function is called only once in a given time frame
 Parameters ~
 {func} `(function)`
 {timeout} `(number)` Time in milliseconds
