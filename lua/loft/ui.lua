@@ -32,12 +32,12 @@ function UI:setup(opts)
   self._window = opts.window
 end
 
----Render a list of all the buffers in the registry (entries) in main UI buffer
+--- Render a list of all the buffers in the registry (entries) in main UI buffer
 ---@private
 function UI:_render_entries()
   if utils.buffer_exists(self._buf_id) then
     utils.buffer_modifiable(self._buf_id, true)
-    ---Lines to render
+    --- Lines to render
     ---@type string[]
     local buf_lines = {}
     for _, buf_id in ipairs(self.registry_instance:get_registry()) do
@@ -212,7 +212,7 @@ function UI:_setup_keymaps()
   end
 end
 
----Move cursor up in cyclic manner
+--- Move cursor up in cyclic manner
 ---@private
 function UI:_move_up()
   local current_line = vim.fn.line(".")
@@ -227,7 +227,7 @@ function UI:_move_up()
   end
 end
 
----Move cursor down in cyclic manner
+--- Move cursor down in cyclic manner
 ---@private
 function UI:_move_down()
   local current_line = vim.fn.line(".")
@@ -242,7 +242,7 @@ function UI:_move_down()
   end
 end
 
----Move entry up in cyclic manner
+--- Move entry up in cyclic manner
 ---@private
 function UI:_move_entry_up()
   local current_line = vim.fn.line(".")
@@ -259,7 +259,7 @@ function UI:_move_entry_up()
   self:_render_entries()
 end
 
----Move entry down in cyclic manner
+--- Move entry down in cyclic manner
 ---@private
 function UI:_move_entry_down()
   local current_line = vim.fn.line(".")
@@ -276,7 +276,7 @@ function UI:_move_entry_down()
   self:_render_entries()
 end
 
----Delete an entry (with its buffer)
+--- Delete an entry (with its buffer)
 ---@private
 function UI:_delete_entry()
   local current_line = vim.fn.line(".")
@@ -323,7 +323,7 @@ function UI:_get_footer()
   return " Smart Order: " .. (self.registry_instance:is_smart_order_on() and "ON" or "OFF") .. " "
 end
 
----@return boolean New state of smart order
+---@return boolean: New state of smart order
 function UI:toggle_smart_order()
   local new_state = self.registry_instance:toggle_smart_order()
   if utils.window_exists(self._win_id) then
@@ -438,7 +438,7 @@ function UI:_close_help()
   end
 end
 
----Toggle the main UI window
+--- Toggle the main UI window
 function UI:toggle()
   if utils.window_exists(self._win_id) then
     self:close()
@@ -447,12 +447,12 @@ function UI:toggle()
   end
 end
 
----Check if the main UI window is open
+--- Check if the main UI window is open
 function UI:is_open()
   return utils.window_exists(self._win_id)
 end
 
----Move up to next marked entry in the main UI window
+--- Move up to next marked entry in the main UI window
 ---@param direction  'up'|'down'
 ---@private
 function UI:_move_to_marked_entry(direction)
@@ -476,7 +476,7 @@ function UI:_move_to_marked_entry(direction)
   end
 end
 
----Get the mark (string) of the given or current buffer
+--- Get the mark (string) of the given or current buffer
 ---@param buffer? integer
 function UI:get_buffer_mark(buffer)
   local buf = buffer or vim.api.nvim_get_current_buf()
@@ -484,7 +484,7 @@ function UI:get_buffer_mark(buffer)
   return is_marked and "(✓)" or ""
 end
 
----Get the smart order indicator (string)
+--- Get the smart order indicator (string)
 function UI:smart_order_indicator()
   local is_smart_order_on = self.registry_instance:is_smart_order_on()
   local pre_status = "[⨳⨳]"

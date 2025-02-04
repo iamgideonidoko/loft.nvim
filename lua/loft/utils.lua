@@ -10,7 +10,7 @@ utils.is_dev = function()
   return lazy_config.plugins[constants.PLUGIN_NAME].dev
 end
 
----Check if the given or current or window is a floating
+--- Check if the given or current or window is a floating
 ---@param window? number
 utils.is_floating_window = function(window)
   local win_id = window or vim.api.nvim_get_current_win()
@@ -18,13 +18,13 @@ utils.is_floating_window = function(window)
   return win_config.relative ~= ""
 end
 
----Check if the given buffer is valid (listed)
+--- Check if the given buffer is valid (listed)
 ---@param buf number
 utils.is_buffer_valid = function(buf)
   return 1 == vim.fn.buflisted(buf) and not utils.buf_has_deleted_file(buf)
 end
 
----Check if the given or current or window is a floating
+--- Check if the given or current or window is a floating
 utils.get_all_valid_buffers = function()
   ---@type integer[]
   local all_valid_buffers = {}
@@ -37,7 +37,7 @@ utils.get_all_valid_buffers = function()
   return all_valid_buffers
 end
 
----Merge two tables (arrays of integers) and return a final table with distinct values
+--- Merge two tables (arrays of integers) and return a final table with distinct values
 ---@param table1 integer[]
 ---@param table2 integer[]
 ---@return integer[]
@@ -59,26 +59,26 @@ utils.merge_distinct = function(table1, table2)
   return result
 end
 
----Make buffer modifiable or not
+--- Make buffer modifiable or not
 ---@param buf integer
 ---@param modifiable boolean
 utils.buffer_modifiable = function(buf, modifiable)
   vim.api.nvim_set_option_value("modifiable", modifiable, { buf = buf })
 end
 
----Check if buffer exists or not
+--- Check if buffer exists or not
 ---@param buf integer|nil
 utils.buffer_exists = function(buf)
   return (buf and vim.api.nvim_buf_is_valid(buf)) or false
 end
 
----Check if window exists or not
+--- Check if window exists or not
 ---@param win integer|nil
 utils.window_exists = function(win)
   return (win and vim.api.nvim_win_is_valid(win)) or false
 end
 
----Get the index of a given item in an table (array)
+--- Get the index of a given item in an table (array)
 ---@param table any[]
 ---@param item any
 utils.get_index = function(table, item)
@@ -90,7 +90,7 @@ utils.get_index = function(table, item)
   return nil
 end
 
----Check if a table (array) includes a given value
+--- Check if a table (array) includes a given value
 ---@param table any[]
 ---@param value any
 utils.table_includes = function(table, value)
@@ -102,14 +102,14 @@ utils.table_includes = function(table, value)
   return false
 end
 
----Get safe autocommand group
+--- Get safe autocommand group
 ---@param name string
 ---@param clear boolean
 utils.get_augroup = function(name, clear)
   return vim.api.nvim_create_augroup(constants.DISPLAY_NAME .. name, { clear = clear })
 end
 
----Ensure that a function is greedily called only once in a given time frame
+--- Ensure that a function is greedily called only once in a given time frame
 ---@param func function
 ---@param timeout number Time in milliseconds
 utils.greedy_debounce = function(func, timeout)
@@ -124,7 +124,7 @@ utils.greedy_debounce = function(func, timeout)
   end
 end
 
----Check if the given or current buffer has a deleted or missing file
+--- Check if the given or current buffer has a deleted or missing file
 ---@param buffer? integer
 utils.buf_has_deleted_file = function(buffer)
   local buf = buffer or vim.api.nvim_get_current_buf()
@@ -143,7 +143,7 @@ utils.buf_has_deleted_file = function(buffer)
   )
 end
 
----Ensure that a function is called only once in a given time frame
+--- Ensure that a function is called only once in a given time frame
 ---@param func function
 ---@param timeout number Time in milliseconds
 utils.debounce = function(func, timeout)

@@ -8,6 +8,7 @@ local commands = require("loft.commands")
 local loft = {}
 
 ---@param keymaps loft.GeneralKeymapsConfig
+---@private
 local function setup_general_keymap(keymaps)
   for key, value in pairs(keymaps) do
     if value == false then

@@ -34,7 +34,7 @@ function Registry:get_registry()
   return self._registry
 end
 
----Update registry to move the given or current buffer to last
+--- Update registry to move the given or current buffer to last
 ---@param buffer? integer
 ---@private
 function Registry:_update(buffer)
@@ -76,7 +76,7 @@ function Registry:resume_update()
   self._update_paused = false
 end
 
----Clean up invalid buffers from registry
+--- Clean up invalid buffers from registry
 function Registry:clean()
   local valid_buffers = {}
   for _, buf in ipairs(self._registry) do
@@ -96,7 +96,7 @@ function Registry:clean()
   self:on_change()
 end
 
----Get the next buffer in registry
+--- Get the next buffer in registry
 function Registry:get_next_buffer()
   local current_buf = vim.api.nvim_get_current_buf()
   ---@type integer|nil
@@ -116,7 +116,7 @@ function Registry:get_next_buffer()
   return next_buf
 end
 
----Get the previous buffer in registry
+--- Get the previous buffer in registry
 function Registry:get_prev_buffer()
   local current_buf = vim.api.nvim_get_current_buf()
   ---@type integer|nil
@@ -139,7 +139,7 @@ function Registry:get_prev_buffer()
   return prev_buf
 end
 
----Swap given buffer with the previous buffer in registry
+--- Swap given buffer with the previous buffer in registry
 ---@param buf_idx integer Index of buffer
 ---@param cyclic? boolean Should swap be cyclic or not i.e from first to last
 function Registry:move_buffer_up(buf_idx, cyclic)
@@ -155,7 +155,7 @@ function Registry:move_buffer_up(buf_idx, cyclic)
   self:on_change()
 end
 
----Swap given buffer with the next buffer in registry
+--- Swap given buffer with the next buffer in registry
 ---@param buf_idx integer Index of buffer
 ---@param cyclic? boolean Whether the swap should be cyclic or not i.e from last to first
 function Registry:move_buffer_down(buf_idx, cyclic)
@@ -171,7 +171,7 @@ function Registry:move_buffer_down(buf_idx, cyclic)
   self:on_change()
 end
 
----Called on plugin setup
+--- Called on plugin setup
 ---@param opts loft.RegistrySetupOpts
 function Registry:setup(opts)
   self.opts = opts
@@ -202,7 +202,7 @@ function Registry:setup(opts)
   self:clean()
 end
 
----Safely overwrite telescope's select to track selection
+--- Safely overwrite telescope's select to track selection
 ---@private
 function Registry:_overwrite_telescope_select()
   local action_set_ok, action_set = pcall(require, "telescope.actions.set")
@@ -229,7 +229,7 @@ local debounced_keymap_recent_marked_buffers = utils.debounce(
   800
 )
 
----Store a given buffer's mark state in b:scoped variables
+--- Store a given buffer's mark state in b:scoped variables
 ---@param buffer integer
 ---@param mark_state boolean
 ---@private
@@ -245,7 +245,7 @@ function Registry:_mark_buffer(buffer, mark_state)
   end
 end
 
----Check if a given buffer is marked
+--- Check if a given buffer is marked
 ---@param buffer integer
 function Registry:is_buffer_marked(buffer)
   local ok, mark_state = pcall(vim.api.nvim_buf_get_var, buffer, constants.MARK_STATE_ID)
@@ -255,15 +255,15 @@ function Registry:is_buffer_marked(buffer)
   return false
 end
 
----Toggle the mark state of a given buffer
+--- Toggle the mark state of a given buffer
 ---@param buffer integer
----@return boolean New mark state of given buffer
+---@return boolean: New mark state of given buffer
 function Registry:toggle_mark_buffer(buffer)
   self:_mark_buffer(buffer, not self:is_buffer_marked(buffer))
   return self:is_buffer_marked(buffer)
 end
 
----Get the next or prev marked buffer in registry
+--- Get the next or prev marked buffer in registry
 ---@param direction  'next'|'prev'
 ---@param buffer?  integer
 function Registry:get_marked_buffer(direction, buffer)
@@ -294,15 +294,15 @@ function Registry:is_smart_order_on()
   return self._is_smart_order_on
 end
 
----@return boolean New state of smart order
+---@return boolean: New state of smart order
 function Registry:toggle_smart_order()
   self._is_smart_order_on = not self._is_smart_order_on
   events.smart_order_toggle(self._is_smart_order_on)
   return self._is_smart_order_on
 end
 
----@private
 ---@return integer[]: Marked buffers
+---@private
 function Registry:_get_marked_buffers()
   local marked_buffers = {}
   for _, buf in ipairs(self._registry) do
@@ -313,7 +313,7 @@ function Registry:_get_marked_buffers()
   return marked_buffers
 end
 
----Set navigation keymaps for the 9 most recent marked buffers
+--- Set navigation keymaps for the 9 most recent marked buffers
 function Registry:keymap_recent_marked_buffers()
   if not self.opts.enable_recent_marked_mapping then
     return
@@ -343,7 +343,7 @@ function Registry:keymap_recent_marked_buffers()
   end
 end
 
----Called at the end of all methods that mutate registry
+--- Called at the end of all methods that mutate registry
 function Registry:on_change()
   if self.opts.enable_recent_marked_mapping then
     debounced_keymap_recent_marked_buffers(self)

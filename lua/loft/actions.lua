@@ -57,7 +57,7 @@ actions.close_buffer = {
   end,
 }
 
----Navigate to the next buffer in registry
+--- Navigate to the next buffer in registry
 ---@type fun()
 actions.switch_to_next_buffer = {
   desc = "Switch to next buffer",
@@ -77,7 +77,7 @@ actions.switch_to_next_buffer = {
   end,
 }
 
----Navigate to the previous buffer in registry
+--- Navigate to the previous buffer in registry
 ---@type fun()
 actions.switch_to_prev_buffer = {
   desc = "Switch to previous buffer",
@@ -105,7 +105,7 @@ actions.open_loft = {
   end,
 }
 
----Navigate to the next marked buffer in registry
+--- Navigate to the next marked buffer in registry
 ---@type fun()
 actions.switch_to_next_marked_buffer = {
   desc = "Switch to next marked buffer",
@@ -121,7 +121,7 @@ actions.switch_to_next_marked_buffer = {
   end,
 }
 
----Navigate to the prev marked buffer in registry
+--- Navigate to the prev marked buffer in registry
 ---@type fun()
 actions.switch_to_prev_marked_buffer = {
   desc = "Switch to previous marked buffer",
@@ -137,7 +137,7 @@ actions.switch_to_prev_marked_buffer = {
   end,
 }
 
----Toggle mark the current buffer
+--- Toggle mark the current buffer
 ---@type fun(opts?: { notify?: boolean })
 actions.toggle_mark_current_buffer = {
   desc = "Toggle mark current buffer",
@@ -161,7 +161,7 @@ actions.toggle_mark_current_buffer = {
   end,
 }
 
----Toggle the smart order status
+--- Toggle the smart order status
 ---@type fun(opts: { notify?: boolean })
 actions.toggle_smart_order = {
   desc = "Toggle Smart Order ON and OFF",
@@ -183,7 +183,7 @@ actions.toggle_smart_order = {
   end,
 }
 
----Switch to the alternate buffer without updating the registry
+--- Switch to the alternate buffer without updating the registry
 ---@type fun()
 actions.switch_to_alt_buffer = {
   desc = "Switch to alternate buffer (no registry update)",
