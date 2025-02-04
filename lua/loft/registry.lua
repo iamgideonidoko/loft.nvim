@@ -2,14 +2,21 @@ local utils = require("loft.utils")
 local events = require("loft.events")
 local constants = require("loft.constants")
 
+---@class (exact) loft.RegistrySetupOpts
+---@field track_telescope_select boolean
+---@field close_invalid_buf_on_switch boolean
+---@field smart_order_marked_bufs boolean
+---@field enable_smart_order_by_default boolean
+---@field enable_recent_marked_mapping boolean
+---@field post_leader_marked_mapping string
+
 ---@class loft.Registry
 ---@field private _registry integer[]
 ---@field private _update_paused boolean
 ---@field private _update_paused_once boolean
 ---@field private _is_telescope_item_selected boolean
 ---@field private _is_smart_order_on boolean
----@field private _smart_order_marked_bufs boolean
----@field close_invalid_buf_on_switch boolean
+---@field opts loft.RegistrySetupOpts
 local Registry = {}
 Registry.__index = Registry
 
@@ -20,7 +27,6 @@ function Registry:new()
   instance._update_paused_once = false
   instance._is_telescope_item_selected = false
   instance._is_smart_order_on = true
-  instance._smart_order_marked_bufs = true
   return instance
 end
 
@@ -42,7 +48,7 @@ function Registry:_update(buffer)
   end
   local is_buffer_in_registry = false
   local should_smart_order = self._is_smart_order_on
-    and (not self:is_buffer_marked(buf) or (self._smart_order_marked_bufs and self:is_buffer_marked(buf)))
+    and (not self:is_buffer_marked(buf) or (self.opts.smart_order_marked_bufs and self:is_buffer_marked(buf)))
   for i, b in ipairs(self._registry) do
     if b == buf then
       is_buffer_in_registry = true
@@ -166,11 +172,10 @@ function Registry:move_buffer_down(buf_idx, cyclic)
 end
 
 ---Called on plugin setup
----@param opts  { track_telescope_select: boolean, close_invalid_buf_on_switch: boolean, enable_smart_order_by_default: boolean, smart_order_marked_bufs: boolean }
+---@param opts loft.RegistrySetupOpts
 function Registry:setup(opts)
-  self.close_invalid_buf_on_switch = opts.close_invalid_buf_on_switch
+  self.opts = opts
   self._is_smart_order_on = opts.enable_smart_order_by_default
-  self._smart_order_marked_bufs = opts.smart_order_marked_bufs
   vim.api.nvim_create_autocmd("BufEnter", {
     group = utils.get_augroup("UpdateRegistry", true),
     callback = function()
@@ -235,7 +240,9 @@ function Registry:_mark_buffer(buffer, mark_state)
     pcall(vim.api.nvim_buf_del_var, buffer, constants.MARK_STATE_ID)
   end
   events.buffer_mark(buffer, self:is_buffer_marked(buffer))
-  debounced_keymap_recent_marked_buffers(self)
+  if self.opts.enable_recent_marked_mapping then
+    debounced_keymap_recent_marked_buffers(self)
+  end
 end
 
 ---Check if a given buffer is marked
@@ -308,7 +315,10 @@ end
 
 ---Set navigation keymaps for the 9 most recent marked buffers
 function Registry:keymap_recent_marked_buffers()
-  local pre_key = "<leader>l"
+  if not self.opts.enable_recent_marked_mapping then
+    return
+  end
+  local pre_key = "<leader>" .. self.opts.post_leader_marked_mapping
   local marked_buffers = self:_get_marked_buffers()
   for i = 1, 9 do
     local key = pre_key .. i
@@ -335,7 +345,9 @@ end
 
 ---Called at the end of all methods that mutate registry
 function Registry:on_change()
-  debounced_keymap_recent_marked_buffers(self)
+  if self.opts.enable_recent_marked_mapping then
+    debounced_keymap_recent_marked_buffers(self)
+  end
 end
 
 return Registry:new()

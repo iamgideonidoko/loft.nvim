@@ -29,6 +29,8 @@ loft.setup = function(opts)
     close_invalid_buf_on_switch = config.all.close_invalid_buf_on_switch,
     enable_smart_order_by_default = config.all.enable_smart_order_by_default,
     smart_order_marked_bufs = config.all.smart_order_marked_bufs,
+    enable_recent_marked_mapping = config.all.enable_recent_marked_mapping,
+    post_leader_marked_mapping = config.all.post_leader_marked_mapping,
   })
   ui_instance:setup({
     keymaps = config.all.keymaps.ui,

@@ -10,6 +10,8 @@ local actions = require("loft.actions")
 ---@field close_invalid_buf_on_switch? boolean Whether to close invalid buffers when switching buffers
 ---@field enable_smart_order_by_default? boolean Whether to enable smart order by default
 ---@field smart_order_marked_bufs? boolean Whether smart order should reposition marked buffers
+---@field enable_recent_marked_mapping? boolean Whether the 9 most recently marked buffers should be switched to with a mapping (with keymaps)
+---@field post_leader_marked_mapping? string The character to use after leader when assigning keymap to the 9 most recently marked buffers
 ---@field window? loft.WinOpts
 
 ---@class (exact) loft.WinOpts
@@ -29,6 +31,8 @@ local default_config = {
   close_invalid_buf_on_switch = true,
   enable_smart_order_by_default = true,
   smart_order_marked_bufs = false,
+  enable_recent_marked_mapping = true,
+  post_leader_marked_mapping = "l",
   window = {
     width = nil,
     height = nil,
