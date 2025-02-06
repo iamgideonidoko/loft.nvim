@@ -320,7 +320,7 @@ end
 
 ---@private
 function UI:_get_footer()
-  return " Smart Order: " .. (self.registry_instance:is_smart_order_on() and "ON" or "OFF") .. " "
+  return " [⇅]: " .. (self.registry_instance:is_smart_order_on() and "ON" or "OFF") .. " "
 end
 
 ---@return boolean: New state of smart order
@@ -487,7 +487,7 @@ end
 --- Get the smart order indicator (string)
 function UI:smart_order_indicator()
   local is_smart_order_on = self.registry_instance:is_smart_order_on()
-  local pre_status = "[⨳⨳]"
+  local pre_status = "[⇅]"
   local status = is_smart_order_on and "ON" or "OFF"
   return pre_status .. ": " .. status
 end
