@@ -337,7 +337,7 @@ function Registry:keymap_recent_marked_buffers()
         vim.api.nvim_set_current_buf(buf)
         pcall(vim.api.nvim_set_current_buf, buf)
         self:resume_update()
-      end, { desc = "⨳⨳]> " .. relative_path, noremap = true, silent = true })
+      end, { desc = "⨳⨳ ➺ " .. relative_path, noremap = true, silent = true })
     end
     count = count + 1
   end
