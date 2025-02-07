@@ -2,6 +2,15 @@ local utils = require("loft.utils")
 local constants = require("loft.constants")
 local actions = require("loft.actions")
 
+---@class (exact) loft.UIOtherOpts
+---@field show_marked_mapping_num boolean
+
+---@class (exact) loft.UIOpts
+---@field keymaps loft.UIKeymapsConfig
+---@field general_keymaps loft.GeneralKeymapsConfig
+---@field window loft.WinOpts
+---@field other_opts loft.UIOtherOpts
+
 ---@class loft.UI
 ---@field private _win_id integer|nil
 ---@field private _buf_id integer|nil
@@ -14,6 +23,7 @@ local actions = require("loft.actions")
 ---@field private _help_buf_id integer|nil
 ---@field private _window loft.WinOpts|nil
 ---@field private _marked_nums string[]
+---@field private _other_opts loft.UIOtherOpts
 local UI = {}
 UI.__index = UI
 
@@ -27,11 +37,12 @@ function UI:new(registry_instance)
   return instance
 end
 
----@param opts  { keymaps: loft.UIKeymapsConfig, general_keymaps: loft.GeneralKeymapsConfig, window: loft.WinOpts }
+---@param opts loft.UIOpts
 function UI:setup(opts)
   self._keymaps = opts.keymaps
   self._general_keymaps = opts.general_keymaps
   self._window = opts.window
+  self._other_opts = opts.other_opts
 end
 
 --- Render a list of all the buffers in the registry (entries) in main UI buffer
@@ -485,11 +496,13 @@ function UI:get_buffer_mark(buffer)
   local is_marked = self.registry_instance:is_buffer_marked(buf)
   if is_marked then
     local mark_symbol = "(✓)"
-    local marked_index = self.registry_instance:get_marked_buffer_keymap_index(buf)
-    if marked_index ~= nil then
-      local marked_num = self._marked_nums[marked_index]
-      if marked_num then
-        return marked_num .. mark_symbol
+    if self._other_opts.show_marked_mapping_num then
+      local marked_index = self.registry_instance:get_marked_buffer_keymap_index(buf)
+      if marked_index ~= nil then
+        local marked_num = self._marked_nums[marked_index]
+        if marked_num then
+          return marked_num .. mark_symbol
+        end
       end
     end
     return mark_symbol
