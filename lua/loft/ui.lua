@@ -13,6 +13,7 @@ local actions = require("loft.actions")
 ---@field private _help_win_id integer|nil
 ---@field private _help_buf_id integer|nil
 ---@field private _window loft.WinOpts|nil
+---@field private _marked_nums string[]
 local UI = {}
 UI.__index = UI
 
@@ -22,6 +23,7 @@ function UI:new(registry_instance)
   instance.registry_instance = registry_instance
   instance._keymaps = {}
   instance._general_keymaps = {}
+  instance._marked_nums = { "➊", "➋", "➌", "➍", "➎", "➏", "➐", "➑", "➒" }
   return instance
 end
 
@@ -481,7 +483,18 @@ end
 function UI:get_buffer_mark(buffer)
   local buf = buffer or vim.api.nvim_get_current_buf()
   local is_marked = self.registry_instance:is_buffer_marked(buf)
-  return is_marked and "(✓)" or ""
+  if is_marked then
+    local mark_symbol = "(✓)"
+    local marked_index = self.registry_instance:get_marked_buffer_keymap_index(buf)
+    if marked_index ~= nil then
+      local marked_num = self._marked_nums[marked_index]
+      if marked_num then
+        return marked_num .. mark_symbol
+      end
+    end
+    return mark_symbol
+  end
+  return ""
 end
 
 --- Get the smart order indicator (string)

@@ -290,6 +290,21 @@ function Registry:get_marked_buffer(direction, buffer)
   return nil
 end
 
+---Get the keymap index for the given or current marked buffer
+---@param buffer?  integer
+function Registry:get_marked_buffer_keymap_index(buffer)
+  local buf = buffer or vim.api.nvim_get_current_buf()
+  local marked_buffers = self:_get_marked_buffers()
+  local count = 1
+  for i = #marked_buffers, math.max(1, #marked_buffers - 8), -1 do
+    if marked_buffers[i] == buf then
+      return count
+    end
+    count = count + 1
+  end
+  return nil
+end
+
 function Registry:is_smart_order_on()
   return self._is_smart_order_on
 end
