@@ -39,6 +39,7 @@ loft.setup = function(opts)
     window = config.all.window,
     other_opts = {
       show_marked_mapping_num = config.all.show_marked_mapping_num,
+      marked_mapping_num_style = config.all.marked_mapping_num_style,
     },
   })
   setup_general_keymap(config.all.keymaps.general)

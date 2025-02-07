@@ -13,6 +13,7 @@ local actions = require("loft.actions")
 ---@field enable_recent_marked_mapping? boolean Whether the 9 most recently marked buffers should be switched to with a mapping (with keymaps)
 ---@field post_leader_marked_mapping? string The character to use after leader when assigning keymap to the 9 most recently marked buffers
 ---@field show_marked_mapping_num? boolean Whether to show the mapping number for the 9 most recently marked buffers
+---@field marked_mapping_num_style 'solid'|'outline' The style of the mapping number
 ---@field window? loft.WinOpts
 
 ---@class (exact) loft.WinOpts
@@ -35,6 +36,7 @@ local default_config = {
   enable_recent_marked_mapping = true,
   post_leader_marked_mapping = "l",
   show_marked_mapping_num = true,
+  marked_mapping_num_style = "solid",
   window = {
     width = nil,
     height = nil,

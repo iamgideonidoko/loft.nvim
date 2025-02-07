@@ -4,6 +4,7 @@ local actions = require("loft.actions")
 
 ---@class (exact) loft.UIOtherOpts
 ---@field show_marked_mapping_num boolean
+---@field marked_mapping_num_style 'solid'|'outline'
 
 ---@class (exact) loft.UIOpts
 ---@field keymaps loft.UIKeymapsConfig
@@ -22,7 +23,8 @@ local actions = require("loft.actions")
 ---@field private _help_win_id integer|nil
 ---@field private _help_buf_id integer|nil
 ---@field private _window loft.WinOpts|nil
----@field private _marked_nums string[]
+---@field private _marked_nums_solid string[]
+---@field private _marked_nums_outline string[]
 ---@field private _other_opts loft.UIOtherOpts
 local UI = {}
 UI.__index = UI
@@ -33,7 +35,8 @@ function UI:new(registry_instance)
   instance.registry_instance = registry_instance
   instance._keymaps = {}
   instance._general_keymaps = {}
-  instance._marked_nums = { "➊", "➋", "➌", "➍", "➎", "➏", "➐", "➑", "➒" }
+  instance._marked_nums_solid = { "➊", "➋", "➌", "➍", "➎", "➏", "➐", "➑", "➒" }
+  instance._marked_nums_outline = { "➀", "➁", "➂", "➃", "➄", "➅", "➆", "➇", "➈" }
   return instance
 end
 
@@ -499,7 +502,9 @@ function UI:get_buffer_mark(buffer)
     if self._other_opts.show_marked_mapping_num then
       local marked_index = self.registry_instance:get_marked_buffer_keymap_index(buf)
       if marked_index ~= nil then
-        local marked_num = self._marked_nums[marked_index]
+        local mark_nums = self._other_opts.marked_mapping_num_style == "outline" and self._marked_nums_outline
+          or self._marked_nums_solid
+        local marked_num = mark_nums[marked_index]
         if marked_num then
           return marked_num .. mark_symbol
         end
