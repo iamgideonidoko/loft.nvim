@@ -26,6 +26,7 @@ local actions = require("loft.actions")
 ---@field private _marked_nums_solid string[]
 ---@field private _marked_nums_outline string[]
 ---@field private _other_opts loft.UIOtherOpts
+---@field private _smart_order_symbol string
 local UI = {}
 UI.__index = UI
 
@@ -37,6 +38,7 @@ function UI:new(registry_instance)
   instance._general_keymaps = {}
   instance._marked_nums_solid = { "➊", "➋", "➌", "➍", "➎", "➏", "➐", "➑", "➒" }
   instance._marked_nums_outline = { "➀", "➁", "➂", "➃", "➄", "➅", "➆", "➇", "➈" }
+  instance._smart_order_symbol = "⟅⇅⟆"
   return instance
 end
 
@@ -336,7 +338,11 @@ end
 
 ---@private
 function UI:_get_footer()
-  return " ⟅⇅⟆: " .. (self.registry_instance:is_smart_order_on() and "ON" or "OFF") .. " "
+  return " "
+    .. self._smart_order_symbol
+    .. ": "
+    .. (self.registry_instance:is_smart_order_on() and "ON" or "OFF")
+    .. " "
 end
 
 ---@return boolean: New state of smart order
@@ -518,9 +524,8 @@ end
 --- Get the smart order indicator (string)
 function UI:smart_order_indicator()
   local is_smart_order_on = self.registry_instance:is_smart_order_on()
-  local pre_status = "⟅⇅⟆"
   local status = is_smart_order_on and "ON" or "OFF"
-  return pre_status .. ": " .. status
+  return self._smart_order_symbol .. ": " .. status
 end
 
 return UI:new(require("loft.registry"))
