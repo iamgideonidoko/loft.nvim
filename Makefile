@@ -5,4 +5,10 @@ lint:
 	luacheck lua/ --globals vim
 
 gen_doc:
-	nvim --headless -u scripts/minimal_init.vim -c "lua require('mini.doc').generate()" -c 'qa'
+	nvim --headless --noplugin -u scripts/minimal_init.vim -c "lua require('mini.doc').generate()" -c 'qa'
+
+test:
+	nvim --headless --noplugin -u scripts/minimal_init.vim \
+    -c "luafile scripts/test_setup.lua" \
+    -c "lua MiniTest.run()" \
+    -c 'qa'
