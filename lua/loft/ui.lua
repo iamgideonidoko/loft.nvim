@@ -135,13 +135,13 @@ function UI:open()
 end
 
 function UI:close()
-  if utils.buffer_exists(self._buf_id) then
-    vim.api.nvim_buf_delete(self._buf_id, { force = true })
-    self._buf_id = nil
-  end
   if utils.window_exists(self._win_id) then
     vim.api.nvim_win_close(self._win_id, true)
     self._win_id = nil
+  end
+  if utils.buffer_exists(self._buf_id) then
+    vim.api.nvim_buf_delete(self._buf_id, { force = true })
+    self._buf_id = nil
   end
 end
 
