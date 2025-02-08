@@ -1,6 +1,8 @@
+Loft	loft.txt	/*Loft*
 Registry	loft.txt	/*Registry*
 Registry:clean()	loft.txt	/*Registry:clean()*
 Registry:get_marked_buffer()	loft.txt	/*Registry:get_marked_buffer()*
+Registry:get_marked_buffer_keymap_index()	loft.txt	/*Registry:get_marked_buffer_keymap_index()*
 Registry:get_next_buffer()	loft.txt	/*Registry:get_next_buffer()*
 Registry:get_prev_buffer()	loft.txt	/*Registry:get_prev_buffer()*
 Registry:is_buffer_marked()	loft.txt	/*Registry:is_buffer_marked()*
@@ -35,6 +37,7 @@ config.setup()	loft.txt	/*config.setup()*
 default_config	loft.txt	/*default_config*
 events.buffer_mark()	loft.txt	/*events.buffer_mark()*
 events.smart_order_toggle()	loft.txt	/*events.smart_order_toggle()*
+loft.nvim	loft.txt	/*loft.nvim*
 loft.setup()	loft.txt	/*loft.setup()*
 registry_instance	loft.txt	/*registry_instance*
 utils.buf_has_deleted_file()	loft.txt	/*utils.buf_has_deleted_file()*

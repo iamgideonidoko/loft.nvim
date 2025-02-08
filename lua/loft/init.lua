@@ -1,3 +1,10 @@
+--- *loft.nvim* Streamlined plugin for productive buffer management
+--- *Loft*
+---
+--- MIT License Copyright (c) 2024 Gideon Idoko
+---
+--- ==============================================================================
+
 local config = require("loft.config")
 local utils = require("loft.utils")
 local registry_instance = require("loft.registry")

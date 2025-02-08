@@ -1,5 +1,13 @@
 ==============================================================================
 ------------------------------------------------------------------------------
+*loft.nvim* Streamlined plugin for productive buffer management
+*Loft*
+
+MIT License Copyright (c) 2024 Gideon Idoko
+
+==============================================================================
+
+------------------------------------------------------------------------------
                                                                   *loft.setup()*
                               `loft.setup`({opts})
 Parameters ~
@@ -99,6 +107,8 @@ Fields ~
 {smart_order_marked_bufs} `(optional)` `(boolean)` Whether smart order should reposition marked buffers
 {enable_recent_marked_mapping} `(optional)` `(boolean)` Whether the 9 most recently marked buffers should be switched to with a mapping (with keymaps)
 {post_leader_marked_mapping} `(optional)` `(string)` The character to use after leader when assigning keymap to the 9 most recently marked buffers
+{show_marked_mapping_num} `(optional)` `(boolean)` Whether to show the mapping number for the 9 most recently marked buffers
+{marked_mapping_num_style} `(optional)` 'solid'|'outline' The style of the mapping `(number)`
 {window} `(optional)` loft.WinOpts
 
 ------------------------------------------------------------------------------
@@ -248,6 +258,13 @@ Parameters ~
 {buffer} `(optional)`  `(integer)`
 
 ------------------------------------------------------------------------------
+                                     *Registry:get_marked_buffer_keymap_index()*
+              `Registry:get_marked_buffer_keymap_index`({buffer})
+the keymap index for the given or current marked buffer
+Parameters ~
+{buffer} `(optional)`  `(integer)`
+
+------------------------------------------------------------------------------
                                                  *Registry:toggle_smart_order()*
                         `Registry:toggle_smart_order`()
 Return ~
@@ -266,6 +283,22 @@ Called at the end of all methods that mutate registry
 
 ==============================================================================
 ------------------------------------------------------------------------------
+Class ~
+{(exact)} loft.UIOtherOpts
+Fields ~
+{show_marked_mapping_num} `(boolean)`
+{marked_mapping_num_style} 'solid'|'outline'
+
+------------------------------------------------------------------------------
+Class ~
+{(exact)} loft.UIOpts
+Fields ~
+{keymaps} `(table<string, 'move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'|'show_help'|'move_up_to_marked_entry'|'move_down_to_marked_entry'|function|false>)`
+{general_keymaps} `(table<string, { callback: function|loft.Action, desc: string }|function|loft.Action|false>)` For keys mapped outside of Loft in `normal` mode
+{window} loft.WinOpts
+{other_opts} loft.UIOtherOpts
+
+------------------------------------------------------------------------------
                                                                             *UI*
                                       `UI`
 Class ~
@@ -281,6 +314,10 @@ Fields ~
 {private} _help_win_id `(integer|nil)`
 {private} _help_buf_id `(integer|nil)`
 {private} _window `(loft.WinOpts|nil)`
+{private} _marked_nums_solid `(string[])`
+{private} _marked_nums_outline `(string[])`
+{private} _other_opts loft.UIOtherOpts
+{private} _smart_order_symbol `(string)`
 
 ------------------------------------------------------------------------------
                                                                       *UI:new()*
@@ -292,7 +329,7 @@ Parameters ~
                                                                     *UI:setup()*
                                `UI:setup`({opts})
 Parameters ~
-{opts}  { keymaps: `(table<string, 'move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'|'show_help'|'move_up_to_marked_entry'|'move_down_to_marked_entry'|function|false>,)` general_keymaps: table<string, { callback: function|loft.Action, desc: string }|function|loft.Action|false> For keys mapped outside of Loft in `normal` mode, window: loft.WinOpts }
+{opts} loft.UIOpts
 
 ------------------------------------------------------------------------------
                                                        *UI:toggle_smart_order()*
