@@ -1,6 +1,6 @@
 <div align="center">
   <img src="assets/loft.nvim.png" alt="Logo" />
-  <h3 align="center"><code>loft.nvim</code></h3>
+  <h3 align="center"><code> ⨳⨳ LOFT ⨳⨳ </code></h3>
   <p align="center">Streamlined plugin for productive buffer management</p>
 </div>
 <br />
@@ -8,7 +8,6 @@
 ## Table of Content
 
 - [Introduction](#introduction)
-- [Requirements](#requirements)
 - [Installation](#installation)
 - [Configuration](#configuration)
   - [Default Options](#default-options)
@@ -19,25 +18,33 @@
 
 https://github.com/user-attachments/assets/312a06be-a2c0-4f4f-9fd2-e404c737cb89
 
-`loft.nvim`, a powerful yet lightweight Neovim plugin for efficient buffer management with an intuitive UI and cool features like:
+Loft is a powerful yet lightweight Neovim plugin that makes buffer management fast, intuitive, and frustration-free—so you can focus on what truly matters. 🚀
 
-- Registry-based buffer tracking and state management.
-- Smart Order (automatically reorganize buffers for quick access).
-- Floating UI that displays a customizable list of entries (buffers + state).
-- Mark/unmark buffers/entries you want to focus on with persistent tracking.
-- Cyclic but slick buffer navigation to all/marked entry/buffer.
-- Configurable window options, keybindings, and more for streamlined control.
-- Dynamic help UI that displays commands, keymaps, and events.
+### 🛑 The Problem: Buffer Chaos!
 
-With all these, it's a lot easier to just **focus** on your code.
+Imagine your Neovim buffer list is like a messy desk. You start with a clean workspace, but as the day goes on, files pile up—some important, others just distractions. Before you know it, you’re **digging through a jungle of buffers**, closing the wrong ones, and losing track of key files.
 
-## Requirements
+Ever rage-quit Neovim just to start fresh? You’re not alone.
 
-- Neovim 0.8+
+### ✅ The Solution: Loft 🔥
+
+Loft uses a registry to manage state and track buffers that can be cyclically navigated to. It provides a floating UI that lists these buffers as rearrangeable entries in order of recency from bottom to top. The catch is in Loft's flagship features—**Smart Ordering** and **Marking**:
+
+- #### ⟅⇅⟆ Smart Ordering
+
+  The smart ordering feature (represented with the symbol `⟅⇅⟆`) dynamically arranges your buffers based on recency. This means that if you navigate to a buffer without any Loft's action (say via [Telescope](https://github.com/nvim-telescope/telescope.nvim)), that buffer will be move to the last position in the registry. If you have Telescope installed, by default, the current buffer before navigation will be moved to second to the last position.
+
+- #### (✓) Marking
+
+  The marking feature allows you to bookmark important buffers. The marked buffers/entries (identified by the symbol `(✓)`) can be specially navigated to cyclically or by keybinding. You read right, keybinding; the nine most recent buffers are automatically mapped for quick access anytime.
+
+No more scrambling to find where you left off. No more accidental closures. **Just smooth, intelligent buffer management.** 🚀
 
 ## Installation
 
-lazy.nvim:
+**Note**: Loft requires Neovim 0.8+
+
+Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 
 ```lua
 {
@@ -64,6 +71,13 @@ require("loft").setup({
   move_curr_buf_on_telescope_select = true,
   close_invalid_buf_on_switch = true, -- Whether to close invalid buffers during navigation
   enable_smart_order_by_default = true, -- Whether to enable smart order by default
+  smart_order_marked_bufs = false, -- Whether smart order (`⟅⇅⟆`) should reposition marked buffers
+  enable_recent_marked_mapping = true, -- Whether the 9 most recently marked buffers should be switched to with a mapping (with keymaps)
+
+  -- The character to use after leader when assigning keymap to the 9 most recently marked buffers
+  post_leader_marked_mapping = "l",  -- Maps to <leader>l1...9 for navigation
+  show_marked_mapping_num = true, -- Whether to show the mapping number for the 9 most recently marked buffers
+  marked_mapping_num_style = "solid", -- The style of the mapping number
   window = {
     width = nil, -- Defaults to calculated width
     height = nil, -- Defaults to calculated height
@@ -115,6 +129,7 @@ require("loft").setup({
 | ----------------------- | ------------------------------------------ |
 | `:LoftToggle`           | Open or close the Loft UI.                 |
 | `:LoftToggleSmartOrder` | Enable or disable the smart order feature. |
+| `:LoftToggleMark`       | Toggle mark current buffer.                |
 
 ## Autocmds
 
