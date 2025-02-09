@@ -4,6 +4,18 @@ local helpers = {}
 -- Add extra expectations
 helpers.expect = vim.deepcopy(MiniTest.expect)
 
+helpers.expect.truthy = MiniTest.new_expectation("truthy", function(value)
+  return value ~= nil and value ~= false
+end, function(value)
+  return string.format("%s is not truthy", value)
+end)
+
+helpers.expect.falsy = MiniTest.new_expectation("falsy", function(value)
+  return value == nil or value == false
+end, function(value)
+  return string.format("%s is not falsy", value)
+end)
+
 --- Monkey-patch `MiniTest.new_child_neovim` with helpful wrappers
 helpers.new_child_neovim = function()
   local child = MiniTest.new_child_neovim()
