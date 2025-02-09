@@ -7,10 +7,13 @@ ignore = {}
 
 globals = {}
 
-read_globals = { "vim" }
+read_globals = { "vim", "MiniTest" }
 
 files = {
-  ["lua/loft/init.lua"] = {
-    ignore = {},
+  ["lua/loft/registry.lua"] = {
+    ignore = { "631" },
+  },
+  ["lua/loft/config.lua"] = {
+    ignore = { "631" },
   },
 }
