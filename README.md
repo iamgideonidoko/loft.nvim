@@ -118,6 +118,8 @@ require("loft").setup({
       ["<leader>ln"] = actions.switch_to_next_marked_buffer, -- Navigate to the next marked buffer
       ["<leader>lp"] = actions.switch_to_prev_marked_buffer, -- Navigate to the previous marked buffer
       ["<leader>lm"] = actions.toggle_mark_current_buffer, -- Mark or unmark the current buffer
+      ["<leader>ls"] = actions.toggle_smart_order, -- Toggle Smart Order ON and OFF
+      ["<leader>la"] = actions.switch_to_alt_buffer, -- Switch to alternate buffer without updating the registry
     },
   },
 })
