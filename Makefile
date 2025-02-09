@@ -1,8 +1,8 @@
 format:
-	stylua lua/ --config-path=.stylua.toml
+	stylua lua/ tests/ --config-path=.stylua.toml
 
 lint:
-	luacheck lua/ --globals vim
+	luacheck lua/ tests/ --globals vim
 
 gen_doc: deps/mini.nvim
 	nvim --headless --noplugin -u scripts/minimal_init.vim -c "lua require('mini.doc').generate()" -c 'qa'
