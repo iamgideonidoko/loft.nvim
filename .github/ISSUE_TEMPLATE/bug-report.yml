@@ -1,0 +1,63 @@
+name: Bug report
+description: Report a problem with the existing module(s)
+labels: [bug]
+body:
+  - type: dropdown
+    id: nvim-version
+    attributes:
+      label: "Neovim version"
+      description: "Choose the latest Neovim version on which you can reproduce the problem"
+      multiple: false
+      options:
+        - 0.8.x
+        - 0.9.x
+        - 0.10.x
+        - 0.11 (!at least latest Nightly build!)
+      default: 2
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: "Description"
+      description: "A short description of a problem; include expected behavior"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: "Reproduction"
+      description: "Steps to reproduce the issue. Suggested steps involve creating an independent config from scratch. If can not reproduce like this, please ask a usage question first."
+      value: |
+        1. Create separate 'nvim-repro' config directory:
+            - '~/.config/nvim-repro/' on Unix
+            - '~/AppData/Local/nvim-repro/' on Windows
+
+        2. Inside 'nvim-repro' directory create a file named 'init.lua'.
+           Populate it with the following content:
+
+            ```lua
+            -- Clone latest 'loft.nvim' (requires Git CLI installed)
+            vim.cmd('echo "Installing `loft.nvim`" | redraw')
+            local mini_path = vim.fn.stdpath('data') .. '/site/pack/deps/start/loft.nvim'
+            local clone_cmd = { 'git', 'clone', '--depth=1', 'https://github.com/echasnovski/loft.nvim', mini_path }
+            vim.fn.system(clone_cmd)
+            vim.cmd('echo "`loft.nvim` is installed" | redraw')
+
+            -- Make sure 'loft.nvim' is available
+            vim.cmd('packadd loft.nvim')
+            require('loft').setup()
+            ```
+
+        3. Run `NVIM_APPNAME=nvim-repro nvim` (i.e. execute `nvim` with `NVIM_APPNAME` environment variable set to "nvim-repro").
+           Wait for all dependencies to install.
+
+        4. Replace this with description of interactive reproduction steps along with the behavior you observe.
+           Feel free to include images/videos/etc, this helps a lot.
+
+        Note: after reporting the issue, it is safe (and even recommended for cleaner possible future bug reports) to remove 'nvim-repro' config from the system:
+        - Delete config directory ('~/.config/nvim-repro' on Unix).
+        - Delete data directory ('~/.local/share/nvim-repro' on Unix).
+        - Delete state directory ('~/.local/state/nvim-repro' on Unix).
+    validations:
+      required: true

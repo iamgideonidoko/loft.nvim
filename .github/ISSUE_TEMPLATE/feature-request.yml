@@ -1,0 +1,11 @@
+name: Feature request
+description: Describe a new feature you would like to see
+labels: [feature-request]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: "Description"
+      description: "A concise and justified description of a feature"
+    validations:
+      required: true
