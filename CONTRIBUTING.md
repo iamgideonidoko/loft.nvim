@@ -16,6 +16,24 @@ You can make contributions in the following ways:
 
 All well-intentioned, polite, and respectful contributions are always welcome! Thanks for reading this!
 
+## Setup
+
+Using `lazy.nvim`:
+
+```lua
+return {
+  dir = "~/path/to/loft.nvim",
+  dev = true,
+  config = true,
+}
+```
+
+Using bare Neovim instance:
+
+```sh
+nvim -u scripts/minimal_init.vim
+```
+
 ## Commit messages
 
 - Try to make commit message as concise as possible while giving enough information about nature of a change. Think about whether it will be easy to understand in one year time when browsing through commit history.
