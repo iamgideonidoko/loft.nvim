@@ -28,6 +28,10 @@ Ever rage-quit Neovim just to start fresh? You’re not alone.
 
 ### ✅ The Solution: Loft 🔥
 
+<div align="center">
+  <img src="assets/showcase.png" alt="Showcase" />
+</div>
+
 Loft uses a registry to manage state and track buffers that can be cyclically navigated to. It provides a floating UI that lists these buffers as rearrangeable entries in order of recency from bottom to top. The catch is in Loft's flagship features—**Smart Ordering** and **Marking**:
 
 - #### ⟅⇅⟆ Smart Ordering
