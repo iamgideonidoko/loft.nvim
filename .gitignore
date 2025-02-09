@@ -43,3 +43,6 @@ luac.out
 .DS_Store
 .AppleDouble
 .LSOverride
+
+# Plugin dependencies
+deps
