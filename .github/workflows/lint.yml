@@ -1,0 +1,23 @@
+name: Lint
+
+on:
+  push:
+    branches: [main, staging, dev]
+  pull_request:
+    branches: [main]
+
+jobs:
+  stylua:
+    name: Run Luacheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Luacheck
+        run: |
+          sudo apt update
+          sudo apt install -y luacheck
+
+      - name: Run Luacheck
+        run: luacheck lua/ tests/ --globals vim

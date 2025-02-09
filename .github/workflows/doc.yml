@@ -1,0 +1,23 @@
+name: Doc
+
+on:
+  push:
+    branches: [main, staging, dev]
+  pull_request:
+    branches: [main]
+
+jobs:
+  gen_doc:
+    name: Document Generation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Neovim
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: v0.10.3
+      - uses: actions/checkout@v4
+      - name: Generate doc
+        run: make --silent gen_doc
+      - name: Check for changes
+        run: if [[ -n $(git status -s) ]]; then exit 1; fi
