@@ -144,9 +144,6 @@ Loft user autocmds:
 
 ## Roadmap
 
-- Improve documentation (Readme, Neovim help doc, contribution guide, etc.).
-- Add a logger for debugging purposes.
-- Improve quality with automated tests.
-- Implement CI/CD to run tests.
+- Implement CI/CD to run formatter, lint, and tests.
 - Registry/state persistence across sessions (investigate the plugin experience with session persistence plugins)
 - Add buffer-relative UI to show info like the filename/path, marked/modified state, etc. (I'll only get to this if it's requested by many)
