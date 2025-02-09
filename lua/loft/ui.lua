@@ -502,7 +502,7 @@ end
 ---@param buffer? integer
 function UI:get_buffer_mark(buffer)
   local buf = buffer or vim.api.nvim_get_current_buf()
-  local is_marked = self.registry_instance:is_buffer_marked(buf)
+  local is_marked = self.registry_instance.is_buffer_marked(buf)
   if is_marked then
     local mark_symbol = "(✓)"
     if self._other_opts.show_marked_mapping_num then

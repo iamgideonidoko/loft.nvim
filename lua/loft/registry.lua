@@ -48,7 +48,7 @@ function Registry:_update(buffer)
   end
   local is_buffer_in_registry = false
   local should_smart_order = self._is_smart_order_on
-    and (not self:is_buffer_marked(buf) or (self.opts.smart_order_marked_bufs and self:is_buffer_marked(buf)))
+    and (not self.is_buffer_marked(buf) or (self.opts.smart_order_marked_bufs and self.is_buffer_marked(buf)))
   for i, b in ipairs(self._registry) do
     if b == buf then
       is_buffer_in_registry = true
@@ -239,7 +239,7 @@ function Registry:_mark_buffer(buffer, mark_state)
   else
     pcall(vim.api.nvim_buf_del_var, buffer, constants.MARK_STATE_ID)
   end
-  events.buffer_mark(buffer, self:is_buffer_marked(buffer))
+  events.buffer_mark(buffer, self.is_buffer_marked(buffer))
   if self.opts.enable_recent_marked_mapping then
     debounced_keymap_recent_marked_buffers(self)
   end
@@ -247,7 +247,7 @@ end
 
 --- Check if a given buffer is marked
 ---@param buffer integer
-function Registry:is_buffer_marked(buffer)
+function Registry.is_buffer_marked(buffer)
   local ok, mark_state = pcall(vim.api.nvim_buf_get_var, buffer, constants.MARK_STATE_ID)
   if ok and mark_state then
     return mark_state
@@ -259,8 +259,8 @@ end
 ---@param buffer integer
 ---@return boolean: New mark state of given buffer
 function Registry:toggle_mark_buffer(buffer)
-  self:_mark_buffer(buffer, not self:is_buffer_marked(buffer))
-  return self:is_buffer_marked(buffer)
+  self:_mark_buffer(buffer, not self.is_buffer_marked(buffer))
+  return self.is_buffer_marked(buffer)
 end
 
 --- Get the next or prev marked buffer in registry
@@ -283,7 +283,7 @@ function Registry:get_marked_buffer(direction, buffer)
     end
     local index = ((current_index or 1) + j - 1) % count + 1
     local buf = self._registry[index]
-    if self:is_buffer_marked(buf) then
+    if self.is_buffer_marked(buf) then
       return buf
     end
   end
@@ -321,7 +321,7 @@ end
 function Registry:_get_marked_buffers()
   local marked_buffers = {}
   for _, buf in ipairs(self._registry) do
-    if self:is_buffer_marked(buf) then
+    if self.is_buffer_marked(buf) then
       table.insert(marked_buffers, buf)
     end
   end
