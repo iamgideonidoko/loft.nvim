@@ -7,17 +7,15 @@ on:
     branches: [main]
 
 jobs:
-  stylua:
+  luacheck:
     name: Run Luacheck
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Luacheck
+      - uses: actions/checkout@v4
+      - name: Prepare
         run: |
-          sudo apt update
-          sudo apt install -y luacheck
-
-      - name: Run Luacheck
-        run: luacheck lua/ tests/ --globals vim
+          sudo apt-get update
+          sudo apt-get install -y luarocks
+          sudo luarocks install luacheck
+      - name: Lint
+        run: sudo make lint
