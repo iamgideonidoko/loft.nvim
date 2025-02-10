@@ -163,4 +163,13 @@ utils.debounce = function(func, timeout)
   end
 end
 
+--- Get the major, minor and patch version of the current Neovim instance
+---@return integer major
+---@return integer minor
+---@return integer patch
+utils.get_nvim_version = function()
+  local version = vim.version()
+  return version.major, version.minor, version.patch
+end
+
 return utils
