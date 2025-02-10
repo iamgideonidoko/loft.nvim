@@ -97,7 +97,6 @@ function UI:open()
     )
   self._buf_id = vim.api.nvim_create_buf(false, true)
   local width = self._window.width or math.floor(vim.o.columns * 0.8)
-  local title = " ⨳⨳ " .. string.upper(constants.DISPLAY_NAME) .. " ⨳⨳ "
   ---@type vim.api.keyset.win_config
   local win_opts = {
     relative = "editor",
@@ -107,13 +106,21 @@ function UI:open()
     col = math.floor((vim.o.columns - width) * 0.5),
     style = "minimal",
     border = self._window.border,
-    title = title,
-    title_pos = self._window.title_pos,
+    title = self._get_title(),
     noautocmd = true,
-    footer = self:_get_footer(),
-    footer_pos = self._window.title_pos,
     zindex = self._window.zindex,
   }
+  -- Backward compatibility
+  local major, minor = utils.get_nvim_version()
+  if major > 0 or minor >= 9 then
+    win_opts.title_pos = self._window.title_pos
+  end
+  if major > 0 or minor >= 10 then
+    win_opts.footer = self:_get_footer()
+    win_opts.footer_pos = self._window.title_pos
+  else
+    win_opts.title = self._get_title(self:_get_footer())
+  end
   self._win_id = vim.api.nvim_open_win(self._buf_id, true, win_opts)
   vim.api.nvim_set_option_value("cursorline", true, {
     win = self._win_id,
@@ -345,14 +352,28 @@ function UI:_get_footer()
     .. " "
 end
 
+---@param extras string|nil
+---@private
+function UI._get_title(extras)
+  extras = extras and " (" .. extras .. ")" or ""
+  return " ⨳⨳ " .. string.upper(constants.DISPLAY_NAME) .. extras .. " ⨳⨳ "
+end
+
 ---@return boolean: New state of smart order
 function UI:toggle_smart_order()
   local new_state = self.registry_instance:toggle_smart_order()
   if utils.window_exists(self._win_id) then
-    vim.api.nvim_win_set_config(self._win_id, {
-      footer = self:_get_footer(),
-      footer_pos = "center",
-    })
+    ---@type vim.api.keyset.win_config
+    local win_opts = {}
+    local major, minor = utils.get_nvim_version()
+    if major > 0 or minor >= 10 then
+      win_opts.footer = self:_get_footer()
+      win_opts.footer_pos = self._window.title_pos
+    else
+      win_opts.title = self._get_title(self:_get_footer())
+    end
+
+    vim.api.nvim_win_set_config(self._win_id, win_opts)
   end
   return new_state
 end
