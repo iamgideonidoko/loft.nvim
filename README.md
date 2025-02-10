@@ -146,6 +146,50 @@ Loft user autocmds:
 | `User LoftBufferMark`       | Triggered when a buffer is marked or unmarked. | `{ mark_state: boolean, buffer: number }` |
 | `User LoftSmartOrderToggle` | Triggered when smart order state is toggled.   | `smart_order_state: number`               |
 
+## Tips
+
+If you think bufferline sucks and prefer working with the info in statusline like me then you can show the smart order and marked info in your statusline.
+
+Get the info from Loft UI's `smart_order_indicator()` and `get_buffer_mark()` methods and infuse like so:
+
+```lua
+vim.api.nvim_set_hl(0, "MiniStatuslineFilename", { fg = "#FFD700", bg = "#262D43", bold = true })
+vim.api.nvim_set_hl(0, "StatusLineLoftSmartOrder", { fg = "#ffffff", bg = "#005f87", bold = true })
+local smart_order_status = "%#StatusLineLoftSmartOrder#" .. require("loft.ui"):smart_order_indicator()
+local buffer_mark = require("loft.ui"):get_buffer_mark()
+local filename = MiniStatusline.section_filename({ trunc_width = 140 })
+MiniStatusline.combine_groups({
+  -- ...
+  { hl = "StatusLineLoftSmartOrder", strings = { smart_order_status } },
+  "%<",
+  -- ...
+  { hl = "MiniStatuslineFilename", strings = { filename .. buffer_mark } },
+  "%=",
+  -- ...
+})
+```
+
+Then listen for the following Loft's user autocmds and redraw your statusline:
+
+```lua
+vim.api.nvim_create_autocmd("User", {
+  pattern = { "LoftSmartOrderToggle", "LoftBufferMark" },
+  callback = function()
+    vim.cmd("redrawstatus")
+  end,
+})
+```
+
+Here's what your statusline would look like:
+
+<div>
+  <img src="assets/statusline_showcase.png" width="300" alt="Statusline Showcase" />
+</div>
+
+## Contributing
+
+Contributions are welcome! Please feel free to check out the [contribution guide](./CONTRIBUTING.md).
+
 ## Roadmap
 
 - Implement CI/CD to run formatter, lint, and tests.
