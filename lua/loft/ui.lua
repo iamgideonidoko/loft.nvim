@@ -106,19 +106,19 @@ function UI:open()
     col = math.floor((vim.o.columns - width) * 0.5),
     style = "minimal",
     border = self._window.border,
-    title = self._get_title(),
     noautocmd = true,
     zindex = self._window.zindex,
   }
   -- Backward compatibility
   local major, minor = utils.get_nvim_version()
   if major > 0 or minor >= 9 then
+    win_opts.title = self._get_title()
     win_opts.title_pos = self._window.title_pos
   end
   if major > 0 or minor >= 10 then
     win_opts.footer = self:_get_footer()
     win_opts.footer_pos = self._window.title_pos
-  else
+  elseif major > 0 or minor >= 9 then
     win_opts.title = self._get_title(self:_get_footer())
   end
   self._win_id = vim.api.nvim_open_win(self._buf_id, true, win_opts)
@@ -369,10 +369,9 @@ function UI:toggle_smart_order()
     if major > 0 or minor >= 10 then
       win_opts.footer = self:_get_footer()
       win_opts.footer_pos = self._window.title_pos
-    else
+    elseif major > 0 or minor >= 9 then
       win_opts.title = self._get_title(self:_get_footer())
     end
-
     vim.api.nvim_win_set_config(self._win_id, win_opts)
   end
   return new_state
