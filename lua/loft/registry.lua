@@ -3,9 +3,9 @@ local events = require("loft.events")
 local constants = require("loft.constants")
 
 ---@class (exact) loft.RegistrySetupOpts
----@field track_telescope_select boolean
 ---@field close_invalid_buf_on_switch boolean
 ---@field smart_order_marked_bufs boolean
+---@field smart_order_alt_bufs boolean
 ---@field enable_smart_order_by_default boolean
 ---@field enable_recent_marked_mapping boolean
 ---@field post_leader_marked_mapping string
@@ -14,7 +14,6 @@ local constants = require("loft.constants")
 ---@field private _registry integer[]
 ---@field private _update_paused boolean
 ---@field private _update_paused_once boolean
----@field private _is_telescope_item_selected boolean
 ---@field private _is_smart_order_on boolean
 ---@field opts loft.RegistrySetupOpts
 local Registry = {}
@@ -25,7 +24,6 @@ function Registry:new()
   instance._registry = {}
   instance._update_paused = false
   instance._update_paused_once = false
-  instance._is_telescope_item_selected = false
   instance._is_smart_order_on = true
   return instance
 end
@@ -38,33 +36,56 @@ end
 ---@param buffer? integer
 ---@private
 function Registry:_update(buffer)
-  local buf = buffer or vim.api.nvim_get_current_buf()
+  local current_buf = vim.api.nvim_get_current_buf()
+  local buf = buffer or current_buf
+  local alt_buf = buf == current_buf and vim.fn.bufnr("#") or -1
   if utils.is_floating_window() or self._update_paused then
+    self._update_paused_once = false
     return
   end
   if self._update_paused_once then
     self._update_paused_once = false
     return
   end
+  local is_buf_valid = utils.is_buffer_valid(buf)
+  if not is_buf_valid then
+    return
+  end
+  self:clean()
   local is_buffer_in_registry = false
-  local should_smart_order = self._is_smart_order_on
+  local is_alt_buffer_in_registry = false
+  local should_smart_order_buf = self._is_smart_order_on
     and (not self.is_buffer_marked(buf) or (self.opts.smart_order_marked_bufs and self.is_buffer_marked(buf)))
+  local should_smart_order_alt_buf = self._is_smart_order_on
+    and self.opts.smart_order_alt_bufs
+    and (not self.is_buffer_marked(alt_buf) or (self.opts.smart_order_marked_bufs and self.is_buffer_marked(alt_buf)))
+    and utils.is_buffer_valid(alt_buf)
   for i, b in ipairs(self._registry) do
     if b == buf then
       is_buffer_in_registry = true
-      if should_smart_order then
+      if should_smart_order_buf then
         table.remove(self._registry, i)
       end
       break
     end
   end
-  if not utils.is_buffer_valid(buf) then
+  for i, b in ipairs(self._registry) do
+    if b == alt_buf then
+      is_alt_buffer_in_registry = true
+      if should_smart_order_alt_buf then
+        table.remove(self._registry, i)
+      end
+      break
+    end
+  end
+  if is_buffer_in_registry and not should_smart_order_buf then
     return
   end
-  if is_buffer_in_registry and not should_smart_order then
-    return
+  if is_alt_buffer_in_registry and should_smart_order_buf then
+    table.insert(self._registry, alt_buf)
   end
   table.insert(self._registry, buf)
+  self:clean()
   self:on_change()
 end
 
@@ -184,41 +205,14 @@ function Registry:setup(opts)
   })
   local prevent_update_after_floating_window = utils.greedy_debounce(function()
     if utils.is_floating_window() then
-      if self._is_telescope_item_selected then
-        self._is_telescope_item_selected = false
-        self._update_paused_once = false
-      else
-        self._update_paused_once = true
-      end
+      self._update_paused_once = true
     end
   end, 1000)
   vim.api.nvim_create_autocmd("WinClosed", {
     group = utils.get_augroup("PreventUpdateAfterFloatingWindow", true),
     callback = prevent_update_after_floating_window,
   })
-  if opts.track_telescope_select then
-    self:_overwrite_telescope_select()
-  end
   self:clean()
-end
-
---- Safely overwrite telescope's select to track selection
----@private
-function Registry:_overwrite_telescope_select()
-  local action_set_ok, action_set = pcall(require, "telescope.actions.set")
-  local mt_ok, mt = pcall(require, "telescope.actions.mt")
-  if not action_set_ok or not mt_ok then
-    return
-  end
-  local original_select = action_set.select
-  ---@diagnostic disable-next-line: duplicate-set-field
-  action_set.select = function(prompt_bufnr, type)
-    self._is_telescope_item_selected = true
-    original_select(prompt_bufnr, type)
-  end
-  local action_set_clone = vim.tbl_deep_extend("force", {}, action_set)
-  action_set_clone = mt.transform_mod(action_set_clone)
-  action_set.select = action_set_clone.select
 end
 
 local debounced_keymap_recent_marked_buffers = utils.debounce(
