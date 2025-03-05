@@ -101,10 +101,10 @@ Class ~
 {(exact)} loft.SetupConfig
 Fields ~
 {keymaps} `(optional)` loft.KeymapConfig
-{move_curr_buf_on_telescope_select} `(optional)` `(boolean)` Whether to move the current buffer to the last of the registry during Telescope selection just before the selected buffer
 {close_invalid_buf_on_switch} `(optional)` `(boolean)` Whether to close invalid buffers when switching buffers
 {enable_smart_order_by_default} `(optional)` `(boolean)` Whether to enable smart order by default
 {smart_order_marked_bufs} `(optional)` `(boolean)` Whether smart order should reposition marked buffers
+{smart_order_alt_bufs} `(optional)` `(boolean)` Whether smart order should reposition alternate buffer by moving it to just before the current buffer
 {enable_recent_marked_mapping} `(optional)` `(boolean)` Whether the 9 most recently marked buffers should be switched to with a mapping (with keymaps)
 {post_leader_marked_mapping} `(optional)` `(string)` The character to use after leader when assigning keymap to the 9 most recently marked buffers
 {show_marked_mapping_num} `(optional)` `(boolean)` Whether to show the mapping number for the 9 most recently marked buffers
@@ -175,9 +175,9 @@ Parameters ~
 Class ~
 {(exact)} loft.RegistrySetupOpts
 Fields ~
-{track_telescope_select} `(boolean)`
 {close_invalid_buf_on_switch} `(boolean)`
 {smart_order_marked_bufs} `(boolean)`
+{smart_order_alt_bufs} `(boolean)`
 {enable_smart_order_by_default} `(boolean)`
 {enable_recent_marked_mapping} `(boolean)`
 {post_leader_marked_mapping} `(string)`
@@ -191,7 +191,6 @@ Fields ~
 {private} _registry `(integer[])`
 {private} _update_paused `(boolean)`
 {private} _update_paused_once `(boolean)`
-{private} _is_telescope_item_selected `(boolean)`
 {private} _is_smart_order_on `(boolean)`
 {opts} loft.RegistrySetupOpts
 
