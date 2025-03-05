@@ -345,11 +345,11 @@ end
 
 ---@private
 function UI:_get_footer()
-  return " "
-    .. self._smart_order_symbol
-    .. ": "
-    .. (self.registry_instance:is_smart_order_on() and "ON" or "OFF")
-    .. " "
+  local smart_order_indicator = self:smart_order_indicator()
+  if smart_order_indicator == "" then
+    return ""
+  end
+  return " " .. self:smart_order_indicator() .. " "
 end
 
 ---@param extras string|nil
@@ -544,8 +544,7 @@ end
 --- Get the smart order indicator (string)
 function UI:smart_order_indicator()
   local is_smart_order_on = self.registry_instance:is_smart_order_on()
-  local status = is_smart_order_on and "ON" or "OFF"
-  return self._smart_order_symbol .. ": " .. status
+  return is_smart_order_on and self._smart_order_symbol or ""
 end
 
 return UI:new(require("loft.registry"))
