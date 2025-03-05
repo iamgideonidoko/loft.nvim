@@ -245,11 +245,8 @@ function UI:_move_up()
   if no_of_entries == 0 then
     return
   end
-  if current_line > 1 then
-    vim.api.nvim_win_set_cursor(self._win_id, { current_line - 1, 1 })
-  else
-    vim.api.nvim_win_set_cursor(self._win_id, { no_of_entries, 1 })
-  end
+  local new_line = ((current_line - vim.v.count1 - 1) % no_of_entries) + 1
+  vim.api.nvim_win_set_cursor(self._win_id, { new_line, 1 })
 end
 
 --- Move cursor down in cyclic manner
@@ -260,11 +257,8 @@ function UI:_move_down()
   if no_of_entries == 0 then
     return
   end
-  if current_line < no_of_entries then
-    vim.api.nvim_win_set_cursor(self._win_id, { current_line + 1, 1 })
-  else
-    vim.api.nvim_win_set_cursor(self._win_id, { 1, 1 })
-  end
+  local new_line = ((current_line + vim.v.count1 - 1) % no_of_entries) + 1
+  vim.api.nvim_win_set_cursor(self._win_id, { new_line, 1 })
 end
 
 --- Move entry up in cyclic manner
