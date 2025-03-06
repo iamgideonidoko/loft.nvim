@@ -94,6 +94,20 @@ Switch to the alternate buffer without updating the registry
 Type ~
 `(fun())`
 
+------------------------------------------------------------------------------
+                                                        *actions.move_buffer_up*
+                            `actions.move_buffer_up`
+Move a buffer up in the registry
+Type ~
+`(fun())`
+
+------------------------------------------------------------------------------
+                                                      *actions.move_buffer_down*
+                           `actions.move_buffer_down`
+Move a buffer down in the registry
+Type ~
+`(fun())`
+
 
 ==============================================================================
 ------------------------------------------------------------------------------
@@ -368,6 +382,20 @@ Parameters ~
                                                     *UI:smart_order_indicator()*
                           `UI:smart_order_indicator`()
 Get the smart order indicator (string)
+
+------------------------------------------------------------------------------
+                                                           *UI:move_buffer_up()*
+                         `UI:move_buffer_up`({buffer})
+Move given or current buffer up in cyclic manner
+Parameters ~
+{buffer} `(optional)` `(integer)`
+
+------------------------------------------------------------------------------
+                                                         *UI:move_buffer_down()*
+                        `UI:move_buffer_down`({buffer})
+Move given or current buffer up in cyclic manner
+Parameters ~
+{buffer} `(optional)` `(integer)`
 
 
 ==============================================================================
