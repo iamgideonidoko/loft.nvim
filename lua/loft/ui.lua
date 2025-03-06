@@ -5,6 +5,7 @@ local actions = require("loft.actions")
 ---@class (exact) loft.UIOtherOpts
 ---@field show_marked_mapping_num boolean
 ---@field marked_mapping_num_style 'solid'|'outline'
+---@field timeout_on_curr_buf_move integer
 
 ---@class (exact) loft.UIOpts
 ---@field keymaps loft.UIKeymapsConfig
@@ -27,6 +28,7 @@ local actions = require("loft.actions")
 ---@field private _marked_nums_outline string[]
 ---@field private _other_opts loft.UIOtherOpts
 ---@field private _smart_order_symbol string
+---@field private _debounce_close fun()
 local UI = {}
 UI.__index = UI
 
@@ -48,6 +50,9 @@ function UI:setup(opts)
   self._general_keymaps = opts.general_keymaps
   self._window = opts.window
   self._other_opts = opts.other_opts
+  self._debounce_close = utils.debounce(function()
+    self:close()
+  end, opts.other_opts.timeout_on_curr_buf_move or 800)
 end
 
 --- Render a list of all the buffers in the registry (entries) in main UI buffer
@@ -541,15 +546,6 @@ function UI:smart_order_indicator()
   return is_smart_order_on and self._smart_order_symbol or ""
 end
 
----@type fun(self: loft.UI)
-local debounce_close = utils.debounce(
-  ---@param self loft.UI
-  function(self)
-    self:close()
-  end,
-  800
-)
-
 --- Move given or current buffer up in cyclic manner
 ---@param buffer? integer
 function UI:move_buffer_up(buffer)
@@ -568,10 +564,12 @@ function UI:move_buffer_up(buffer)
   if buf_idx == nil then
     return
   end
-  if not utils.window_exists(self._win_id) then
-    self:open()
+  if self._other_opts.timeout_on_curr_buf_move > 0 then
+    if not utils.window_exists(self._win_id) then
+      self:open()
+    end
+    self._debounce_close()
   end
-  debounce_close(self)
   self.registry_instance:move_buffer_up(buf_idx, true)
   if utils.window_exists(self._win_id) then
     local new_line = no_of_buffers
@@ -601,10 +599,12 @@ function UI:move_buffer_down(buffer)
   if buf_idx == nil then
     return
   end
-  if not utils.window_exists(self._win_id) then
-    self:open()
+  if self._other_opts.timeout_on_curr_buf_move > 0 then
+    if not utils.window_exists(self._win_id) then
+      self:open()
+    end
+    self._debounce_close()
   end
-  debounce_close(self)
   self.registry_instance:move_buffer_down(buf_idx, true)
   if utils.window_exists(self._win_id) then
     local new_line = 1
