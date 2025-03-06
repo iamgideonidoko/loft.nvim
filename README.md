@@ -36,7 +36,7 @@ Loft uses a registry to manage state and track buffers that can be cyclically na
 
 - #### ⟅⇅⟆ Smart Ordering
 
-  The smart ordering feature (represented with the symbol `⟅⇅⟆`) dynamically arranges your buffers based on recency. This means that if you navigate to a buffer without any Loft's action (say via [Telescope](https://github.com/nvim-telescope/telescope.nvim)), that buffer will be move to the last position in the registry. If you have Telescope installed, by default, the current buffer before navigation will be moved to second to the last position.
+  The smart ordering feature (represented with the symbol `⟅⇅⟆`) dynamically arranges your buffers based on recency. This means that if you navigate to a buffer without any Loft's action (say via [Telescope](https://github.com/nvim-telescope/telescope.nvim)), that buffer will be move to the last position in the registry. Also, the current buffer before navigation will be moved to second to the last position.
 
 - #### (✓) Marking
 
@@ -70,12 +70,10 @@ require("loft").setup()
 ```lua
 local actions = require("loft.actions")
 require("loft").setup({
-  -- Whether to move the current buffer to the second to last position (just before the
-  -- selected buffer, which will be the last position) in the registry during Telescope selection
-  move_curr_buf_on_telescope_select = true,
   close_invalid_buf_on_switch = true, -- Whether to close invalid buffers during navigation
   enable_smart_order_by_default = true, -- Whether to enable smart order by default
   smart_order_marked_bufs = false, -- Whether smart order (`⟅⇅⟆`) should reposition marked buffers
+  smart_order_alt_bufs = false, -- Whether smart order (`⟅⇅⟆`) should reposition alternate buffers
   enable_recent_marked_mapping = true, -- Whether the 9 most recently marked buffers should be switched to with a mapping (with keymaps)
 
   -- The character to use after leader when assigning keymap to the 9 most recently marked buffers
