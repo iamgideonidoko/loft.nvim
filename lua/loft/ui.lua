@@ -541,4 +541,62 @@ function UI:smart_order_indicator()
   return is_smart_order_on and self._smart_order_symbol or ""
 end
 
+--- Move given or current buffer up in cyclic manner
+---@param buffer? integer
+function UI:move_buffer_up(buffer)
+  self.registry_instance:clean()
+  local registry = self.registry_instance:get_registry()
+  local no_of_buffers = #registry
+  if no_of_buffers == 0 then
+    return
+  end
+  local buf = buffer
+    or (
+      utils.is_floating_window() and vim.api.nvim_win_get_buf(vim.fn.win_getid(vim.fn.winnr("#")))
+      or vim.api.nvim_get_current_buf()
+    )
+  local buf_idx = utils.get_index(registry, buf)
+  if buf_idx == nil then
+    return
+  end
+  self.registry_instance:move_buffer_up(buf_idx, true)
+  if utils.window_exists(self._win_id) then
+    local new_line = no_of_buffers
+    if buf_idx > 1 then
+      new_line = buf_idx - 1
+    end
+    vim.api.nvim_win_set_cursor(self._win_id, { new_line, 1 })
+    self:_render_entries()
+  end
+end
+
+--- Move given or current buffer up in cyclic manner
+---@param buffer? integer
+function UI:move_buffer_down(buffer)
+  self.registry_instance:clean()
+  local registry = self.registry_instance:get_registry()
+  local no_of_buffers = #registry
+  if no_of_buffers == 0 then
+    return
+  end
+  local buf = buffer
+    or (
+      utils.is_floating_window() and vim.api.nvim_win_get_buf(vim.fn.win_getid(vim.fn.winnr("#")))
+      or vim.api.nvim_get_current_buf()
+    )
+  local buf_idx = utils.get_index(registry, buf)
+  if buf_idx == nil then
+    return
+  end
+  self.registry_instance:move_buffer_down(buf_idx, true)
+  if utils.window_exists(self._win_id) then
+    local new_line = 1
+    if buf_idx < no_of_buffers then
+      new_line = buf_idx + 1
+    end
+    vim.api.nvim_win_set_cursor(self._win_id, { new_line, 1 })
+    self:_render_entries()
+  end
+end
+
 return UI:new(require("loft.registry"))
