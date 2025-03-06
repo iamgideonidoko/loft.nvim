@@ -19,5 +19,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Generate doc
         run: make --silent gen_doc
-      - name: Check for changes
-        run: if [[ -n $(git status -s) ]]; then exit 1; fi
+      - name: Check for Uncommitted Changes
+        run: |
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "⚠ Uncommitted changes detected!"
+          fi

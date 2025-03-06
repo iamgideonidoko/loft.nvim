@@ -1,7 +1,7 @@
 --- *loft.nvim* Streamlined plugin for productive buffer management
 --- *Loft*
 ---
---- MIT License Copyright (c) 2024 Gideon Idoko
+--- MIT License Copyright (c) 2025 Gideon Idoko
 ---
 --- ==============================================================================
 
@@ -33,10 +33,10 @@ end
 loft.setup = function(opts)
   config.setup(opts)
   registry_instance:setup({
-    track_telescope_select = config.all.move_curr_buf_on_telescope_select,
     close_invalid_buf_on_switch = config.all.close_invalid_buf_on_switch,
     enable_smart_order_by_default = config.all.enable_smart_order_by_default,
     smart_order_marked_bufs = config.all.smart_order_marked_bufs,
+    smart_order_alt_bufs = config.all.smart_order_alt_bufs,
     enable_recent_marked_mapping = config.all.enable_recent_marked_mapping,
     post_leader_marked_mapping = config.all.post_leader_marked_mapping,
   })
@@ -47,6 +47,7 @@ loft.setup = function(opts)
     other_opts = {
       show_marked_mapping_num = config.all.show_marked_mapping_num,
       marked_mapping_num_style = config.all.marked_mapping_num_style,
+      timeout_on_curr_buf_move = config.all.ui_timeout_on_curr_buf_move,
     },
   })
   setup_general_keymap(config.all.keymaps.general)

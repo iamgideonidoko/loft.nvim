@@ -16,6 +16,8 @@ Registry:toggle_smart_order()	loft.txt	/*Registry:toggle_smart_order()*
 UI	loft.txt	/*UI*
 UI:get_buffer_mark()	loft.txt	/*UI:get_buffer_mark()*
 UI:is_open()	loft.txt	/*UI:is_open()*
+UI:move_buffer_down()	loft.txt	/*UI:move_buffer_down()*
+UI:move_buffer_up()	loft.txt	/*UI:move_buffer_up()*
 UI:new()	loft.txt	/*UI:new()*
 UI:setup()	loft.txt	/*UI:setup()*
 UI:smart_order_indicator()	loft.txt	/*UI:smart_order_indicator()*
@@ -23,6 +25,8 @@ UI:toggle()	loft.txt	/*UI:toggle()*
 UI:toggle_smart_order()	loft.txt	/*UI:toggle_smart_order()*
 actions	loft.txt	/*actions*
 actions.close_buffer	loft.txt	/*actions.close_buffer*
+actions.move_buffer_down	loft.txt	/*actions.move_buffer_down*
+actions.move_buffer_up	loft.txt	/*actions.move_buffer_up*
 actions.open_loft	loft.txt	/*actions.open_loft*
 actions.switch_to_alt_buffer	loft.txt	/*actions.switch_to_alt_buffer*
 actions.switch_to_next_buffer	loft.txt	/*actions.switch_to_next_buffer*

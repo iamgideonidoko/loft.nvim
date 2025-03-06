@@ -6,14 +6,15 @@ local actions = require("loft.actions")
 
 ---@class (exact) loft.SetupConfig
 ---@field keymaps? loft.KeymapConfig
----@field move_curr_buf_on_telescope_select? boolean Whether to move the current buffer to the last of the registry during Telescope selection just before the selected buffer
 ---@field close_invalid_buf_on_switch? boolean Whether to close invalid buffers when switching buffers
 ---@field enable_smart_order_by_default? boolean Whether to enable smart order by default
 ---@field smart_order_marked_bufs? boolean Whether smart order should reposition marked buffers
+---@field smart_order_alt_bufs? boolean Whether smart order should reposition alternate buffer by moving it to just before the current buffer
 ---@field enable_recent_marked_mapping? boolean Whether the 9 most recently marked buffers should be switched to with a mapping (with keymaps)
 ---@field post_leader_marked_mapping? string The character to use after leader when assigning keymap to the 9 most recently marked buffers
 ---@field show_marked_mapping_num? boolean Whether to show the mapping number for the 9 most recently marked buffers
 ---@field marked_mapping_num_style? 'solid'|'outline' The style of the mapping number
+---@field ui_timeout_on_curr_buf_move? integer The timeout in milliseconds to wait before closing the UI after moving the current buffer. Defaults to 800. Set to 0 to disable the UI from showing.
 ---@field window? loft.WinOpts
 
 ---@class (exact) loft.WinOpts
@@ -29,14 +30,15 @@ local actions = require("loft.actions")
 
 ---@type loft.SetupConfig
 local default_config = {
-  move_curr_buf_on_telescope_select = true,
   close_invalid_buf_on_switch = true,
   enable_smart_order_by_default = true,
   smart_order_marked_bufs = false,
+  smart_order_alt_bufs = true,
   enable_recent_marked_mapping = true,
   post_leader_marked_mapping = "l",
   show_marked_mapping_num = true,
   marked_mapping_num_style = "solid",
+  ui_timeout_on_curr_buf_move = 800,
   window = {
     width = nil,
     height = nil,
@@ -76,6 +78,8 @@ local default_config = {
       ["<leader>lm"] = actions.toggle_mark_current_buffer,
       ["<leader>ls"] = actions.toggle_smart_order,
       ["<leader>la"] = actions.switch_to_alt_buffer,
+      ["<S-M-i>"] = actions.move_buffer_up,
+      ["<S-M-o>"] = actions.move_buffer_down,
     },
   },
 }

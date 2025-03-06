@@ -198,6 +198,24 @@ actions.switch_to_alt_buffer = {
   end,
 }
 
+--- Move the current buffer up the registry in a cyclic manner while showing the UI briefly
+---@type fun()
+actions.move_buffer_up = {
+  desc = "Move buffer up",
+  func = function()
+    require("loft.ui"):move_buffer_up()
+  end,
+}
+
+--- Move the current buffer down the registry in a cyclic manner while showing the UI briefly
+---@type fun()
+actions.move_buffer_down = {
+  desc = "Move buffer down",
+  func = function()
+    require("loft.ui"):move_buffer_down()
+  end,
+}
+
 for _, action in pairs(actions) do
   setmetatable(action, {
     __call = function(_, ...)

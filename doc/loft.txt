@@ -3,7 +3,7 @@
 *loft.nvim* Streamlined plugin for productive buffer management
 *Loft*
 
-MIT License Copyright (c) 2024 Gideon Idoko
+MIT License Copyright (c) 2025 Gideon Idoko
 
 ==============================================================================
 
@@ -94,6 +94,20 @@ Switch to the alternate buffer without updating the registry
 Type ~
 `(fun())`
 
+------------------------------------------------------------------------------
+                                                        *actions.move_buffer_up*
+                            `actions.move_buffer_up`
+Move the current buffer up the registry in a cyclic manner while showing the UI briefly
+Type ~
+`(fun())`
+
+------------------------------------------------------------------------------
+                                                      *actions.move_buffer_down*
+                           `actions.move_buffer_down`
+Move the current buffer down the registry in a cyclic manner while showing the UI briefly
+Type ~
+`(fun())`
+
 
 ==============================================================================
 ------------------------------------------------------------------------------
@@ -101,14 +115,15 @@ Class ~
 {(exact)} loft.SetupConfig
 Fields ~
 {keymaps} `(optional)` loft.KeymapConfig
-{move_curr_buf_on_telescope_select} `(optional)` `(boolean)` Whether to move the current buffer to the last of the registry during Telescope selection just before the selected buffer
 {close_invalid_buf_on_switch} `(optional)` `(boolean)` Whether to close invalid buffers when switching buffers
 {enable_smart_order_by_default} `(optional)` `(boolean)` Whether to enable smart order by default
 {smart_order_marked_bufs} `(optional)` `(boolean)` Whether smart order should reposition marked buffers
+{smart_order_alt_bufs} `(optional)` `(boolean)` Whether smart order should reposition alternate buffer by moving it to just before the current buffer
 {enable_recent_marked_mapping} `(optional)` `(boolean)` Whether the 9 most recently marked buffers should be switched to with a mapping (with keymaps)
 {post_leader_marked_mapping} `(optional)` `(string)` The character to use after leader when assigning keymap to the 9 most recently marked buffers
 {show_marked_mapping_num} `(optional)` `(boolean)` Whether to show the mapping number for the 9 most recently marked buffers
 {marked_mapping_num_style} `(optional)` 'solid'|'outline' The style of the mapping `(number)`
+{ui_timeout_on_curr_buf_move} `(optional)` `(integer)` The timeout in milliseconds to wait before closing the UI after moving the current buffer. Defaults to 800. Set to 0 to disable the UI from showing.
 {window} `(optional)` loft.WinOpts
 
 ------------------------------------------------------------------------------
@@ -175,9 +190,9 @@ Parameters ~
 Class ~
 {(exact)} loft.RegistrySetupOpts
 Fields ~
-{track_telescope_select} `(boolean)`
 {close_invalid_buf_on_switch} `(boolean)`
 {smart_order_marked_bufs} `(boolean)`
+{smart_order_alt_bufs} `(boolean)`
 {enable_smart_order_by_default} `(boolean)`
 {enable_recent_marked_mapping} `(boolean)`
 {post_leader_marked_mapping} `(string)`
@@ -191,7 +206,6 @@ Fields ~
 {private} _registry `(integer[])`
 {private} _update_paused `(boolean)`
 {private} _update_paused_once `(boolean)`
-{private} _is_telescope_item_selected `(boolean)`
 {private} _is_smart_order_on `(boolean)`
 {opts} loft.RegistrySetupOpts
 
@@ -299,6 +313,7 @@ Class ~
 Fields ~
 {show_marked_mapping_num} `(boolean)`
 {marked_mapping_num_style} 'solid'|'outline'
+{timeout_on_curr_buf_move} `(integer)`
 
 ------------------------------------------------------------------------------
 Class ~
@@ -329,6 +344,7 @@ Fields ~
 {private} _marked_nums_outline `(string[])`
 {private} _other_opts loft.UIOtherOpts
 {private} _smart_order_symbol `(string)`
+{private} _debounce_close `(fun())`
 
 ------------------------------------------------------------------------------
                                                                       *UI:new()*
@@ -369,6 +385,16 @@ Parameters ~
                                                     *UI:smart_order_indicator()*
                           `UI:smart_order_indicator`()
 Get the smart order indicator (string)
+
+------------------------------------------------------------------------------
+                                                           *UI:move_buffer_up()*
+                             `UI:move_buffer_up`()
+Move the current buffer up the registry in cyclic manner while showing the UI briefly
+
+------------------------------------------------------------------------------
+                                                         *UI:move_buffer_down()*
+                            `UI:move_buffer_down`()
+Move the current buffer down the registry in a cyclic manner while showing the UI briefly
 
 
 ==============================================================================

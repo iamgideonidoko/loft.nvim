@@ -5,6 +5,7 @@ local actions = require("loft.actions")
 ---@class (exact) loft.UIOtherOpts
 ---@field show_marked_mapping_num boolean
 ---@field marked_mapping_num_style 'solid'|'outline'
+---@field timeout_on_curr_buf_move integer
 
 ---@class (exact) loft.UIOpts
 ---@field keymaps loft.UIKeymapsConfig
@@ -27,6 +28,7 @@ local actions = require("loft.actions")
 ---@field private _marked_nums_outline string[]
 ---@field private _other_opts loft.UIOtherOpts
 ---@field private _smart_order_symbol string
+---@field private _debounce_close fun()
 local UI = {}
 UI.__index = UI
 
@@ -48,6 +50,9 @@ function UI:setup(opts)
   self._general_keymaps = opts.general_keymaps
   self._window = opts.window
   self._other_opts = opts.other_opts
+  self._debounce_close = utils.debounce(function()
+    self:close()
+  end, opts.other_opts.timeout_on_curr_buf_move or 800)
 end
 
 --- Render a list of all the buffers in the registry (entries) in main UI buffer
@@ -245,11 +250,8 @@ function UI:_move_up()
   if no_of_entries == 0 then
     return
   end
-  if current_line > 1 then
-    vim.api.nvim_win_set_cursor(self._win_id, { current_line - 1, 1 })
-  else
-    vim.api.nvim_win_set_cursor(self._win_id, { no_of_entries, 1 })
-  end
+  local new_line = ((current_line - vim.v.count1 - 1) % no_of_entries) + 1
+  vim.api.nvim_win_set_cursor(self._win_id, { new_line, 1 })
 end
 
 --- Move cursor down in cyclic manner
@@ -260,11 +262,8 @@ function UI:_move_down()
   if no_of_entries == 0 then
     return
   end
-  if current_line < no_of_entries then
-    vim.api.nvim_win_set_cursor(self._win_id, { current_line + 1, 1 })
-  else
-    vim.api.nvim_win_set_cursor(self._win_id, { 1, 1 })
-  end
+  local new_line = ((current_line + vim.v.count1 - 1) % no_of_entries) + 1
+  vim.api.nvim_win_set_cursor(self._win_id, { new_line, 1 })
 end
 
 --- Move entry up in cyclic manner
@@ -345,11 +344,11 @@ end
 
 ---@private
 function UI:_get_footer()
-  return " "
-    .. self._smart_order_symbol
-    .. ": "
-    .. (self.registry_instance:is_smart_order_on() and "ON" or "OFF")
-    .. " "
+  local smart_order_indicator = self:smart_order_indicator()
+  if smart_order_indicator == "" then
+    return ""
+  end
+  return " " .. self:smart_order_indicator() .. " "
 end
 
 ---@param extras string|nil
@@ -544,8 +543,70 @@ end
 --- Get the smart order indicator (string)
 function UI:smart_order_indicator()
   local is_smart_order_on = self.registry_instance:is_smart_order_on()
-  local status = is_smart_order_on and "ON" or "OFF"
-  return self._smart_order_symbol .. ": " .. status
+  return is_smart_order_on and self._smart_order_symbol or ""
+end
+
+--- Move the current buffer up the registry in cyclic manner while showing the UI briefly
+function UI:move_buffer_up()
+  self.registry_instance:clean()
+  local registry = self.registry_instance:get_registry()
+  local no_of_buffers = #registry
+  if no_of_buffers == 0 then
+    return
+  end
+  local buf = utils.is_floating_window() and vim.api.nvim_win_get_buf(vim.fn.win_getid(vim.fn.winnr("#")))
+    or vim.api.nvim_get_current_buf()
+
+  local buf_idx = utils.get_index(registry, buf)
+  if buf_idx == nil then
+    return
+  end
+  if self._other_opts.timeout_on_curr_buf_move > 0 then
+    if not utils.window_exists(self._win_id) then
+      self:open()
+    end
+    self._debounce_close()
+  end
+  self.registry_instance:move_buffer_up(buf_idx, true)
+  if utils.window_exists(self._win_id) then
+    local new_line = no_of_buffers
+    if buf_idx > 1 then
+      new_line = buf_idx - 1
+    end
+    vim.api.nvim_win_set_cursor(self._win_id, { new_line, 1 })
+    self:_render_entries()
+  end
+end
+
+--- Move the current buffer down the registry in a cyclic manner while showing the UI briefly
+function UI:move_buffer_down()
+  self.registry_instance:clean()
+  local registry = self.registry_instance:get_registry()
+  local no_of_buffers = #registry
+  if no_of_buffers == 0 then
+    return
+  end
+  local buf = utils.is_floating_window() and vim.api.nvim_win_get_buf(vim.fn.win_getid(vim.fn.winnr("#")))
+    or vim.api.nvim_get_current_buf()
+  local buf_idx = utils.get_index(registry, buf)
+  if buf_idx == nil then
+    return
+  end
+  if self._other_opts.timeout_on_curr_buf_move > 0 then
+    if not utils.window_exists(self._win_id) then
+      self:open()
+    end
+    self._debounce_close()
+  end
+  self.registry_instance:move_buffer_down(buf_idx, true)
+  if utils.window_exists(self._win_id) then
+    local new_line = 1
+    if buf_idx < no_of_buffers then
+      new_line = buf_idx + 1
+    end
+    vim.api.nvim_win_set_cursor(self._win_id, { new_line, 1 })
+    self:_render_entries()
+  end
 end
 
 return UI:new(require("loft.registry"))
