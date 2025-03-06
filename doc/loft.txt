@@ -97,14 +97,14 @@ Type ~
 ------------------------------------------------------------------------------
                                                         *actions.move_buffer_up*
                             `actions.move_buffer_up`
-Move a buffer up in the registry
+Move the current buffer up the registry in a cyclic manner while showing the UI briefly
 Type ~
 `(fun())`
 
 ------------------------------------------------------------------------------
                                                       *actions.move_buffer_down*
                            `actions.move_buffer_down`
-Move a buffer down in the registry
+Move the current buffer down the registry in a cyclic manner while showing the UI briefly
 Type ~
 `(fun())`
 
@@ -388,17 +388,13 @@ Get the smart order indicator (string)
 
 ------------------------------------------------------------------------------
                                                            *UI:move_buffer_up()*
-                         `UI:move_buffer_up`({buffer})
-Move given or current buffer up in cyclic manner
-Parameters ~
-{buffer} `(optional)` `(integer)`
+                             `UI:move_buffer_up`()
+Move the current buffer up the registry in cyclic manner while showing the UI briefly
 
 ------------------------------------------------------------------------------
                                                          *UI:move_buffer_down()*
-                        `UI:move_buffer_down`({buffer})
-Move given or current buffer up in cyclic manner
-Parameters ~
-{buffer} `(optional)` `(integer)`
+                            `UI:move_buffer_down`()
+Move the current buffer down the registry in a cyclic manner while showing the UI briefly
 
 
 ==============================================================================

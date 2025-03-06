@@ -198,7 +198,7 @@ actions.switch_to_alt_buffer = {
   end,
 }
 
---- Move a buffer up in the registry
+--- Move the current buffer up the registry in a cyclic manner while showing the UI briefly
 ---@type fun()
 actions.move_buffer_up = {
   desc = "Move buffer up",
@@ -207,7 +207,7 @@ actions.move_buffer_up = {
   end,
 }
 
---- Move a buffer down in the registry
+--- Move the current buffer down the registry in a cyclic manner while showing the UI briefly
 ---@type fun()
 actions.move_buffer_down = {
   desc = "Move buffer down",
