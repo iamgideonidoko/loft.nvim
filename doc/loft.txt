@@ -123,6 +123,7 @@ Fields ~
 {post_leader_marked_mapping} `(optional)` `(string)` The character to use after leader when assigning keymap to the 9 most recently marked buffers
 {show_marked_mapping_num} `(optional)` `(boolean)` Whether to show the mapping number for the 9 most recently marked buffers
 {marked_mapping_num_style} `(optional)` 'solid'|'outline' The style of the mapping `(number)`
+{ui_timeout_on_curr_buf_move} `(optional)` `(integer)` The timeout in milliseconds to wait before closing the UI after moving the current buffer. Defaults to 800. Set to 0 to disable the UI from showing.
 {window} `(optional)` loft.WinOpts
 
 ------------------------------------------------------------------------------
@@ -312,6 +313,7 @@ Class ~
 Fields ~
 {show_marked_mapping_num} `(boolean)`
 {marked_mapping_num_style} 'solid'|'outline'
+{timeout_on_curr_buf_move} `(integer)`
 
 ------------------------------------------------------------------------------
 Class ~
@@ -342,6 +344,7 @@ Fields ~
 {private} _marked_nums_outline `(string[])`
 {private} _other_opts loft.UIOtherOpts
 {private} _smart_order_symbol `(string)`
+{private} _debounce_close `(fun())`
 
 ------------------------------------------------------------------------------
                                                                       *UI:new()*
