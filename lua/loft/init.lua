@@ -1,7 +1,7 @@
 --- *loft.nvim* Streamlined plugin for productive buffer management
 --- *Loft*
 ---
---- MIT License Copyright (c) 2024 Gideon Idoko
+--- MIT License Copyright (c) 2025 Gideon Idoko
 ---
 --- ==============================================================================
 
