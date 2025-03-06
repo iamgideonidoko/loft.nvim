@@ -541,6 +541,15 @@ function UI:smart_order_indicator()
   return is_smart_order_on and self._smart_order_symbol or ""
 end
 
+---@type fun(self: loft.UI)
+local debounce_close = utils.debounce(
+  ---@param self loft.UI
+  function(self)
+    self:close()
+  end,
+  800
+)
+
 --- Move given or current buffer up in cyclic manner
 ---@param buffer? integer
 function UI:move_buffer_up(buffer)
@@ -559,6 +568,10 @@ function UI:move_buffer_up(buffer)
   if buf_idx == nil then
     return
   end
+  if not utils.window_exists(self._win_id) then
+    self:open()
+  end
+  debounce_close(self)
   self.registry_instance:move_buffer_up(buf_idx, true)
   if utils.window_exists(self._win_id) then
     local new_line = no_of_buffers
@@ -588,6 +601,10 @@ function UI:move_buffer_down(buffer)
   if buf_idx == nil then
     return
   end
+  if not utils.window_exists(self._win_id) then
+    self:open()
+  end
+  debounce_close(self)
   self.registry_instance:move_buffer_down(buf_idx, true)
   if utils.window_exists(self._win_id) then
     local new_line = 1
