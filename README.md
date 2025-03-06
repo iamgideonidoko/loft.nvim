@@ -80,6 +80,10 @@ require("loft").setup({
   post_leader_marked_mapping = "l",  -- Maps to <leader>l1...9 for navigation
   show_marked_mapping_num = true, -- Whether to show the mapping number for the 9 most recently marked buffers
   marked_mapping_num_style = "solid", -- The style of the mapping number
+
+  --[[ The timeout in milliseconds to wait before closing the UI after moving the current buffer.
+  Defaults to 800. Set to 0 to disable the UI from showing at all. ]]
+  ui_timeout_on_curr_buf_move = 800
   window = {
     width = nil, -- Defaults to calculated width
     height = nil, -- Defaults to calculated height
@@ -122,6 +126,8 @@ require("loft").setup({
       ["<leader>lm"] = actions.toggle_mark_current_buffer, -- Mark or unmark the current buffer
       ["<leader>ls"] = actions.toggle_smart_order, -- Toggle Smart Order ON and OFF
       ["<leader>la"] = actions.switch_to_alt_buffer, -- Switch to alternate buffer without updating the registry
+      ["<S-M-i>"] = actions.move_buffer_up, --  Move the current buffer up while showing the UI briefly
+      ["<S-M-o>"] = actions.move_buffer_down, --  Move the current buffer down while showing the UI briefly
     },
   },
 })
@@ -183,6 +189,9 @@ Here's what your statusline would look like:
 <div>
   <img src="assets/statusline_showcase.png" width="300" alt="Statusline Showcase" />
 </div>
+<br />
+
+Another little tip: you can search (/) the loft UI by the ID of filename of the entry/buffer to get it.
 
 ## Contributing
 
@@ -190,6 +199,5 @@ Contributions are welcome! Please feel free to check out the [contribution guide
 
 ## Roadmap
 
-- Implement CI/CD to run formatter, lint, and tests.
 - Registry/state persistence across sessions (investigate the plugin experience with session persistence plugins)
-- Add buffer-relative UI to show info like the filename/path, marked/modified state, etc. (I'll only get to this if it's requested by many)
+- Add buffer-relative UI to show info like the filename/path, marked/modified state, etc. (This can be done via status line so I'll only get to this if it's highly requested)
