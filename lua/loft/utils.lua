@@ -124,6 +124,26 @@ utils.greedy_debounce = function(func, timeout)
   end
 end
 
+--- Check if a given file path is in a temporary directory
+---@param file_path string
+utils.in_temp_directory = function(file_path)
+  local temp_dirs = {
+    vim.fn.stdpath("run"),
+    vim.fn.stdpath("cache"),
+    os.getenv("TMPDIR"),
+    os.getenv("TMP"),
+    os.getenv("TEMP"),
+    "/tmp",
+    "/var/tmp",
+  }
+  for _, temp_dir in ipairs(temp_dirs) do
+    if temp_dir and file_path:find(temp_dir, 1, true) then
+      return true
+    end
+  end
+  return false
+end
+
 --- Check if the given or current buffer has a deleted or missing file
 ---@param buffer? integer
 utils.buf_has_deleted_file = function(buffer)
@@ -138,8 +158,9 @@ utils.buf_has_deleted_file = function(buffer)
     buftype ~= ""
     or file_path == ""
     or stat
-    or vim.fn.filereadable(file_path) == 1
-    or 0 == vim.fn.buflisted(buf)
+    or utils.in_temp_directory(file_path)
+    or vim.fn.filereadable(file_path) ~= 0
+    or vim.fn.buflisted(buf) == 0
   )
 end
 
