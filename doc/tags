@@ -55,6 +55,7 @@ utils.get_augroup()	loft.txt	/*utils.get_augroup()*
 utils.get_index()	loft.txt	/*utils.get_index()*
 utils.get_nvim_version()	loft.txt	/*utils.get_nvim_version()*
 utils.greedy_debounce()	loft.txt	/*utils.greedy_debounce()*
+utils.in_temp_directory()	loft.txt	/*utils.in_temp_directory()*
 utils.is_buffer_valid()	loft.txt	/*utils.is_buffer_valid()*
 utils.is_floating_window()	loft.txt	/*utils.is_floating_window()*
 utils.merge_distinct()	loft.txt	/*utils.merge_distinct()*

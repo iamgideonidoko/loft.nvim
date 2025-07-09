@@ -11,7 +11,7 @@ MIT License Copyright (c) 2025 Gideon Idoko
                                                                   *loft.setup()*
                               `loft.setup`({opts})
 Parameters ~
-{opts} `(optional)` loft.SetupConfig
+{opts} `(optional)` `(loft.SetupConfig)`
 
 
 ==============================================================================
@@ -114,7 +114,7 @@ Type ~
 Class ~
 {(exact)} loft.SetupConfig
 Fields ~
-{keymaps} `(optional)` loft.KeymapConfig
+{keymaps} `(optional)` `(loft.KeymapConfig)`
 {close_invalid_buf_on_switch} `(optional)` `(boolean)` Whether to close invalid buffers when switching buffers
 {enable_smart_order_by_default} `(optional)` `(boolean)` Whether to enable smart order by default
 {smart_order_marked_bufs} `(optional)` `(boolean)` Whether smart order should reposition marked buffers
@@ -122,9 +122,9 @@ Fields ~
 {enable_recent_marked_mapping} `(optional)` `(boolean)` Whether the 9 most recently marked buffers should be switched to with a mapping (with keymaps)
 {post_leader_marked_mapping} `(optional)` `(string)` The character to use after leader when assigning keymap to the 9 most recently marked buffers
 {show_marked_mapping_num} `(optional)` `(boolean)` Whether to show the mapping number for the 9 most recently marked buffers
-{marked_mapping_num_style} `(optional)` 'solid'|'outline' The style of the mapping `(number)`
+{marked_mapping_num_style} `(optional)` '`(solid)`'|'outline' The style of the mapping number
 {ui_timeout_on_curr_buf_move} `(optional)` `(integer)` The timeout in milliseconds to wait before closing the UI after moving the current buffer. Defaults to 800. Set to 0 to disable the UI from showing.
-{window} `(optional)` loft.WinOpts
+{window} `(optional)` `(loft.WinOpts)`
 
 ------------------------------------------------------------------------------
 Class ~
@@ -133,21 +133,21 @@ Fields ~
 {width} `(optional)` `(integer)` Defaults to calculated width
 {height} `(optional)` `(integer)` Defaults to calculated height
 {zindex} `(optional)` `(integer)`
-{title_pos} `(optional)` "left"|"right"|"center"
-{border} `(optional)` `("none"|"single"|"double"|"rounded"|"solid"|"shadow"|string[])`
+{title_pos} `(optional)` "`(left)`"|"right"|"center"
+{border} `(optional)` "`(none)`"|"single"|"double"|"rounded"|"solid"|"shadow"|string[]
 
 ------------------------------------------------------------------------------
 Class ~
 {(exact)} loft.KeymapConfig
 Fields ~
-{ui} `(optional)` `(table<string, 'move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'|'show_help'|'move_up_to_marked_entry'|'move_down_to_marked_entry'|function|false>)`
+{ui} `(optional)` `(table<string, ('move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'|'show_help'|'move_up_to_marked_entry'|'move_down_to_marked_entry')|function|false>)`
 {general} `(optional)` `(table<string, { callback: function|loft.Action, desc: string }|function|loft.Action|false>)` For keys mapped outside of Loft in `normal` mode
 
 ------------------------------------------------------------------------------
                                                                 *default_config*
                                 `default_config`
 Type ~
-loft.SetupConfig
+`(loft.SetupConfig)`
 
 ------------------------------------------------------------------------------
                                                                         *config*
@@ -155,13 +155,13 @@ loft.SetupConfig
 Class ~
 {loft.Config}
 Fields ~
-{all} `(optional)` loft.SetupConfig
+{all} `(optional)` `(loft.SetupConfig)`
 
 ------------------------------------------------------------------------------
                                                                     *config.all*
                                   `config.all`
 Type ~
-loft.SetupConfig
+`(loft.SetupConfig)`
 
 ------------------------------------------------------------------------------
                                                                 *config.setup()*
@@ -203,11 +203,11 @@ Fields ~
 Class ~
 {loft.Registry}
 Fields ~
-{private} _registry `(integer[])`
-{private} _update_paused `(boolean)`
-{private} _update_paused_once `(boolean)`
-{private} _is_smart_order_on `(boolean)`
-{opts} loft.RegistrySetupOpts
+{private} _`(registry)` integer[]
+{private} _`(update_paused)` boolean
+{private} _`(update_paused_once)` boolean
+{private} _`(is_smart_order_on)` boolean
+{opts} `(loft.RegistrySetupOpts)`
 
 ------------------------------------------------------------------------------
                                                               *Registry:clean()*
@@ -245,7 +245,7 @@ Parameters ~
                             `Registry:setup`({opts})
 Called on plugin setup
 Parameters ~
-{opts} loft.RegistrySetupOpts
+{opts} `(loft.RegistrySetupOpts)`
 
 ------------------------------------------------------------------------------
                                                    *Registry.is_buffer_marked()*
@@ -261,14 +261,14 @@ Toggle the mark state of a given buffer
 Parameters ~
 {buffer} `(integer)`
 Return ~
-`(boolean:)` New mark state of given buffer
+`(boolean)`: New mark state of given buffer
 
 ------------------------------------------------------------------------------
                                                   *Registry:get_marked_buffer()*
               `Registry:get_marked_buffer`({direction}, {buffer})
 Get the next or prev marked buffer in registry
 Parameters ~
-{direction}  'next'|'prev'
+{direction}  '`(next)`'|'prev'
 {buffer} `(optional)`  `(integer)`
 
 ------------------------------------------------------------------------------
@@ -282,7 +282,7 @@ Parameters ~
                                                  *Registry:toggle_smart_order()*
                         `Registry:toggle_smart_order`()
 Return ~
-`(boolean:)` New state of smart order
+`(boolean)`: New state of smart order
 
 ------------------------------------------------------------------------------
                                        *Registry:keymap_recent_marked_buffers()*
@@ -312,17 +312,17 @@ Class ~
 {(exact)} loft.UIOtherOpts
 Fields ~
 {show_marked_mapping_num} `(boolean)`
-{marked_mapping_num_style} 'solid'|'outline'
+{marked_mapping_num_style} '`(solid)`'|'outline'
 {timeout_on_curr_buf_move} `(integer)`
 
 ------------------------------------------------------------------------------
 Class ~
 {(exact)} loft.UIOpts
 Fields ~
-{keymaps} `(table<string, 'move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'|'show_help'|'move_up_to_marked_entry'|'move_down_to_marked_entry'|function|false>)`
+{keymaps} `(table<string, ('move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'|'show_help'|'move_up_to_marked_entry'|'move_down_to_marked_entry')|function|false>)`
 {general_keymaps} `(table<string, { callback: function|loft.Action, desc: string }|function|loft.Action|false>)` For keys mapped outside of Loft in `normal` mode
-{window} loft.WinOpts
-{other_opts} loft.UIOtherOpts
+{window} `(loft.WinOpts)`
+{other_opts} `(loft.UIOtherOpts)`
 
 ------------------------------------------------------------------------------
                                                                             *UI*
@@ -330,39 +330,39 @@ Fields ~
 Class ~
 {loft.UI}
 Fields ~
-{private} _win_id `(integer|nil)`
-{private} _buf_id `(integer|nil)`
-{private} _last_win_before_loft `(integer|nil)`
-{private} _last_buf_before_loft `(integer|nil)`
-{registry_instance} loft.Registry
-{private} _keymaps `(table<string, 'move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'|'show_help'|'move_up_to_marked_entry'|'move_down_to_marked_entry'|function|false>|nil)`
-{private} _general_keymaps `(table<string, { callback: function|loft.Action, desc: string }|function|loft.Action|false>)` For keys mapped outside of Loft in `normal` mode|nil
-{private} _help_win_id `(integer|nil)`
-{private} _help_buf_id `(integer|nil)`
-{private} _window `(loft.WinOpts|nil)`
-{private} _marked_nums_solid `(string[])`
-{private} _marked_nums_outline `(string[])`
-{private} _other_opts loft.UIOtherOpts
-{private} _smart_order_symbol `(string)`
-{private} _debounce_close `(fun())`
+{private} _`(win_id)` integer|nil
+{private} _`(buf_id)` integer|nil
+{private} _`(last_win_before_loft)` integer|nil
+{private} _`(last_buf_before_loft)` integer|nil
+{registry_instance} `(loft.Registry)`
+{private} _`(keymaps)` (table<string, ('move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'|'show_help'|'move_up_to_marked_entry'|'move_down_to_marked_entry')|function|false>)|nil
+{private} _`(general_keymaps)` (table<string, { callback: function|loft.Action, desc: string }|function|loft.Action|false> For keys mapped outside of Loft in `normal` mode)|nil
+{private} _`(help_win_id)` integer|nil
+{private} _`(help_buf_id)` integer|nil
+{private} _`(window)` loft.WinOpts|nil
+{private} _`(marked_nums_solid)` string[]
+{private} _`(marked_nums_outline)` string[]
+{private} _`(other_opts)` loft.UIOtherOpts
+{private} _`(smart_order_symbol)` string
+{private} _`(debounce_close)` fun()
 
 ------------------------------------------------------------------------------
                                                                       *UI:new()*
                          `UI:new`({registry_instance})
 Parameters ~
-{registry_instance} loft.Registry
+{registry_instance} `(loft.Registry)`
 
 ------------------------------------------------------------------------------
                                                                     *UI:setup()*
                                `UI:setup`({opts})
 Parameters ~
-{opts} loft.UIOpts
+{opts} `(loft.UIOpts)`
 
 ------------------------------------------------------------------------------
                                                        *UI:toggle_smart_order()*
                            `UI:toggle_smart_order`()
 Return ~
-`(boolean:)` New state of smart order
+`(boolean)`: New state of smart order
 
 ------------------------------------------------------------------------------
                                                                    *UI:toggle()*
@@ -480,6 +480,13 @@ Ensure that a function is greedily called only once in a given time frame
 Parameters ~
 {func} `(function)`
 {timeout} `(number)` Time in milliseconds
+
+------------------------------------------------------------------------------
+                                                     *utils.in_temp_directory()*
+                     `utils.in_temp_directory`({file_path})
+Check if a given file path is in a temporary directory
+Parameters ~
+{file_path} `(string)`
 
 ------------------------------------------------------------------------------
                                                   *utils.buf_has_deleted_file()*
