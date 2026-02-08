@@ -383,7 +383,7 @@ function UI:_show_help()
     return vim.api.nvim_set_current_win(self._help_win_id)
   end
   local content = {
-    "Help (v" .. constants.PLUGIN_VERSION .. "):",
+    " ⨳⨳ LOFT HELP ⨳⨳ ",
     "`loft.nvim` streamlines buffer management while you focus on your code",
     "",
     "Keymaps:",
