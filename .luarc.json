@@ -1,8 +1,0 @@
-{
-  "runtime.version": "LuaJIT",
-  "runtime.path": ["?.lua", "?/init.lua"],
-  "diagnostics.globals": ["vim"],
-  "workspace.library": ["$VIMRUNTIME/lua", "$VIMRUNTIME/lua/vim/lsp"],
-  "workspace.maxPreload": 100000,
-  "workspace.preloadFileSize": 10000
-}
