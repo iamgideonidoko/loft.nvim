@@ -193,6 +193,33 @@ Here's what your statusline would look like:
 
 Another little tip: you can search (/) the loft UI by the ID of filename of the entry/buffer to get it.
 
+### Usage with oil.nvim
+
+If you use [`oil.nvim`](https://github.com/stevearc/oil.nvim) (which I recommend for file exploration, btw), you can hook into the `OilActionsPost` user autocmd to clean the Loft registry after file deletion:
+
+```lua
+vim.api.nvim_create_autocmd("User", {
+  pattern = "OilActionsPost",
+  desc = "Clean Loft registry after oil.nvim deletions",
+  callback = function(args)
+    local actions = args.data and args.data.actions or {}
+    local needs_clean = false
+    for _, action in ipairs(actions) do
+      if action.type == "delete" or action.type == "trash" then
+        needs_clean = true
+        break
+      end
+    end
+    if needs_clean then
+      local ok, registry = pcall(require, "loft.registry")
+      if ok then
+        registry:clean()
+      end
+    end
+  end,
+})
+```
+
 ## Contributing
 
 Contributions are welcome! Please feel free to check out the [contribution guide](./CONTRIBUTING.md).
