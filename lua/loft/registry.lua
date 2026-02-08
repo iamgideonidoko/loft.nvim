@@ -105,15 +105,16 @@ function Registry:clean()
       table.insert(valid_buffers, buf)
     end
   end
-  self._registry = utils.merge_distinct(valid_buffers, utils.get_all_valid_buffers())
-  -- Clean up buffers with missing files
-  local current_buf = vim.api.nvim_get_current_buf()
-  for _, buf in ipairs(self._registry) do
-    if utils.buf_has_deleted_file(buf) and buf ~= current_buf then
-      -- Skip the current buffer since it's safely handled by autocmd (like switching to next. see lua/loft/autocmds.lua)
+
+  -- Delete buffers with missing files to prevent them from being switched to and causing issues
+  -- This is a safety net in case such buffers are not closed by autocmds
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if utils.buf_has_deleted_file(buf) then
       pcall(vim.api.nvim_buf_delete, buf, { force = true })
     end
   end
+
+  self._registry = utils.merge_distinct(valid_buffers, utils.get_all_valid_buffers())
   self:on_change()
 end
 

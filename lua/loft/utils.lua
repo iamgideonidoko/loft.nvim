@@ -153,7 +153,7 @@ utils.buf_has_deleted_file = function(buffer)
     return false
   end
   local file_path = vim.api.nvim_buf_get_name(buf)
-  local stat = vim.loop.fs_stat(file_path)
+  local stat = (vim.loop or vim.uv).fs_stat(file_path)
   return not (
     buftype ~= ""
     or file_path == ""
