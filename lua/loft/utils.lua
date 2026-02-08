@@ -153,14 +153,15 @@ utils.buf_has_deleted_file = function(buffer)
     return false
   end
   local file_path = vim.api.nvim_buf_get_name(buf)
-  local stat = (vim.loop or vim.uv).fs_stat(file_path)
+  local uv = vim.uv or vim.loop
   return not (
     buftype ~= ""
     or file_path == ""
-    or stat
-    or utils.in_temp_directory(file_path)
-    or vim.fn.filereadable(file_path) ~= 0
+    or vim.bo[buf].modified
     or vim.fn.buflisted(buf) == 0
+    or utils.in_temp_directory(file_path)
+    or file_path:match("^%a[%w+.-]+://") -- Check for uri schemes
+    or uv.fs_stat(file_path) ~= nil -- slow but necessary to check if the file exists on disk
   )
 end
 
