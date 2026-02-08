@@ -46,3 +46,26 @@ luac.out
 
 # Plugin dependencies
 deps
+
+# Lua LS
+.luarc.json
+.luacheckrc
+
+# Cache / compiled
+*.luac
+.cache/
+
+# Swap / backup  / undo
+*.swp
+*.swo
+*.bak
+*.tmp
+.nvim/undo/
+.nvim/swap/
+
+# Editor / IDE
+.vscode/
+.idea/
+
+# Environment files
+.env
