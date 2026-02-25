@@ -226,5 +226,13 @@ Contributions are welcome! Please feel free to check out the [contribution guide
 
 ## Roadmap
 
-- Registry/state persistence across sessions (investigate the plugin experience with session persistence plugins)
-- Add buffer-relative UI to show info like the filename/path, marked/modified state, etc. (This can be done via status line so I'll only get to this if it's highly requested)
+- **Session persistence** — Save registry order and marks to disk and restore on startup, so your buffer workspace survives across Neovim sessions (investigate compatibility with session plugins like `auto-session`).
+- **`LoftCloseOthers` command** — Close all buffers in the registry except the current one.
+- **`LoftCloseUnmarked` command** — Close all unmarked buffers. Pairs naturally with marking: mark what you want to keep, then run this to clear the rest.
+- **In-UI fuzzy filter** — A keymap (e.g. `f`) to filter registry entries in-place by filename/path, making the UI useful in very large buffer lists.
+- **Pinned buffers** — A "pinned" state (distinct from marked) that locks a buffer to a fixed position in the registry, making it immune to smart order reordering.
+- **`LoftBufferSwitch` event** — A `User` autocmd fired whenever Loft navigates to a buffer (next/prev/marked/alt), useful for statusline and other integrations.
+- **`LoftRegistryChanged` event** — A `User` autocmd fired whenever the registry mutates (entries added, removed, reordered), enabling reactive integrations.
+- **UI highlight groups** — Dedicated highlight groups (`LoftCurrentBuffer`, `LoftMarkedBuffer`, `LoftModifiedBuffer`, etc.) so the UI is themeable and visually scannable at a glance.
+- **UI Customization** — More UI options like layout options (e.g. horizontal list).
+- **Tab-local registries** — Option for each tab to maintain its own independent buffer registry, supporting project-separation workflows across tabs.
