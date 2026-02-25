@@ -405,7 +405,7 @@ test_set["setup registers SessionLoadPost autocmd when enabled"] = function()
   )
 end
 
-test_set["setup registers VimEnter autocmd when enabled"] = function()
+test_set["setup registers VimEnter autocmd when enabled and no session loaded"] = function()
   child.lua([[
     require("loft.persistence").setup(require("loft.registry"), {
       enabled = true,
@@ -413,6 +413,21 @@ test_set["setup registers VimEnter autocmd when enabled"] = function()
     })
   ]])
   eq(child.lua_get([[#vim.api.nvim_get_autocmds({ group = "LoftPersistenceVimEnter", event = "VimEnter" })]]), 1)
+end
+
+test_set["setup skips VimEnter autocmd when session already loaded (vim.v.this_session set)"] = function()
+  local tmp = make_tmp()
+  -- Simulate a session already being loaded by setting vim.v.this_session
+  child.lua(string.format([[vim.v.this_session = "/some/session.vim"]], tmp))
+  child.lua(
+    string.format([[require("loft.persistence").setup(require("loft.registry"), { enabled = true, path = %q })]], tmp)
+  )
+  -- luacheck: ignore 631
+  local augroup_check =
+    [[(function() local ok, cmds = pcall(vim.api.nvim_get_autocmds, { group = "LoftPersistenceVimEnter" }); return ok and #cmds or 0 end)()]]
+  local count = child.lua_get(augroup_check)
+  eq(count, 0)
+  child.lua([[vim.v.this_session = ""]])
 end
 
 test_set["setup registers User event autocmds for session plugins when enabled"] = function()
@@ -474,6 +489,46 @@ test_set["ResessionLoadPost event triggers restore (stevearc/resession.nvim)"] =
     string.format([[require("loft.persistence").setup(require("loft.registry"), { enabled = true, path = %q })]], tmp)
   )
   child.lua([[vim.api.nvim_exec_autocmds("User", { pattern = "ResessionLoadPost" })]])
+  eq(child.lua_get([[require("loft.registry").is_buffer_marked(]] .. buf .. [[)]]), true)
+  cleanup(tmp)
+end
+
+test_set["setup restores immediately when session was loaded before setup ran"] = function()
+  local buf = open_file("scripts/minimal_init.vim")
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf .. [[)]])
+  local tmp = make_tmp()
+  do_save(tmp)
+  -- Unmark to simulate state after a fresh load
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf .. [[)]])
+  eq(child.lua_get([[require("loft.registry").is_buffer_marked(]] .. buf .. [[)]]), false)
+  -- Simulate loft being loaded lazily after the session was already sourced
+  child.lua([[vim.v.this_session = "/some/session.vim"]])
+  child.lua(
+    string.format([[require("loft.persistence").setup(require("loft.registry"), { enabled = true, path = %q })]], tmp)
+  )
+  -- vim.schedule restore should have been queued; wait for it
+  child.lua([[vim.wait(200, function() return require("loft.registry").is_buffer_marked(]] .. buf .. [[) end)]])
+  eq(child.lua_get([[require("loft.registry").is_buffer_marked(]] .. buf .. [[)]]), true)
+  child.lua([[vim.v.this_session = ""]])
+  cleanup(tmp)
+end
+
+test_set["direct vim.schedule fallback restores when no session plugin fires"] = function()
+  local buf = open_file("scripts/minimal_init.vim")
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf .. [[)]])
+  local tmp = make_tmp()
+  do_save(tmp)
+  -- Unmark
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf .. [[)]])
+  eq(child.lua_get([[require("loft.registry").is_buffer_marked(]] .. buf .. [[)]]), false)
+  -- Call setup; no session plugin fires, VimEnter won't re-fire in test, but
+  -- the direct vim.schedule inside setup() should run the fallback
+  child.lua(
+    string.format([[require("loft.persistence").setup(require("loft.registry"), { enabled = true, path = %q })]], tmp)
+  )
+  child.lua([[vim.wait(200, function() return require("loft.registry").is_buffer_marked(]] .. buf .. [[) end)]])
   eq(child.lua_get([[require("loft.registry").is_buffer_marked(]] .. buf .. [[)]]), true)
   cleanup(tmp)
 end

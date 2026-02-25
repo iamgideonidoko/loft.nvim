@@ -243,12 +243,18 @@ autocmds fired by the most common session plugins:
   - rmagatti/auto-session    → native SessionLoadPost only (no custom User event)
   - Shatur/neovim-session-manager → native SessionLoadPost + User SessionLoadPost
 
-Falls back to a deferred VimEnter handler for users without a session plugin.
+Falls back to a deferred VimEnter handler and a direct vim.schedule call for
+users without a session plugin, or when loft is loaded lazily inside VimEnter
+(in which case a VimEnter autocmd can no longer fire for the current event).
 
-Design: session load events **always** trigger restore (no once-only guard).
-The VimEnter fallback is suppressed once any session load event has fired,
-preventing a redundant restore when the fallback races ahead of a plugin that
-schedules its own load via vim.schedule (e.g. persisted.nvim).
+Design:
+  • session load events always trigger restore (no once-only guard), so loading
+    a different session mid-session re-applies loft state correctly.
+  • session_plugin_fired prevents the VimEnter / vim.schedule fallbacks from
+    running redundantly after a real session-load event has fired.
+  • vim.v.this_session is checked at setup() time so that loft can restore
+    immediately when it was loaded lazily after the session was already sourced
+    (common when using lazy.nvim with event = "VimEnter" or similar).
 
 possession.nvim note: it uses vim.api.nvim_exec2 instead of :source, so it
 does not fire SessionLoadPost or any User event after loading. Users should
