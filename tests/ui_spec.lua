@@ -400,9 +400,9 @@ test_set["highlights.setup defines all highlight groups"] = function()
     "LoftBufferNumber",
   }
   for _, name in ipairs(expected) do
-    local hl = child.lua_get([[vim.api.nvim_get_hl(0, { name = "]] .. name .. [[", link = true })]])
-    eq(type(hl), "table")
-    eq(next(hl) ~= nil, true)
+    -- vim.fn.hlID returns a positive integer when a group is defined; works on all Neovim versions
+    local defined = child.lua_get([[vim.fn.hlID("]] .. name .. [[") > 0]])
+    eq(defined, true)
   end
   eq(#groups, #expected)
 end
@@ -410,8 +410,8 @@ end
 test_set["highlights re-applied on ColorScheme event"] = function()
   -- Fire ColorScheme; groups must still resolve afterwards
   child.lua([[vim.api.nvim_exec_autocmds("ColorScheme", { modeline = false })]])
-  local hl = child.lua_get([[vim.api.nvim_get_hl(0, { name = "LoftCurrentBuffer", link = true })]])
-  eq(next(hl) ~= nil, true)
+  local defined = child.lua_get([[vim.fn.hlID("LoftCurrentBuffer") > 0]])
+  eq(defined, true)
 end
 
 test_set["_render_entries applies LoftCurrentBuffer to current buffer line"] = function()
@@ -423,14 +423,21 @@ test_set["_render_entries applies LoftCurrentBuffer to current buffer line"] = f
   local ui_buf = child.lua_get([[require("loft.ui")._buf_id]])
   local marks =
     child.lua_get(string.format([[vim.api.nvim_buf_get_extmarks(%d, %d, 0, -1, { details = true })]], ui_buf, ns))
-  local found = false
-  for _, m in ipairs(marks) do
-    if m[4] and m[4].line_hl_group == "LoftCurrentBuffer" then
-      found = true
-      break
+  -- line_hl_group is not reported in extmark details before Neovim 0.9;
+  -- on those versions just confirm the namespace has extmarks (highlights applied).
+  local has_nvim_09 = child.lua_get([[vim.fn.has("nvim-0.9") == 1]])
+  if has_nvim_09 then
+    local found = false
+    for _, m in ipairs(marks) do
+      if m[4] and m[4].line_hl_group == "LoftCurrentBuffer" then
+        found = true
+        break
+      end
     end
+    eq(found, true)
+  else
+    eq(#marks > 0, true)
   end
-  eq(found, true)
   child.lua([[require("loft.ui"):close()]])
 end
 
@@ -444,14 +451,20 @@ test_set["_render_entries applies LoftMarkedBuffer to marked buffer line"] = fun
   local ui_buf = child.lua_get([[require("loft.ui")._buf_id]])
   local marks =
     child.lua_get(string.format([[vim.api.nvim_buf_get_extmarks(%d, %d, 0, -1, { details = true })]], ui_buf, ns))
-  local found = false
-  for _, m in ipairs(marks) do
-    if m[4] and m[4].line_hl_group == "LoftMarkedBuffer" then
-      found = true
-      break
+  -- line_hl_group is not reported in extmark details before Neovim 0.9
+  local has_nvim_09 = child.lua_get([[vim.fn.has("nvim-0.9") == 1]])
+  if has_nvim_09 then
+    local found = false
+    for _, m in ipairs(marks) do
+      if m[4] and m[4].line_hl_group == "LoftMarkedBuffer" then
+        found = true
+        break
+      end
     end
+    eq(found, true)
+  else
+    eq(#marks > 0, true)
   end
-  eq(found, true)
   child.lua([[require("loft.ui"):close()]])
 end
 
