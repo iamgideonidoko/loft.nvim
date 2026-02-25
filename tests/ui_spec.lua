@@ -553,4 +553,153 @@ test_set["highlights cleared on close and reapplied on re-open"] = function()
   child.lua([[require("loft.ui"):close()]])
 end
 
+-- ── reverse_order ──────────────────────────────────────────────────────
+
+-- Helper: setup loft with reverse_order = true and create N listed buffers.
+-- Returns the created buffer IDs in creation order.
+local function setup_reverse(child_instance, n)
+  child_instance.lua([[require("loft").setup({ reverse_order = true })]])
+  local bufs = {}
+  for _ = 1, n do
+    table.insert(bufs, child_instance.api.nvim_create_buf(true, false))
+  end
+  child_instance.lua([[require("loft.registry"):clean()]])
+  return bufs
+end
+
+test_set["reverse_order: entries rendered in reverse registry order"] = function()
+  setup_reverse(child, 3)
+  child.lua([[require("loft.ui"):open()]])
+  local lines = child.lua_get([[vim.api.nvim_buf_get_lines(require("loft.ui")._buf_id, 0, -1, false)]])
+  -- Each line encodes {bufnr}; first rendered line should contain the LAST registry item
+  local registry = child.lua_get([[require("loft.registry"):get_registry()]])
+  -- registry[3] should appear on line 1
+  local last_bufnr = tostring(registry[#registry])
+  eq(lines[1]:find("{" .. last_bufnr .. "}") ~= nil, true)
+  -- registry[1] should appear on the last line
+  local first_bufnr = tostring(registry[1])
+  eq(lines[#lines]:find("{" .. first_bufnr .. "}") ~= nil, true)
+  child.lua([[require("loft.ui"):close()]])
+  -- silence unused-var warning
+end
+
+test_set["reverse_order: cursor placed on current buffer line"] = function()
+  setup_reverse(child, 3)
+  local registry = child.lua_get([[require("loft.registry"):get_registry()]])
+  -- Set registry[1] as current; in reversed mode it lands on the last display line
+  child.api.nvim_set_current_buf(registry[1])
+  child.lua([[require("loft.ui"):open()]])
+  local cursor_row = child.lua_get([[select(1, unpack(vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)))]])
+  local lines = child.lua_get([[vim.api.nvim_buf_get_lines(require("loft.ui")._buf_id, 0, -1, false)]])
+  -- The cursor line must contain the number of _last_buf_before_loft
+  local last_buf = child.lua_get([[require("loft.ui")._last_buf_before_loft]])
+  eq(lines[cursor_row]:find("{" .. tostring(last_buf) .. "}") ~= nil, true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["reverse_order: _move_entry_up moves visually upward"] = function()
+  setup_reverse(child, 3)
+  child.lua([[require("loft.ui"):open()]])
+  local registry_before = child.lua_get([[require("loft.registry"):get_registry()]])
+  local n = #registry_before
+  -- Position cursor on the MIDDLE display line (line 2) which is registry[n-1]
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, {2, 1})]])
+  local mid_buf = registry_before[n - 1]
+  child.lua([[require("loft.ui"):_move_entry_up()]])
+  -- After move-up, mid_buf should be at display line 1
+  local lines = child.lua_get([[vim.api.nvim_buf_get_lines(require("loft.ui")._buf_id, 0, -1, false)]])
+  eq(lines[1]:find("{" .. tostring(mid_buf) .. "}") ~= nil, true)
+  -- Cursor should be at line 1
+  local cursor_row = child.lua_get([[select(1, unpack(vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)))]])
+  eq(cursor_row, 1)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["reverse_order: _move_entry_down moves visually downward"] = function()
+  setup_reverse(child, 3)
+  child.lua([[require("loft.ui"):open()]])
+  local registry_before = child.lua_get([[require("loft.registry"):get_registry()]])
+  local n = #registry_before
+  -- Position cursor on the MIDDLE display line (line 2) which is registry[n-1]
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, {2, 1})]])
+  local mid_buf = registry_before[n - 1]
+  child.lua([[require("loft.ui"):_move_entry_down()]])
+  -- After move-down from line 2, mid_buf should be at display line 3 (line 2 + 1)
+  local lines = child.lua_get([[vim.api.nvim_buf_get_lines(require("loft.ui")._buf_id, 0, -1, false)]])
+  eq(lines[3]:find("{" .. tostring(mid_buf) .. "}") ~= nil, true)
+  -- Cursor should be at line 3
+  local cursor_row = child.lua_get([[select(1, unpack(vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)))]])
+  eq(cursor_row, 3)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["reverse_order: _delete_entry removes correct buffer"] = function()
+  setup_reverse(child, 3)
+  child.lua([[require("loft.ui"):open()]])
+  local registry = child.lua_get([[require("loft.registry"):get_registry()]])
+  local n = #registry
+  -- Line 1 in reversed display = registry[n]; position cursor there
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, {1, 1})]])
+  local top_buf = registry[n]
+  child.lua([[require("loft.ui"):_delete_entry()]])
+  local registry_after = child.lua_get([[require("loft.registry"):get_registry()]])
+  -- top_buf must no longer be in the registry
+  local still_present = false
+  for _, b in ipairs(registry_after) do
+    if b == top_buf then
+      still_present = true
+      break
+    end
+  end
+  eq(still_present, false)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["reverse_order: _toggle_mark_entry marks correct buffer"] = function()
+  setup_reverse(child, 3)
+  child.lua([[require("loft.ui"):open()]])
+  local registry = child.lua_get([[require("loft.registry"):get_registry()]])
+  local n = #registry
+  -- Line 1 = registry[n]; mark it
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, {1, 1})]])
+  local top_buf = registry[n]
+  child.lua([[require("loft.ui"):_toggle_mark_entry()]])
+  eq(child.lua_get([[require("loft.registry").is_buffer_marked(]] .. top_buf .. [[)]]), true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["reverse_order: _move_to_marked_entry down jumps to buffer visually below"] = function()
+  setup_reverse(child, 4)
+  child.lua([[require("loft.registry"):clean()]])
+  local registry = child.lua_get([[require("loft.registry"):get_registry()]])
+  local n = #registry
+  -- Mark the buffer at registry[2] (display line n-1)
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. registry[2] .. [[)]])
+  child.lua([[require("loft.ui"):open()]])
+  -- Place cursor at top line (registry[n])
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, {1, 1})]])
+  child.lua([[require("loft.ui"):_move_to_marked_entry("down")]])
+  local cursor_row = child.lua_get([[select(1, unpack(vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)))]])
+  -- registry[2] in reversed display = line n - 2 + 1 = n-1
+  eq(cursor_row, n - 1)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["reverse_order: _move_to_marked_entry up jumps to buffer visually above"] = function()
+  setup_reverse(child, 4)
+  child.lua([[require("loft.registry"):clean()]])
+  local registry = child.lua_get([[require("loft.registry"):get_registry()]])
+  local n = #registry
+  -- Mark the buffer at registry[n-1] (display line 2)
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. registry[n - 1] .. [[)]])
+  child.lua([[require("loft.ui"):open()]])
+  -- Place cursor at the last display line (registry[1])
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, {]] .. n .. [[, 1})]])
+  child.lua([[require("loft.ui"):_move_to_marked_entry("up")]])
+  local cursor_row = child.lua_get([[select(1, unpack(vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)))]])
+  -- registry[n-1] in reversed display = line n - (n-1) + 1 = 2
+  eq(cursor_row, 2)
+  child.lua([[require("loft.ui"):close()]])
+end
+
 return test_set

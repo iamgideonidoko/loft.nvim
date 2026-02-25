@@ -84,7 +84,11 @@ require("loft").setup({
 
   --[[ The timeout in milliseconds to wait before closing the UI after moving the current buffer.
   Defaults to 800. Set to 0 to disable the UI from showing at all. ]]
-  ui_timeout_on_curr_buf_move = 800
+  ui_timeout_on_curr_buf_move = 800,
+
+  -- Display the buffer list in reverse order (first/oldest registry entry at the bottom).
+  -- All navigation, reordering, and marked-buffer jumps continue to work correctly.
+  reverse_order = false,
   window = {
     width = nil, -- Defaults to calculated width
     height = nil, -- Defaults to calculated height

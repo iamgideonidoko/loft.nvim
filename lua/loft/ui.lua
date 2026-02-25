@@ -9,6 +9,7 @@ local hl_ns = vim.api.nvim_create_namespace("loft_ui")
 ---@field show_marked_mapping_num boolean
 ---@field marked_mapping_num_style 'solid'|'outline'
 ---@field timeout_on_curr_buf_move integer
+---@field reverse_order boolean
 
 ---@class (exact) loft.UIOpts
 ---@field keymaps loft.UIKeymapsConfig
@@ -72,8 +73,12 @@ function UI:_render_entries()
   --- col_end < 0 means line-level highlight (line_hl_group).
   ---@type table[]
   local hl_specs = {}
-  for i, buf_id in ipairs(self.registry_instance:get_registry()) do
-    local lnum = i - 1 -- 0-indexed
+  local registry = self.registry_instance:get_registry()
+  local n = #registry
+  for display_pos = 1, n do
+    local reg_idx = self:_line_to_reg_idx(display_pos, n)
+    local lnum = display_pos - 1 -- 0-indexed extmark row
+    local buf_id = registry[reg_idx]
     local buffer = vim.fn.getbufinfo(buf_id)[1]
     if buffer then
       local bufname = buffer.name ~= "" and buffer.name or "[No Name]"
@@ -158,6 +163,31 @@ function UI:_apply_highlights(hl_specs)
   end
 end
 
+--- Convert a 1-indexed display line to a 1-indexed registry position.
+--- In reverse mode line 1 maps to the last registry item.
+---@param line integer 1-indexed display line
+---@param n integer total number of registry entries
+---@return integer
+---@private
+function UI:_line_to_reg_idx(line, n)
+  if self._other_opts.reverse_order then
+    return n - line + 1
+  end
+  return line
+end
+
+--- Convert a 1-indexed registry position to a 1-indexed display line.
+---@param idx integer 1-indexed registry index
+---@param n integer total number of registry entries
+---@return integer
+---@private
+function UI:_reg_idx_to_line(idx, n)
+  if self._other_opts.reverse_order then
+    return n - idx + 1
+  end
+  return idx
+end
+
 function UI:open()
   self._last_win_before_loft = vim.api.nvim_get_current_win()
   self._last_buf_before_loft = vim.api.nvim_get_current_buf()
@@ -209,9 +239,11 @@ function UI:open()
   })
   self:_render_entries()
   -- Move cursor to current entry
-  local last_buf_index = utils.get_index(self.registry_instance:get_registry(), self._last_buf_before_loft)
+  local registry = self.registry_instance:get_registry()
+  local last_buf_index = utils.get_index(registry, self._last_buf_before_loft)
   if last_buf_index then
-    vim.api.nvim_win_set_cursor(self._win_id, { last_buf_index, 1 })
+    local display_line = self:_reg_idx_to_line(last_buf_index, #registry)
+    vim.api.nvim_win_set_cursor(self._win_id, { display_line, 1 })
   end
   self:_setup_autocmd()
   self:_setup_keymaps()
@@ -345,7 +377,13 @@ function UI:_move_entry_up()
   if no_of_entries == 0 then
     return
   end
-  self.registry_instance:move_buffer_up(current_line, true)
+  local reg_idx = self:_line_to_reg_idx(current_line, no_of_entries)
+  -- Visually moving up in reversed mode means advancing toward higher registry indices
+  if self._other_opts.reverse_order then
+    self.registry_instance:move_buffer_down(reg_idx, true)
+  else
+    self.registry_instance:move_buffer_up(reg_idx, true)
+  end
   local new_line = no_of_entries
   if current_line > 1 then
     new_line = current_line - 1
@@ -362,7 +400,13 @@ function UI:_move_entry_down()
   if no_of_entries == 0 then
     return
   end
-  self.registry_instance:move_buffer_down(current_line, true)
+  local reg_idx = self:_line_to_reg_idx(current_line, no_of_entries)
+  -- Visually moving down in reversed mode means retreating toward lower registry indices
+  if self._other_opts.reverse_order then
+    self.registry_instance:move_buffer_up(reg_idx, true)
+  else
+    self.registry_instance:move_buffer_down(reg_idx, true)
+  end
   local new_line = 1
   if current_line < no_of_entries then
     new_line = current_line + 1
@@ -375,10 +419,12 @@ end
 ---@private
 function UI:_delete_entry()
   local current_line = vim.fn.line(".")
-  if #self.registry_instance:get_registry() == 0 then
+  local n = #self.registry_instance:get_registry()
+  if n == 0 then
     return
   end
-  local buf = self.registry_instance:get_registry()[current_line]
+  local reg_idx = self:_line_to_reg_idx(current_line, n)
+  local buf = self.registry_instance:get_registry()[reg_idx]
   if buf == nil then
     return
   end
@@ -394,10 +440,12 @@ end
 function UI:_select_entry()
   self.registry_instance:pause_update()
   local current_line = vim.fn.line(".")
+  local n = #self.registry_instance:get_registry()
+  local reg_idx = self:_line_to_reg_idx(current_line, n)
   self:close()
-  local selected_buffer = self.registry_instance:get_registry()[current_line]
+  local selected_buffer = self.registry_instance:get_registry()[reg_idx]
   if selected_buffer ~= nil and utils.window_exists(self._last_win_before_loft) then
-    pcall(vim.api.nvim_win_set_buf, self._last_win_before_loft, self.registry_instance:get_registry()[current_line])
+    pcall(vim.api.nvim_win_set_buf, self._last_win_before_loft, selected_buffer)
   end
   self.registry_instance:resume_update()
 end
@@ -405,7 +453,9 @@ end
 ---@private
 function UI:_toggle_mark_entry()
   local current_line = vim.fn.line(".")
-  local buf = self.registry_instance:get_registry()[current_line]
+  local n = #self.registry_instance:get_registry()
+  local reg_idx = self:_line_to_reg_idx(current_line, n)
+  local buf = self.registry_instance:get_registry()[reg_idx]
   if buf == nil then
     return
   end
@@ -570,16 +620,25 @@ end
 function UI:_move_to_marked_entry(direction)
   local current_line = vim.fn.line(".")
   local registry = self.registry_instance:get_registry()
-  local current_buf = registry[current_line]
+  local n = #registry
+  local reg_idx = self:_line_to_reg_idx(current_line, n)
+  local current_buf = registry[reg_idx]
   if current_buf == nil then
     return
   end
-  local goto_buf = self.registry_instance:get_marked_buffer(direction == "up" and "prev" or "next", current_buf)
+  -- In reversed mode visual "up" = higher registry index ("next"), "down" = lower ("prev")
+  local registry_dir
+  if self._other_opts.reverse_order then
+    registry_dir = direction == "up" and "next" or "prev"
+  else
+    registry_dir = direction == "up" and "prev" or "next"
+  end
+  local goto_buf = self.registry_instance:get_marked_buffer(registry_dir, current_buf)
   ---@type integer|nil
   local goto_line
   for i, buf in ipairs(registry) do
     if buf == goto_buf then
-      goto_line = i
+      goto_line = self:_reg_idx_to_line(i, n)
       break
     end
   end
@@ -640,10 +699,8 @@ function UI:move_buffer_up()
   end
   self.registry_instance:move_buffer_up(buf_idx, true)
   if utils.window_exists(self._win_id) then
-    local new_line = no_of_buffers
-    if buf_idx > 1 then
-      new_line = buf_idx - 1
-    end
+    local new_reg_idx = buf_idx > 1 and buf_idx - 1 or no_of_buffers
+    local new_line = self:_reg_idx_to_line(new_reg_idx, no_of_buffers)
     vim.api.nvim_win_set_cursor(self._win_id, { new_line, 1 })
     self:_render_entries()
   end
@@ -671,10 +728,8 @@ function UI:move_buffer_down()
   end
   self.registry_instance:move_buffer_down(buf_idx, true)
   if utils.window_exists(self._win_id) then
-    local new_line = 1
-    if buf_idx < no_of_buffers then
-      new_line = buf_idx + 1
-    end
+    local new_reg_idx = buf_idx < no_of_buffers and buf_idx + 1 or 1
+    local new_line = self:_reg_idx_to_line(new_reg_idx, no_of_buffers)
     vim.api.nvim_win_set_cursor(self._win_id, { new_line, 1 })
     self:_render_entries()
   end

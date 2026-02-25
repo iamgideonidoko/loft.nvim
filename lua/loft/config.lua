@@ -15,6 +15,7 @@ local actions = require("loft.actions")
 ---@field show_marked_mapping_num? boolean Whether to show the mapping number for the 9 most recently marked buffers
 ---@field marked_mapping_num_style? 'solid'|'outline' The style of the mapping number
 ---@field ui_timeout_on_curr_buf_move? integer The timeout in milliseconds to wait before closing the UI after moving the current buffer. Defaults to 800. Set to 0 to disable the UI from showing.
+---@field reverse_order? boolean Whether to display the buffer list in reverse order (first registry entry at the bottom). Defaults to false.
 ---@field window? loft.WinOpts
 ---@field persistence? loft.PersistenceConfig
 
@@ -44,6 +45,7 @@ local default_config = {
   show_marked_mapping_num = true,
   marked_mapping_num_style = "solid",
   ui_timeout_on_curr_buf_move = 800,
+  reverse_order = false,
   window = {
     width = nil,
     height = nil,

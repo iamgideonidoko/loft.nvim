@@ -50,6 +50,7 @@ loft.setup = function(opts)
       show_marked_mapping_num = config.all.show_marked_mapping_num,
       marked_mapping_num_style = config.all.marked_mapping_num_style,
       timeout_on_curr_buf_move = config.all.ui_timeout_on_curr_buf_move,
+      reverse_order = config.all.reverse_order,
     },
   })
   setup_general_keymap(config.all.keymaps.general)
