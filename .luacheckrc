@@ -16,4 +16,7 @@ files = {
   ["lua/loft/config.lua"] = {
     ignore = { "631" },
   },
+  ["tests/persistence_spec.lua"] = {
+    ignore = { "631" },
+  },
 }

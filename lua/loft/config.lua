@@ -16,6 +16,11 @@ local actions = require("loft.actions")
 ---@field marked_mapping_num_style? 'solid'|'outline' The style of the mapping number
 ---@field ui_timeout_on_curr_buf_move? integer The timeout in milliseconds to wait before closing the UI after moving the current buffer. Defaults to 800. Set to 0 to disable the UI from showing.
 ---@field window? loft.WinOpts
+---@field persistence? loft.PersistenceConfig
+
+---@class (exact) loft.PersistenceConfig
+---@field enabled? boolean Whether to persist registry state across sessions (default: false)
+---@field path? string Custom file path for persistence state; defaults to stdpath("data")/loft/<cwd_hash>.json
 
 ---@class (exact) loft.WinOpts
 ---@field width? integer Defaults to calculated width
@@ -81,6 +86,10 @@ local default_config = {
       ["<S-M-i>"] = actions.move_buffer_up,
       ["<S-M-o>"] = actions.move_buffer_down,
     },
+  },
+  persistence = {
+    enabled = false,
+    path = nil,
   },
 }
 

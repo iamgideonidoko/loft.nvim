@@ -41,11 +41,16 @@ config.setup()	loft.txt	/*config.setup()*
 default_config	loft.txt	/*default_config*
 events.buffer_mark()	loft.txt	/*events.buffer_mark()*
 events.smart_order_toggle()	loft.txt	/*events.smart_order_toggle()*
+get_file_path()	loft.txt	/*get_file_path()*
 helpers	loft.txt	/*helpers*
 helpers.new_child_neovim()	loft.txt	/*helpers.new_child_neovim()*
 loft.nvim	loft.txt	/*loft.nvim*
 loft.setup()	loft.txt	/*loft.setup()*
+persistence.restore()	loft.txt	/*persistence.restore()*
+persistence.save()	loft.txt	/*persistence.save()*
+persistence.setup()	loft.txt	/*persistence.setup()*
 registry_instance	loft.txt	/*registry_instance*
+utils	loft.txt	/*utils*
 utils.buf_has_deleted_file()	loft.txt	/*utils.buf_has_deleted_file()*
 utils.buffer_exists()	loft.txt	/*utils.buffer_exists()*
 utils.buffer_modifiable()	loft.txt	/*utils.buffer_modifiable()*

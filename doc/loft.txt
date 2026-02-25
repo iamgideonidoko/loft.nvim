@@ -1,5 +1,3 @@
-==============================================================================
-------------------------------------------------------------------------------
 *loft.nvim* Streamlined plugin for productive buffer management
 *Loft*
 
@@ -125,6 +123,14 @@ Fields ~
 {marked_mapping_num_style} `(optional)` '`(solid)`'|'outline' The style of the mapping number
 {ui_timeout_on_curr_buf_move} `(optional)` `(integer)` The timeout in milliseconds to wait before closing the UI after moving the current buffer. Defaults to 800. Set to 0 to disable the UI from showing.
 {window} `(optional)` `(loft.WinOpts)`
+{persistence} `(optional)` `(loft.PersistenceConfig)`
+
+------------------------------------------------------------------------------
+Class ~
+{(exact)} loft.PersistenceConfig
+Fields ~
+{enabled} `(optional)` `(boolean)` Whether to persist registry state across sessions (default: false)
+{path} `(optional)` `(string)` Custom file path for persistence state; defaults to stdpath("data")/loft/<cwd_hash>.json
 
 ------------------------------------------------------------------------------
 Class ~
@@ -183,6 +189,58 @@ Parameters ~
                 `events.smart_order_toggle`({smart_order_state})
 Parameters ~
 {smart_order_state} `(boolean)`
+
+
+==============================================================================
+------------------------------------------------------------------------------
+                                                                         *utils*
+                                    `utils`
+
+------------------------------------------------------------------------------
+Class ~
+{(exact)} loft.PersistenceConfig
+Fields ~
+{enabled} `(boolean)` Whether persistence is enabled
+{path} `(optional)` `(string)` Custom file path for state; defaults to stdpath("data")/loft/<cwd_hash>.json
+
+------------------------------------------------------------------------------
+                                                               *get_file_path()*
+                            `get_file_path`({opts})
+Return the file path used to persist state for the current working directory
+Parameters ~
+{opts} `(loft.PersistenceConfig)`
+Return ~
+`(string)`
+
+------------------------------------------------------------------------------
+                                                            *persistence.save()*
+                     `persistence.save`({registry}, {opts})
+Save registry state (order, marks, smart_order) to disk
+Parameters ~
+{registry} `(loft.Registry)`
+{opts} `(loft.PersistenceConfig)`
+
+------------------------------------------------------------------------------
+                                                         *persistence.restore()*
+                   `persistence.restore`({registry}, {opts})
+Restore registry state from disk, mapping saved file paths back to current buffer numbers.
+Buffers not present in the saved state are appended at the end.
+Silently ignores paths that are not currently open.
+Parameters ~
+{registry} `(loft.Registry)`
+{opts} `(loft.PersistenceConfig)`
+
+------------------------------------------------------------------------------
+                                                           *persistence.setup()*
+                    `persistence.setup`({registry}, {opts})
+Setup autocmds that save state on exit and restore it after a session is loaded.
+Hooks into the native Neovim SessionLoadPost event as well as the post-load events
+fired by the most common session plugins (auto-session, persisted.nvim,
+resession.nvim, possession.nvim). Falls back to a deferred VimEnter handler for
+users who do not use a session plugin.
+Parameters ~
+{registry} `(loft.Registry)`
+{opts} `(loft.PersistenceConfig)`
 
 
 ==============================================================================

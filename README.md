@@ -130,6 +130,12 @@ require("loft").setup({
       ["<S-M-o>"] = actions.move_buffer_down, --  Move the current buffer down while showing the UI briefly
     },
   },
+  -- Session persistence: saves registry order, marks and smart order state to disk
+  -- per working directory, and restores them on the next startup.
+  persistence = {
+    enabled = false, -- Opt-in: set to true to enable
+    path = nil,      -- Defaults to stdpath("data")/loft/<cwd_hash>.json
+  },
 })
 ```
 
@@ -226,7 +232,6 @@ Contributions are welcome! Please feel free to check out the [contribution guide
 
 ## Roadmap
 
-- **Session persistence** — Save registry order and marks to disk and restore on startup, so your buffer workspace survives across Neovim sessions (investigate compatibility with session plugins like `auto-session`).
 - **`LoftCloseOthers` command** — Close all buffers in the registry except the current one.
 - **`LoftCloseUnmarked` command** — Close all unmarked buffers. Pairs naturally with marking: mark what you want to keep, then run this to clear the rest.
 - **In-UI fuzzy filter** — A keymap (e.g. `f`) to filter registry entries in-place by filename/path, making the UI useful in very large buffer lists.
