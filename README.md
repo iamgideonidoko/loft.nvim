@@ -169,8 +169,6 @@ require("possession").setup({
 })
 ```
 
-````
-
 ## Commands
 
 | Commands                | Description                                |
@@ -188,14 +186,14 @@ need to clear Loft's definitions first.
 
 ### Highlight groups
 
-| Group | Default link | Applied to |
-| ----- | ------------ | ---------- |
-| `LoftCurrentBuffer` | `PmenuSel` | Full line — the buffer that was active when Loft opened |
-| `LoftMarkedBuffer` | `DiffAdd` | Full line — marked / pinned buffers |
-| `LoftMark` | `DiagnosticInfo` | The `(✓)` / `➊`–`➒` mark symbol |
-| `LoftCurrentIndicator` | `Statement` | The `●` current-buffer dot |
-| `LoftModified` | `DiagnosticWarn` | The `[+]` unsaved-changes indicator |
-| `LoftBufferNumber` | `Comment` | The `{N}` buffer-number token |
+| Group                  | Default link     | Applied to                                              |
+| ---------------------- | ---------------- | ------------------------------------------------------- |
+| `LoftCurrentBuffer`    | `PmenuSel`       | Full line — the buffer that was active when Loft opened |
+| `LoftMarkedBuffer`     | `DiffAdd`        | Full line — marked / pinned buffers                     |
+| `LoftMark`             | `DiagnosticInfo` | The `(✓)` / `➊`–`➒` mark symbol                         |
+| `LoftCurrentIndicator` | `Statement`      | The `●` current-buffer dot                              |
+| `LoftModified`         | `DiagnosticWarn` | The `[+]` unsaved-changes indicator                     |
+| `LoftBufferNumber`     | `Comment`        | The `{N}` buffer-number token                           |
 
 Line-level groups (`LoftCurrentBuffer`, `LoftMarkedBuffer`) set the background for the
 entire line. Inline groups are layered on top at higher priority, so their foreground
@@ -254,7 +252,7 @@ MiniStatusline.combine_groups({
   "%=",
   -- ...
 })
-````
+```
 
 Then listen for the following Loft's user autocmds and redraw your statusline:
 
@@ -312,7 +310,6 @@ Contributions are welcome! Please feel free to check out the [contribution guide
 - **`LoftCloseOthers` command** — Close all buffers in the registry except the current one.
 - **`LoftCloseUnmarked` command** — Close all unmarked buffers. Pairs naturally with marking: mark what you want to keep, then run this to clear the rest.
 - **In-UI fuzzy filter** — A keymap (e.g. `f`) to filter registry entries in-place by filename/path, making the UI useful in very large buffer lists.
-- **Pinned buffers** — A "pinned" state (distinct from marked) that locks a buffer to a fixed position in the registry, making it immune to smart order reordering.
 - **`LoftBufferSwitch` event** — A `User` autocmd fired whenever Loft navigates to a buffer (next/prev/marked/alt), useful for statusline and other integrations.
 - **`LoftRegistryChanged` event** — A `User` autocmd fired whenever the registry mutates (entries added, removed, reordered), enabling reactive integrations.
 - **UI Customization** — More UI options like layout options (e.g. horizontal list).
