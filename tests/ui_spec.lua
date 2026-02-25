@@ -28,4 +28,359 @@ test_set["close deletes buffer and window"] = function()
   eq(child.api.nvim_buf_is_valid(buf_id), false)
 end
 
+test_set["toggle opens when closed"] = function()
+  eq(child.lua_get([[require("loft.ui"):is_open()]]), false)
+  child.api.nvim_create_buf(true, true)
+  child.lua([[require("loft.ui"):toggle()]])
+  eq(child.lua_get([[require("loft.ui"):is_open()]]), true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["toggle closes when open"] = function()
+  child.api.nvim_create_buf(true, true)
+  child.lua([[require("loft.ui"):open()]])
+  eq(child.lua_get([[require("loft.ui"):is_open()]]), true)
+  child.lua([[require("loft.ui"):toggle()]])
+  eq(child.lua_get([[require("loft.ui"):is_open()]]), false)
+end
+
+test_set["is_open returns false initially"] = function()
+  eq(child.lua_get([[require("loft.ui"):is_open()]]), false)
+end
+
+test_set["is_open returns true when open"] = function()
+  child.api.nvim_create_buf(true, true)
+  child.lua([[require("loft.ui"):open()]])
+  eq(child.lua_get([[require("loft.ui"):is_open()]]), true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["get_buffer_mark returns empty for unmarked buffer"] = function()
+  local buf = child.api.nvim_create_buf(true, false)
+  eq(child.lua_get([[require("loft.ui"):get_buffer_mark(]] .. buf .. [[)]]), "")
+end
+
+test_set["get_buffer_mark returns symbol for marked buffer"] = function()
+  local buf = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf .. [[)]])
+  local mark = child.lua_get([[require("loft.ui"):get_buffer_mark(]] .. buf .. [[)]])
+  eq(mark ~= "", true)
+end
+
+test_set["smart_order_indicator returns symbol when on"] = function()
+  eq(child.lua_get([[require("loft.ui"):smart_order_indicator() ~= ""]]), true)
+end
+
+test_set["smart_order_indicator returns empty when off"] = function()
+  child.lua([[require("loft.registry"):toggle_smart_order()]])
+  eq(child.lua_get([[require("loft.ui"):smart_order_indicator()]]), "")
+end
+
+test_set["toggle_smart_order changes registry state"] = function()
+  local initial = child.lua_get([[require("loft.registry"):is_smart_order_on()]])
+  child.lua([[require("loft.ui"):toggle_smart_order()]])
+  eq(child.lua_get([[require("loft.registry"):is_smart_order_on()]]), not initial)
+end
+
+test_set["move_buffer_up reorders registry"] = function()
+  local buf1 = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.api.nvim_set_current_buf(buf1)
+  -- After switching, buf1 is last. move_buffer_up swaps it with second-to-last.
+  local before = child.lua_get([[require("loft.registry"):get_registry()]])
+  local len = #before
+  child.lua([[require("loft.ui"):move_buffer_up()]])
+  local after = child.lua_get([[require("loft.registry"):get_registry()]])
+  eq(after[len - 1], before[len])
+  eq(after[len], before[len - 1])
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["move_buffer_down reorders registry"] = function()
+  local buf1 = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  -- Current = initial (first). move_buffer_down swaps it with second.
+  local before = child.lua_get([[require("loft.registry"):get_registry()]])
+  child.lua([[require("loft.ui"):move_buffer_down()]])
+  local after = child.lua_get([[require("loft.registry"):get_registry()]])
+  eq(after[1], before[2])
+  eq(after[2], before[1])
+  child.lua([[require("loft.ui"):close()]])
+end
+
+-- ── cursor movement ────────────────────────────────────────────────────
+
+test_set["_move_up moves cursor up by one"] = function()
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, {3, 1})]])
+  child.lua([[require("loft.ui"):_move_up()]])
+  eq(child.lua_get([[select(1, unpack(vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)))]]), 2)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["_move_up wraps from first line to last"] = function()
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local n = child.lua_get([[#require("loft.registry"):get_registry()]])
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, {1, 1})]])
+  child.lua([[require("loft.ui"):_move_up()]])
+  eq(child.lua_get([[select(1, unpack(vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)))]]), n)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["_move_down moves cursor down by one"] = function()
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, {1, 1})]])
+  child.lua([[require("loft.ui"):_move_down()]])
+  eq(child.lua_get([[select(1, unpack(vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)))]]), 2)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["_move_down wraps from last line to first"] = function()
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local n = child.lua_get([[#require("loft.registry"):get_registry()]])
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, {]] .. n .. [[, 1})]])
+  child.lua([[require("loft.ui"):_move_down()]])
+  eq(child.lua_get([[select(1, unpack(vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)))]]), 1)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+-- ── entry reordering ───────────────────────────────────────────────────
+
+test_set["_move_entry_up swaps entry with previous and moves cursor up"] = function()
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local before = child.lua_get([[require("loft.registry"):get_registry()]])
+  local n = #before
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, {]] .. n .. [[, 1})]])
+  child.lua([[require("loft.ui"):_move_entry_up()]])
+  local after = child.lua_get([[require("loft.registry"):get_registry()]])
+  eq(after[n - 1], before[n])
+  eq(after[n], before[n - 1])
+  eq(child.lua_get([[select(1, unpack(vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)))]]), n - 1)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["_move_entry_up cyclic from first to last"] = function()
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local before = child.lua_get([[require("loft.registry"):get_registry()]])
+  local n = #before
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, {1, 1})]])
+  child.lua([[require("loft.ui"):_move_entry_up()]])
+  local after = child.lua_get([[require("loft.registry"):get_registry()]])
+  eq(after[n], before[1])
+  eq(child.lua_get([[select(1, unpack(vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)))]]), n)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["_move_entry_down swaps entry with next and moves cursor down"] = function()
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local before = child.lua_get([[require("loft.registry"):get_registry()]])
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, {1, 1})]])
+  child.lua([[require("loft.ui"):_move_entry_down()]])
+  local after = child.lua_get([[require("loft.registry"):get_registry()]])
+  eq(after[1], before[2])
+  eq(after[2], before[1])
+  eq(child.lua_get([[select(1, unpack(vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)))]]), 2)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["_move_entry_down cyclic from last to first"] = function()
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local before = child.lua_get([[require("loft.registry"):get_registry()]])
+  local n = #before
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, {]] .. n .. [[, 1})]])
+  child.lua([[require("loft.ui"):_move_entry_down()]])
+  local after = child.lua_get([[require("loft.registry"):get_registry()]])
+  eq(after[1], before[n])
+  eq(child.lua_get([[select(1, unpack(vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)))]]), 1)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+-- ── entry selection and deletion ───────────────────────────────────────
+
+test_set["_select_entry closes UI and switches to selected buffer"] = function()
+  local buf1 = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local registry = child.lua_get([[require("loft.registry"):get_registry()]])
+  local buf1_line = nil
+  for i, b in ipairs(registry) do
+    if b == buf1 then
+      buf1_line = i
+      break
+    end
+  end
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, {]] .. buf1_line .. [[, 1})]])
+  child.lua([[require("loft.ui"):_select_entry()]])
+  eq(child.lua_get([[require("loft.ui"):is_open()]]), false)
+  eq(child.lua_get([[vim.api.nvim_get_current_buf()]]), buf1)
+end
+
+test_set["_delete_entry removes buffer from registry"] = function()
+  local buf1 = child.api.nvim_create_buf(true, false)
+  local buf2 = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local registry = child.lua_get([[require("loft.registry"):get_registry()]])
+  local buf1_line = nil
+  for i, b in ipairs(registry) do
+    if b == buf1 then
+      buf1_line = i
+      break
+    end
+  end
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, {]] .. buf1_line .. [[, 1})]])
+  child.lua([[require("loft.ui"):_delete_entry()]])
+  eq(child.api.nvim_buf_is_valid(buf1), false)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+-- ── mark toggling ──────────────────────────────────────────────────────
+
+test_set["_toggle_mark_entry marks entry at cursor"] = function()
+  local buf1 = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local registry = child.lua_get([[require("loft.registry"):get_registry()]])
+  local buf1_line = nil
+  for i, b in ipairs(registry) do
+    if b == buf1 then
+      buf1_line = i
+      break
+    end
+  end
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, {]] .. buf1_line .. [[, 1})]])
+  child.lua([[require("loft.ui"):_toggle_mark_entry()]])
+  eq(child.lua_get([[require("loft.registry").is_buffer_marked(]] .. buf1 .. [[)]]), true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["_toggle_mark_entry unmarks already marked entry"] = function()
+  local buf1 = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf1 .. [[)]])
+  child.lua([[require("loft.ui"):open()]])
+  local registry = child.lua_get([[require("loft.registry"):get_registry()]])
+  local buf1_line = nil
+  for i, b in ipairs(registry) do
+    if b == buf1 then
+      buf1_line = i
+      break
+    end
+  end
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, {]] .. buf1_line .. [[, 1})]])
+  child.lua([[require("loft.ui"):_toggle_mark_entry()]])
+  eq(child.lua_get([[require("loft.registry").is_buffer_marked(]] .. buf1 .. [[)]]), false)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+-- ── navigate to marked entry ───────────────────────────────────────────
+
+test_set["_move_to_marked_entry down jumps to next marked buffer"] = function()
+  local buf1 = child.api.nvim_create_buf(true, false)
+  local buf2 = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf2 .. [[)]])
+  child.lua([[require("loft.ui"):open()]])
+  local registry = child.lua_get([[require("loft.registry"):get_registry()]])
+  local buf2_line = nil
+  for i, b in ipairs(registry) do
+    if b == buf2 then
+      buf2_line = i
+      break
+    end
+  end
+  -- cursor starts at line 1 (initial buf); move down to first marked
+  child.lua([[require("loft.ui"):_move_to_marked_entry("down")]])
+  eq(child.lua_get([[select(1, unpack(vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)))]]), buf2_line)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["_move_to_marked_entry up jumps to prev marked buffer"] = function()
+  local buf1 = child.api.nvim_create_buf(true, false)
+  local buf2 = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf1 .. [[)]])
+  child.lua([[require("loft.ui"):open()]])
+  local registry = child.lua_get([[require("loft.registry"):get_registry()]])
+  local buf1_line, buf2_line = nil, nil
+  for i, b in ipairs(registry) do
+    if b == buf1 then buf1_line = i end
+    if b == buf2 then buf2_line = i end
+  end
+  -- place cursor at buf2 (last), move up to buf1 (marked)
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, {]] .. buf2_line .. [[, 1})]])
+  child.lua([[require("loft.ui"):_move_to_marked_entry("up")]])
+  eq(child.lua_get([[select(1, unpack(vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)))]]), buf1_line)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["_move_to_marked_entry does nothing when no marked buffer"] = function()
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  -- cursor at line 1, no marked buffers
+  local before_line = child.lua_get([[select(1, unpack(vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)))]])
+  child.lua([[require("loft.ui"):_move_to_marked_entry("down")]])
+  eq(child.lua_get([[select(1, unpack(vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)))]]), before_line)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+-- ── help window ────────────────────────────────────────────────────────
+
+test_set["_show_help creates help window"] = function()
+  child.api.nvim_create_buf(true, true)
+  child.lua([[require("loft.ui"):open()]])
+  child.lua([[require("loft.ui"):_show_help()]])
+  eq(child.lua_get([[type(require("loft.ui")._help_win_id)]]), "number")
+  eq(child.lua_get([[vim.api.nvim_win_is_valid(require("loft.ui")._help_win_id)]]), true)
+  child.lua([[require("loft.ui"):_close_help()]])
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["_show_help focuses existing window on second call"] = function()
+  child.api.nvim_create_buf(true, true)
+  child.lua([[require("loft.ui"):open()]])
+  child.lua([[require("loft.ui"):_show_help()]])
+  local first_id = child.lua_get([[require("loft.ui")._help_win_id]])
+  child.lua([[require("loft.ui"):_show_help()]])
+  eq(child.lua_get([[require("loft.ui")._help_win_id]]), first_id)
+  child.lua([[require("loft.ui"):_close_help()]])
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["_close_help closes help window and clears id"] = function()
+  child.api.nvim_create_buf(true, true)
+  child.lua([[require("loft.ui"):open()]])
+  child.lua([[require("loft.ui"):_show_help()]])
+  local help_win = child.lua_get([[require("loft.ui")._help_win_id]])
+  child.lua([[require("loft.ui"):_close_help()]])
+  -- Window must be invalid (either explicitly closed or auto-closed on buf delete)
+  eq(child.api.nvim_win_is_valid(help_win), false)
+  child.lua([[require("loft.ui"):close()]])
+end
+
 return test_set
