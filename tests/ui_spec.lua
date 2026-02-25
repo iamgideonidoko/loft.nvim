@@ -97,7 +97,7 @@ test_set["move_buffer_up reorders registry"] = function()
 end
 
 test_set["move_buffer_down reorders registry"] = function()
-  local buf1 = child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
   child.lua([[require("loft.registry"):clean()]])
   -- Current = initial (first). move_buffer_down swaps it with second.
   local before = child.lua_get([[require("loft.registry"):get_registry()]])
@@ -241,7 +241,7 @@ end
 
 test_set["_delete_entry removes buffer from registry"] = function()
   local buf1 = child.api.nvim_create_buf(true, false)
-  local buf2 = child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
   child.lua([[require("loft.registry"):clean()]])
   child.lua([[require("loft.ui"):open()]])
   local registry = child.lua_get([[require("loft.registry"):get_registry()]])
@@ -300,7 +300,7 @@ end
 -- ── navigate to marked entry ───────────────────────────────────────────
 
 test_set["_move_to_marked_entry down jumps to next marked buffer"] = function()
-  local buf1 = child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
   local buf2 = child.api.nvim_create_buf(true, false)
   child.lua([[require("loft.registry"):clean()]])
   child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf2 .. [[)]])

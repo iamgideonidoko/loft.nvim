@@ -62,7 +62,7 @@ test_set["handles invalid input gracefully"] = function()
 end
 
 test_set["get_next_buffer navigates forward"] = function()
-  local buf1 = child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
   child.lua([[require("loft.registry"):clean()]])
   -- Registry: [initial, buf1], current = initial (index 1)
   local registry = child.lua_get([[require("loft.registry"):get_registry()]])
@@ -81,7 +81,7 @@ test_set["get_next_buffer wraps to first"] = function()
 end
 
 test_set["get_prev_buffer wraps to last"] = function()
-  local buf1 = child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
   child.lua([[require("loft.registry"):clean()]])
   -- current = initial (first), prev should wrap to last
   local registry = child.lua_get([[require("loft.registry"):get_registry()]])

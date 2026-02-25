@@ -16,7 +16,7 @@ local test_set = MiniTest.new_set({
 
 test_set["switch_to_next_buffer navigates to next"] = function()
   local buf1 = child.api.nvim_create_buf(true, false)
-  local buf2 = child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
   child.lua([[require("loft.registry"):clean()]])
   -- Registry: [initial, buf1, buf2]. Current = initial (index 1). Next = buf1.
   child.lua([[require("loft.actions").switch_to_next_buffer()]])
@@ -34,7 +34,7 @@ test_set["switch_to_next_buffer wraps to first"] = function()
 end
 
 test_set["switch_to_prev_buffer navigates to prev"] = function()
-  local buf1 = child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
   local buf2 = child.api.nvim_create_buf(true, false)
   child.lua([[require("loft.registry"):clean()]])
   -- Registry: [initial, buf1, buf2]. Current = initial (index 1). Prev wraps to last = buf2.
@@ -43,7 +43,7 @@ test_set["switch_to_prev_buffer navigates to prev"] = function()
 end
 
 test_set["switch_to_prev_buffer navigates backward"] = function()
-  local buf1 = child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
   local buf2 = child.api.nvim_create_buf(true, false)
   child.lua([[require("loft.registry"):clean()]])
   child.api.nvim_set_current_buf(buf2)
@@ -160,7 +160,7 @@ test_set["move_buffer_up reorders registry"] = function()
 end
 
 test_set["move_buffer_down reorders registry"] = function()
-  local buf1 = child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
   child.lua([[require("loft.registry"):clean()]])
   -- current = initial (first buffer); move_buffer_down swaps it with the next
   local before = child.lua_get([[require("loft.registry"):get_registry()]])
