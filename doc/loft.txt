@@ -193,6 +193,34 @@ Parameters ~
 
 ==============================================================================
 ------------------------------------------------------------------------------
+                                                             *highlights.groups*
+                              `highlights.groups`
+Loft highlight groups with sensible defaults linked to standard Neovim groups.
+All groups use `default = true` so colorschemes (and user config) can override
+them freely without needing to explicitly clear loft's definitions.
+
+Line-level groups (applied as background to the whole line):
+  LoftCurrentBuffer   – the buffer that was active when Loft opened
+  LoftMarkedBuffer    – a buffer that has been marked/pinned
+
+Inline groups (applied to specific characters on the line):
+  LoftMark            – the mark indicator symbol  (✓ / ➊–➒)
+  LoftCurrentIndicator – the ● current-buffer dot
+  LoftModified        – the [+] unsaved-changes indicator
+  LoftBufferNumber    – the {N} buffer-number token
+
+Type ~
+`(table<string, vim.api.keyset.highlight>)`
+
+------------------------------------------------------------------------------
+                                                            *highlights.setup()*
+                              `highlights.setup`()
+Set up all Loft highlight groups.
+Safe to call multiple times (e.g. after a ColorScheme change).
+
+
+==============================================================================
+------------------------------------------------------------------------------
                                                                          *utils*
                                     `utils`
 
@@ -387,6 +415,11 @@ Monkey-patch `MiniTest.new_child_neovim` with helpful wrappers
 
 
 ==============================================================================
+------------------------------------------------------------------------------
+                                                                         *hl_ns*
+                                    `hl_ns`
+Extmark namespace used for all Loft highlight decorations.
+
 ------------------------------------------------------------------------------
 Class ~
 {(exact)} loft.UIOtherOpts

@@ -2,6 +2,9 @@ local utils = require("loft.utils")
 local constants = require("loft.constants")
 local actions = require("loft.actions")
 
+--- Extmark namespace used for all Loft highlight decorations.
+local hl_ns = vim.api.nvim_create_namespace("loft_ui")
+
 ---@class (exact) loft.UIOtherOpts
 ---@field show_marked_mapping_num boolean
 ---@field marked_mapping_num_style 'solid'|'outline'
@@ -58,32 +61,100 @@ end
 --- Render a list of all the buffers in the registry (entries) in main UI buffer
 ---@private
 function UI:_render_entries()
-  if utils.buffer_exists(self._buf_id) then
-    utils.buffer_modifiable(self._buf_id, true)
-    --- Lines to render
-    ---@type string[]
-    local buf_lines = {}
-    for _, buf_id in ipairs(self.registry_instance:get_registry()) do
-      local buffer = vim.fn.getbufinfo(buf_id)[1]
-      if buffer then
-        local bufname = buffer.name ~= "" and buffer.name or "[No Name]"
-        local bufnr = buffer.bufnr
-        local flags = ""
-        flags = flags .. self:get_buffer_mark(bufnr)
-        local is_modified = vim.api.nvim_get_option_value("modified", { buf = bufnr })
-        if is_modified then
-          flags = flags .. "[+]"
-        end
-        local is_current_buf = self._last_buf_before_loft == bufnr
-        if is_current_buf then
-          flags = flags .. "●"
-        end
-        local relative_path = vim.fn.fnamemodify(bufname, ":.")
-        table.insert(buf_lines, string.format("%s>{%d}%s", flags, bufnr, relative_path))
+  if not utils.buffer_exists(self._buf_id) then
+    return
+  end
+  utils.buffer_modifiable(self._buf_id, true)
+  --- Lines to render
+  ---@type string[]
+  local buf_lines = {}
+  --- Highlight specs: { lnum, col_start, col_end, hl_group }
+  --- col_end < 0 means line-level highlight (line_hl_group).
+  ---@type table[]
+  local hl_specs = {}
+  for i, buf_id in ipairs(self.registry_instance:get_registry()) do
+    local lnum = i - 1 -- 0-indexed
+    local buffer = vim.fn.getbufinfo(buf_id)[1]
+    if buffer then
+      local bufname = buffer.name ~= "" and buffer.name or "[No Name]"
+      local bufnr = buffer.bufnr
+      local col = 0
+      local flags = ""
+
+      -- 1. Mark indicator symbol  (✓ / ➊–➒)
+      local mark = self:get_buffer_mark(bufnr)
+      if mark ~= "" then
+        table.insert(hl_specs, { lnum, col, col + #mark, "LoftMark" })
+        col = col + #mark
+        flags = flags .. mark
       end
+
+      -- 2. Modified indicator [+]
+      local is_modified = vim.api.nvim_get_option_value("modified", { buf = bufnr })
+      if is_modified then
+        local mod = "[+]"
+        table.insert(hl_specs, { lnum, col, col + #mod, "LoftModified" })
+        col = col + #mod
+        flags = flags .. mod
+      end
+
+      -- 3. Current-buffer indicator ●
+      local is_current_buf = self._last_buf_before_loft == bufnr
+      if is_current_buf then
+        local ind = "●"
+        table.insert(hl_specs, { lnum, col, col + #ind, "LoftCurrentIndicator" })
+        col = col + #ind
+        flags = flags .. ind
+      end
+
+      -- 4. ">" separator  (1 ASCII byte, no dedicated highlight)
+      col = col + 1
+
+      -- 5. Buffer number {N}
+      local bufnr_str = string.format("{%d}", bufnr)
+      table.insert(hl_specs, { lnum, col, col + #bufnr_str, "LoftBufferNumber" })
+
+      -- 6. Line-level background (current > marked > none)
+      if is_current_buf then
+        table.insert(hl_specs, { lnum, 0, -1, "LoftCurrentBuffer" })
+      elseif mark ~= "" then
+        table.insert(hl_specs, { lnum, 0, -1, "LoftMarkedBuffer" })
+      end
+
+      local relative_path = vim.fn.fnamemodify(bufname, ":.")
+      table.insert(buf_lines, string.format("%s>{%d}%s", flags, bufnr, relative_path))
     end
-    vim.api.nvim_buf_set_lines(self._buf_id, 0, -1, false, buf_lines)
-    utils.buffer_modifiable(self._buf_id, false)
+  end
+  vim.api.nvim_buf_set_lines(self._buf_id, 0, -1, false, buf_lines)
+  utils.buffer_modifiable(self._buf_id, false)
+  self:_apply_highlights(hl_specs)
+end
+
+--- Apply extmark-based highlights to the UI buffer.
+--- col_end < 0 in a spec means a full-line (line_hl_group) extmark.
+---@param hl_specs table[]
+---@private
+function UI:_apply_highlights(hl_specs)
+  if not utils.buffer_exists(self._buf_id) then
+    return
+  end
+  vim.api.nvim_buf_clear_namespace(self._buf_id, hl_ns, 0, -1)
+  for _, spec in ipairs(hl_specs) do
+    local lnum, col_start, col_end, group = spec[1], spec[2], spec[3], spec[4]
+    if col_end < 0 then
+      -- Line-level background highlight (lower priority so inline fg shows on top)
+      vim.api.nvim_buf_set_extmark(self._buf_id, hl_ns, lnum, 0, {
+        line_hl_group = group,
+        priority = 100,
+      })
+    else
+      -- Inline character highlight (higher priority to overlay the line bg)
+      vim.api.nvim_buf_set_extmark(self._buf_id, hl_ns, lnum, col_start, {
+        end_col = col_end,
+        hl_group = group,
+        priority = 200,
+      })
+    end
   end
 end
 

@@ -12,6 +12,7 @@
 - [Configuration](#configuration)
   - [Default Options](#default-options)
 - [Commands](#commands)
+- [Highlights](#highlights)
 - [Roadmap](#roadmap)
 
 ## Introduction
@@ -178,6 +179,51 @@ require("possession").setup({
 | `:LoftToggleSmartOrder` | Enable or disable the smart order feature. |
 | `:LoftToggleMark`       | Toggle mark current buffer.                |
 
+## Highlights
+
+Loft applies dedicated highlight groups to its UI so the buffer list is visually
+scannable at a glance and fully themeable. All groups use `default = true`, meaning
+your colorscheme (or your own `vim.api.nvim_set_hl` calls) take priority — you never
+need to clear Loft's definitions first.
+
+### Highlight groups
+
+| Group | Default link | Applied to |
+| ----- | ------------ | ---------- |
+| `LoftCurrentBuffer` | `PmenuSel` | Full line — the buffer that was active when Loft opened |
+| `LoftMarkedBuffer` | `DiffAdd` | Full line — marked / pinned buffers |
+| `LoftMark` | `DiagnosticInfo` | The `(✓)` / `➊`–`➒` mark symbol |
+| `LoftCurrentIndicator` | `Statement` | The `●` current-buffer dot |
+| `LoftModified` | `DiagnosticWarn` | The `[+]` unsaved-changes indicator |
+| `LoftBufferNumber` | `Comment` | The `{N}` buffer-number token |
+
+Line-level groups (`LoftCurrentBuffer`, `LoftMarkedBuffer`) set the background for the
+entire line. Inline groups are layered on top at higher priority, so their foreground
+colours remain visible against the line background.
+
+### Overriding highlight groups
+
+Set your overrides **after** your colorscheme loads so they are not cleared on theme
+change:
+
+```lua
+-- Example: make the current-buffer line stand out with a custom colour
+vim.api.nvim_set_hl(0, "LoftCurrentBuffer", { bg = "#264F78", bold = true })
+
+-- Example: dim the buffer-number column even further
+vim.api.nvim_set_hl(0, "LoftBufferNumber", { fg = "#555555" })
+```
+
+Or hook into the `ColorScheme` autocmd if you want the override to survive theme switches:
+
+```lua
+vim.api.nvim_create_autocmd("ColorScheme", {
+  callback = function()
+    vim.api.nvim_set_hl(0, "LoftCurrentBuffer", { bg = "#264F78", bold = true })
+  end,
+})
+```
+
 ## Autocmds
 
 Loft user autocmds:
@@ -269,6 +315,5 @@ Contributions are welcome! Please feel free to check out the [contribution guide
 - **Pinned buffers** — A "pinned" state (distinct from marked) that locks a buffer to a fixed position in the registry, making it immune to smart order reordering.
 - **`LoftBufferSwitch` event** — A `User` autocmd fired whenever Loft navigates to a buffer (next/prev/marked/alt), useful for statusline and other integrations.
 - **`LoftRegistryChanged` event** — A `User` autocmd fired whenever the registry mutates (entries added, removed, reordered), enabling reactive integrations.
-- **UI highlight groups** — Dedicated highlight groups (`LoftCurrentBuffer`, `LoftMarkedBuffer`, `LoftModifiedBuffer`, etc.) so the UI is themeable and visually scannable at a glance.
 - **UI Customization** — More UI options like layout options (e.g. horizontal list).
 - **Tab-local registries** — Option for each tab to maintain its own independent buffer registry, supporting project-separation workflows across tabs.

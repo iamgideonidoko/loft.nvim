@@ -387,4 +387,170 @@ test_set["_close_help closes help window and clears id"] = function()
   child.lua([[require("loft.ui"):close()]])
 end
 
+-- ── highlight groups ────────────────────────────────────────────────────
+
+test_set["highlights.setup defines all highlight groups"] = function()
+  local groups = child.lua_get([[vim.tbl_keys(require("loft.highlights").groups)]])
+  local expected = {
+    "LoftCurrentBuffer",
+    "LoftMarkedBuffer",
+    "LoftMark",
+    "LoftCurrentIndicator",
+    "LoftModified",
+    "LoftBufferNumber",
+  }
+  for _, name in ipairs(expected) do
+    local hl = child.lua_get([[vim.api.nvim_get_hl(0, { name = "]] .. name .. [[", link = true })]])
+    eq(type(hl), "table")
+    eq(next(hl) ~= nil, true)
+  end
+  eq(#groups, #expected)
+end
+
+test_set["highlights re-applied on ColorScheme event"] = function()
+  -- Fire ColorScheme; groups must still resolve afterwards
+  child.lua([[vim.api.nvim_exec_autocmds("ColorScheme", { modeline = false })]])
+  local hl = child.lua_get([[vim.api.nvim_get_hl(0, { name = "LoftCurrentBuffer", link = true })]])
+  eq(next(hl) ~= nil, true)
+end
+
+test_set["_render_entries applies LoftCurrentBuffer to current buffer line"] = function()
+  local buf = child.api.nvim_create_buf(true, false)
+  child.api.nvim_set_current_buf(buf)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local ns = child.lua_get('vim.api.nvim_get_namespaces()["loft_ui"]')
+  local ui_buf = child.lua_get([[require("loft.ui")._buf_id]])
+  local marks =
+    child.lua_get(string.format([[vim.api.nvim_buf_get_extmarks(%d, %d, 0, -1, { details = true })]], ui_buf, ns))
+  local found = false
+  for _, m in ipairs(marks) do
+    if m[4] and m[4].line_hl_group == "LoftCurrentBuffer" then
+      found = true
+      break
+    end
+  end
+  eq(found, true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["_render_entries applies LoftMarkedBuffer to marked buffer line"] = function()
+  local buf = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf .. [[)]])
+  child.lua([[require("loft.registry"):clean()]])
+  -- open from a different buffer so `buf` is not the current one
+  child.lua([[require("loft.ui"):open()]])
+  local ns = child.lua_get('vim.api.nvim_get_namespaces()["loft_ui"]')
+  local ui_buf = child.lua_get([[require("loft.ui")._buf_id]])
+  local marks =
+    child.lua_get(string.format([[vim.api.nvim_buf_get_extmarks(%d, %d, 0, -1, { details = true })]], ui_buf, ns))
+  local found = false
+  for _, m in ipairs(marks) do
+    if m[4] and m[4].line_hl_group == "LoftMarkedBuffer" then
+      found = true
+      break
+    end
+  end
+  eq(found, true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["_render_entries applies LoftMark inline highlight to mark symbol"] = function()
+  local buf = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf .. [[)]])
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local ns = child.lua_get('vim.api.nvim_get_namespaces()["loft_ui"]')
+  local ui_buf = child.lua_get([[require("loft.ui")._buf_id]])
+  local marks =
+    child.lua_get(string.format([[vim.api.nvim_buf_get_extmarks(%d, %d, 0, -1, { details = true })]], ui_buf, ns))
+  local found = false
+  for _, m in ipairs(marks) do
+    if m[4] and m[4].hl_group == "LoftMark" then
+      found = true
+      break
+    end
+  end
+  eq(found, true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["_render_entries applies LoftBufferNumber to every buffer number token"] = function()
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local ns = child.lua_get('vim.api.nvim_get_namespaces()["loft_ui"]')
+  local ui_buf = child.lua_get([[require("loft.ui")._buf_id]])
+  local marks =
+    child.lua_get(string.format([[vim.api.nvim_buf_get_extmarks(%d, %d, 0, -1, { details = true })]], ui_buf, ns))
+  local found = false
+  for _, m in ipairs(marks) do
+    if m[4] and m[4].hl_group == "LoftBufferNumber" then
+      found = true
+      break
+    end
+  end
+  eq(found, true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["_render_entries applies LoftCurrentIndicator for current buffer dot"] = function()
+  local buf = child.api.nvim_create_buf(true, false)
+  child.api.nvim_set_current_buf(buf)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local ns = child.lua_get('vim.api.nvim_get_namespaces()["loft_ui"]')
+  local ui_buf = child.lua_get([[require("loft.ui")._buf_id]])
+  local marks =
+    child.lua_get(string.format([[vim.api.nvim_buf_get_extmarks(%d, %d, 0, -1, { details = true })]], ui_buf, ns))
+  local found = false
+  for _, m in ipairs(marks) do
+    if m[4] and m[4].hl_group == "LoftCurrentIndicator" then
+      found = true
+      break
+    end
+  end
+  eq(found, true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["_render_entries applies LoftModified for modified buffer"] = function()
+  local buf = child.api.nvim_create_buf(true, false)
+  -- mark buffer as modified via setlocal modified
+  child.lua([[vim.api.nvim_set_option_value("modified", true, { buf = ]] .. buf .. [[ })]])
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local ns = child.lua_get('vim.api.nvim_get_namespaces()["loft_ui"]')
+  local ui_buf = child.lua_get([[require("loft.ui")._buf_id]])
+  local marks =
+    child.lua_get(string.format([[vim.api.nvim_buf_get_extmarks(%d, %d, 0, -1, { details = true })]], ui_buf, ns))
+  local found = false
+  for _, m in ipairs(marks) do
+    if m[4] and m[4].hl_group == "LoftModified" then
+      found = true
+      break
+    end
+  end
+  eq(found, true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["highlights cleared on close and reapplied on re-open"] = function()
+  local buf = child.api.nvim_create_buf(true, false)
+  child.api.nvim_set_current_buf(buf)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local ns = child.lua_get('vim.api.nvim_get_namespaces()["loft_ui"]')
+  local ui_buf = child.lua_get([[require("loft.ui")._buf_id]])
+  local before = child.lua_get(string.format([[#vim.api.nvim_buf_get_extmarks(%d, %d, 0, -1, {})]], ui_buf, ns))
+  eq(before > 0, true)
+  child.lua([[require("loft.ui"):close()]])
+  -- Re-open: new buffer, highlights should be present again
+  child.lua([[require("loft.ui"):open()]])
+  local ui_buf2 = child.lua_get([[require("loft.ui")._buf_id]])
+  local after = child.lua_get(string.format([[#vim.api.nvim_buf_get_extmarks(%d, %d, 0, -1, {})]], ui_buf2, ns))
+  eq(after > 0, true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
 return test_set

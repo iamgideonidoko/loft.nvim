@@ -44,6 +44,9 @@ events.smart_order_toggle()	loft.txt	/*events.smart_order_toggle()*
 get_file_path()	loft.txt	/*get_file_path()*
 helpers	loft.txt	/*helpers*
 helpers.new_child_neovim()	loft.txt	/*helpers.new_child_neovim()*
+highlights.groups	loft.txt	/*highlights.groups*
+highlights.setup()	loft.txt	/*highlights.setup()*
+hl_ns	loft.txt	/*hl_ns*
 loft.nvim	loft.txt	/*loft.nvim*
 loft.setup()	loft.txt	/*loft.setup()*
 persistence.restore()	loft.txt	/*persistence.restore()*

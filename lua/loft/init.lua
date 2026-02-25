@@ -12,6 +12,7 @@ local ui_instance = require("loft.ui")
 local autocmds = require("loft.autocmds")
 local commands = require("loft.commands")
 local persistence = require("loft.persistence")
+local highlights = require("loft.highlights")
 
 local loft = {}
 
@@ -55,6 +56,11 @@ loft.setup = function(opts)
   autocmds.setup()
   commands.setup()
   persistence.setup(registry_instance, config.all.persistence)
+  highlights.setup()
+  vim.api.nvim_create_autocmd("ColorScheme", {
+    group = utils.get_augroup("LoftHighlights", true),
+    callback = highlights.setup,
+  })
   if utils.is_dev() then
     require("loft.dev").create_reload_command()
   end
