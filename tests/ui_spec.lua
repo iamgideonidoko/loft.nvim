@@ -328,8 +328,12 @@ test_set["_move_to_marked_entry up jumps to prev marked buffer"] = function()
   local registry = child.lua_get([[require("loft.registry"):get_registry()]])
   local buf1_line, buf2_line = nil, nil
   for i, b in ipairs(registry) do
-    if b == buf1 then buf1_line = i end
-    if b == buf2 then buf2_line = i end
+    if b == buf1 then
+      buf1_line = i
+    end
+    if b == buf2 then
+      buf2_line = i
+    end
   end
   -- place cursor at buf2 (last), move up to buf1 (marked)
   child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, {]] .. buf2_line .. [[, 1})]])
