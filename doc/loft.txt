@@ -305,6 +305,7 @@ Fields ~
 {enable_smart_order_by_default} `(boolean)`
 {enable_recent_marked_mapping} `(boolean)`
 {post_leader_marked_mapping} `(string)`
+{reverse_order} `(boolean)`
 
 ------------------------------------------------------------------------------
                                                                       *Registry*

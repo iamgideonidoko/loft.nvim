@@ -268,4 +268,52 @@ test_set["keymap_recent_marked_buffers maps up to 9 most recent"] = function()
   end
 end
 
+-- ── reverse_order navigation ────────────────────────────────────────────
+
+test_set["reverse_order: get_next_buffer follows visual order (lower registry index)"] = function()
+  child.lua([[require("loft").setup({ reverse_order = true })]])
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  local registry = child.lua_get([[require("loft.registry"):get_registry()]])
+  -- Set current to registry[2] (middle); visual "next" = registry[1] (lower index)
+  child.api.nvim_set_current_buf(registry[2])
+  local next_buf = child.lua_get([[require("loft.registry"):get_next_buffer()]])
+  eq(next_buf, registry[1])
+end
+
+test_set["reverse_order: get_next_buffer wraps from registry[1] to last"] = function()
+  child.lua([[require("loft").setup({ reverse_order = true })]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  local registry = child.lua_get([[require("loft.registry"):get_registry()]])
+  -- Set current to registry[1]; visual "next" wraps to registry[n]
+  child.api.nvim_set_current_buf(registry[1])
+  local next_buf = child.lua_get([[require("loft.registry"):get_next_buffer()]])
+  eq(next_buf, registry[#registry])
+end
+
+test_set["reverse_order: get_prev_buffer follows visual order (higher registry index)"] = function()
+  child.lua([[require("loft").setup({ reverse_order = true })]])
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  local registry = child.lua_get([[require("loft.registry"):get_registry()]])
+  -- Set current to registry[2]; visual "prev" = registry[3] (higher index)
+  child.api.nvim_set_current_buf(registry[2])
+  local prev_buf = child.lua_get([[require("loft.registry"):get_prev_buffer()]])
+  eq(prev_buf, registry[3])
+end
+
+test_set["reverse_order: get_prev_buffer wraps from last to registry[1]"] = function()
+  child.lua([[require("loft").setup({ reverse_order = true })]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  local registry = child.lua_get([[require("loft.registry"):get_registry()]])
+  -- Set current to registry[n]; visual "prev" wraps to registry[1]
+  child.api.nvim_set_current_buf(registry[#registry])
+  local prev_buf = child.lua_get([[require("loft.registry"):get_prev_buffer()]])
+  eq(prev_buf, registry[1])
+end
+
 return test_set

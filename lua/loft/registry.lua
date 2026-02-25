@@ -9,6 +9,7 @@ local constants = require("loft.constants")
 ---@field enable_smart_order_by_default boolean
 ---@field enable_recent_marked_mapping boolean
 ---@field post_leader_marked_mapping string
+---@field reverse_order boolean
 
 ---@class loft.Registry
 ---@field private _registry integer[]
@@ -132,8 +133,16 @@ function Registry:get_next_buffer()
   if current_index == nil then
     return
   end
-  -- Calculate the next index in a circular manner
-  local next_index = (current_index % #self._registry) + 1
+  -- With reverse_order the visual list is flipped, so "next" is a lower registry index
+  local next_index
+  if self.opts.reverse_order then
+    next_index = current_index - 1
+    if next_index < 1 then
+      next_index = #self._registry
+    end
+  else
+    next_index = (current_index % #self._registry) + 1
+  end
   local next_buf = self._registry[next_index]
   return next_buf
 end
@@ -152,10 +161,15 @@ function Registry:get_prev_buffer()
   if current_index == nil then
     return
   end
-  -- Calculate the previous index in a circular manner
-  local prev_index = current_index - 1
-  if prev_index < 1 then
-    prev_index = #self._registry
+  -- With reverse_order the visual list is flipped, so "prev" is a higher registry index
+  local prev_index
+  if self.opts.reverse_order then
+    prev_index = (current_index % #self._registry) + 1
+  else
+    prev_index = current_index - 1
+    if prev_index < 1 then
+      prev_index = #self._registry
+    end
   end
   local prev_buf = self._registry[prev_index]
   return prev_buf

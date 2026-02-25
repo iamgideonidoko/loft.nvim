@@ -41,6 +41,7 @@ loft.setup = function(opts)
     smart_order_alt_bufs = config.all.smart_order_alt_bufs,
     enable_recent_marked_mapping = config.all.enable_recent_marked_mapping,
     post_leader_marked_mapping = config.all.post_leader_marked_mapping,
+    reverse_order = config.all.reverse_order,
   })
   ui_instance:setup({
     keymaps = config.all.keymaps.ui,
