@@ -415,6 +415,90 @@ test_set["setup registers VimEnter autocmd when enabled"] = function()
   eq(child.lua_get([[#vim.api.nvim_get_autocmds({ group = "LoftPersistenceVimEnter", event = "VimEnter" })]]), 1)
 end
 
+test_set["setup registers User event autocmds for session plugins when enabled"] = function()
+  child.lua([[
+    require("loft.persistence").setup(require("loft.registry"), {
+      enabled = true,
+      path = vim.fn.tempname() .. ".json",
+    })
+  ]])
+  -- luacheck: ignore 631
+  local count = child.lua_get(
+    [[(function() local cmds = vim.api.nvim_get_autocmds({ group = "LoftPersistencePluginLoad", event = "User" }); return #cmds end)()]]
+  )
+  eq(count > 0, true)
+end
+
+test_set["PersistenceLoadPost event triggers restore (folke/persistence.nvim)"] = function()
+  local buf = open_file("scripts/minimal_init.vim")
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf .. [[)]])
+  local tmp = make_tmp()
+  do_save(tmp)
+  -- Unmark, then fire the PersistenceLoadPost User event to simulate persistence.nvim
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf .. [[)]])
+  eq(child.lua_get([[require("loft.registry").is_buffer_marked(]] .. buf .. [[)]]), false)
+  child.lua(
+    string.format([[require("loft.persistence").setup(require("loft.registry"), { enabled = true, path = %q })]], tmp)
+  )
+  child.lua([[vim.api.nvim_exec_autocmds("User", { pattern = "PersistenceLoadPost" })]])
+  eq(child.lua_get([[require("loft.registry").is_buffer_marked(]] .. buf .. [[)]]), true)
+  cleanup(tmp)
+end
+
+test_set["PersistedLoadPost event triggers restore (olimorris/persisted.nvim)"] = function()
+  local buf = open_file("scripts/minimal_init.vim")
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf .. [[)]])
+  local tmp = make_tmp()
+  do_save(tmp)
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf .. [[)]])
+  eq(child.lua_get([[require("loft.registry").is_buffer_marked(]] .. buf .. [[)]]), false)
+  child.lua(
+    string.format([[require("loft.persistence").setup(require("loft.registry"), { enabled = true, path = %q })]], tmp)
+  )
+  child.lua([[vim.api.nvim_exec_autocmds("User", { pattern = "PersistedLoadPost" })]])
+  eq(child.lua_get([[require("loft.registry").is_buffer_marked(]] .. buf .. [[)]]), true)
+  cleanup(tmp)
+end
+
+test_set["ResessionLoadPost event triggers restore (stevearc/resession.nvim)"] = function()
+  local buf = open_file("scripts/minimal_init.vim")
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf .. [[)]])
+  local tmp = make_tmp()
+  do_save(tmp)
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf .. [[)]])
+  eq(child.lua_get([[require("loft.registry").is_buffer_marked(]] .. buf .. [[)]]), false)
+  child.lua(
+    string.format([[require("loft.persistence").setup(require("loft.registry"), { enabled = true, path = %q })]], tmp)
+  )
+  child.lua([[vim.api.nvim_exec_autocmds("User", { pattern = "ResessionLoadPost" })]])
+  eq(child.lua_get([[require("loft.registry").is_buffer_marked(]] .. buf .. [[)]]), true)
+  cleanup(tmp)
+end
+
+test_set["session load event can re-restore after a new session is loaded"] = function()
+  local buf = open_file("scripts/minimal_init.vim")
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf .. [[)]])
+  local tmp = make_tmp()
+  do_save(tmp)
+  child.lua(
+    string.format([[require("loft.persistence").setup(require("loft.registry"), { enabled = true, path = %q })]], tmp)
+  )
+  -- First restore via SessionLoadPost
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf .. [[)]])
+  child.lua([[vim.api.nvim_exec_autocmds("SessionLoadPost", {})]])
+  eq(child.lua_get([[require("loft.registry").is_buffer_marked(]] .. buf .. [[)]]), true)
+  -- Unmark and fire event again (simulating a second session load)
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf .. [[)]])
+  eq(child.lua_get([[require("loft.registry").is_buffer_marked(]] .. buf .. [[)]]), false)
+  child.lua([[vim.api.nvim_exec_autocmds("SessionLoadPost", {})]])
+  eq(child.lua_get([[require("loft.registry").is_buffer_marked(]] .. buf .. [[)]]), true)
+  cleanup(tmp)
+end
+
 test_set["setup does not register autocmds when disabled"] = function()
   child.lua([[
     require("loft.persistence").setup(require("loft.registry"), {

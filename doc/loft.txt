@@ -234,10 +234,26 @@ Parameters ~
                                                            *persistence.setup()*
                     `persistence.setup`({registry}, {opts})
 Setup autocmds that save state on exit and restore it after a session is loaded.
-Hooks into the native Neovim SessionLoadPost event as well as the post-load events
-fired by the most common session plugins (auto-session, persisted.nvim,
-resession.nvim, possession.nvim). Falls back to a deferred VimEnter handler for
-users who do not use a session plugin.
+
+Hooks into the native Neovim SessionLoadPost event and the post-load User
+autocmds fired by the most common session plugins:
+  - folke/persistence.nvim  → User PersistenceLoadPost  (+ native SessionLoadPost)
+  - olimorris/persisted.nvim → User PersistedLoadPost    (+ native SessionLoadPost)
+  - stevearc/resession.nvim  → User ResessionLoadPost    (no native SessionLoadPost)
+  - rmagatti/auto-session    → native SessionLoadPost only (no custom User event)
+  - Shatur/neovim-session-manager → native SessionLoadPost + User SessionLoadPost
+
+Falls back to a deferred VimEnter handler for users without a session plugin.
+
+Design: session load events **always** trigger restore (no once-only guard).
+The VimEnter fallback is suppressed once any session load event has fired,
+preventing a redundant restore when the fallback races ahead of a plugin that
+schedules its own load via vim.schedule (e.g. persisted.nvim).
+
+possession.nvim note: it uses vim.api.nvim_exec2 instead of :source, so it
+does not fire SessionLoadPost or any User event after loading. Users should
+call require("loft.persistence").restore() in their possession.nvim after_load
+hook: hooks = { after_load = function() require("loft.persistence").restore(...) end }
 Parameters ~
 {registry} `(loft.Registry)`
 {opts} `(loft.PersistenceConfig)`

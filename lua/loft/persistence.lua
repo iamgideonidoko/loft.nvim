@@ -129,10 +129,26 @@ function persistence.restore(registry, opts)
 end
 
 --- Setup autocmds that save state on exit and restore it after a session is loaded.
---- Hooks into the native Neovim SessionLoadPost event as well as the post-load events
---- fired by the most common session plugins (auto-session, persisted.nvim,
---- resession.nvim, possession.nvim). Falls back to a deferred VimEnter handler for
---- users who do not use a session plugin.
+---
+--- Hooks into the native Neovim SessionLoadPost event and the post-load User
+--- autocmds fired by the most common session plugins:
+---   - folke/persistence.nvim  → User PersistenceLoadPost  (+ native SessionLoadPost)
+---   - olimorris/persisted.nvim → User PersistedLoadPost    (+ native SessionLoadPost)
+---   - stevearc/resession.nvim  → User ResessionLoadPost    (no native SessionLoadPost)
+---   - rmagatti/auto-session    → native SessionLoadPost only (no custom User event)
+---   - Shatur/neovim-session-manager → native SessionLoadPost + User SessionLoadPost
+---
+--- Falls back to a deferred VimEnter handler for users without a session plugin.
+---
+--- Design: session load events **always** trigger restore (no once-only guard).
+--- The VimEnter fallback is suppressed once any session load event has fired,
+--- preventing a redundant restore when the fallback races ahead of a plugin that
+--- schedules its own load via vim.schedule (e.g. persisted.nvim).
+---
+--- possession.nvim note: it uses vim.api.nvim_exec2 instead of :source, so it
+--- does not fire SessionLoadPost or any User event after loading. Users should
+--- call require("loft.persistence").restore() in their possession.nvim after_load
+--- hook: hooks = { after_load = function() require("loft.persistence").restore(...) end }
 ---@param registry loft.Registry
 ---@param opts loft.PersistenceConfig
 function persistence.setup(registry, opts)
@@ -147,39 +163,44 @@ function persistence.setup(registry, opts)
     end,
   })
 
-  local restored = false
-  local function try_restore()
-    if restored then
-      return
-    end
-    restored = true
+  -- Tracks whether at least one session load event has fired. Used by the
+  -- VimEnter fallback to avoid restoring before session buffers are available.
+  local session_plugin_fired = false
+
+  local function on_session_load()
+    session_plugin_fired = true
     persistence.restore(registry, opts)
   end
 
   -- Native Neovim :mksession / :source session.vim
   vim.api.nvim_create_autocmd("SessionLoadPost", {
     group = utils.get_augroup("PersistenceSessionLoad", true),
-    callback = try_restore,
+    callback = on_session_load,
   })
 
-  -- Session plugin post-load events
+  -- Session plugin post-load User events
   vim.api.nvim_create_autocmd("User", {
     pattern = {
-      "AutoSessionLoadPost", -- auto-session
-      "PersistedLoadPost", -- persisted.nvim
-      "ResessionLoadPost", -- resession.nvim
-      "PossessionLoadPost", -- possession.nvim
+      "PersistenceLoadPost", -- folke/persistence.nvim
+      "PersistedLoadPost", -- olimorris/persisted.nvim
+      "ResessionLoadPost", -- stevearc/resession.nvim
     },
     group = utils.get_augroup("PersistencePluginLoad", true),
-    callback = try_restore,
+    callback = on_session_load,
   })
 
-  -- Fallback for users without a session plugin
+  -- Fallback for users without a session plugin. Runs deferred so that any
+  -- synchronous session load (e.g. folke/persistence.nvim) can set
+  -- session_plugin_fired = true before this runs.
   vim.api.nvim_create_autocmd("VimEnter", {
     group = utils.get_augroup("PersistenceVimEnter", true),
     once = true,
     callback = function()
-      vim.schedule(try_restore)
+      vim.schedule(function()
+        if not session_plugin_fired then
+          persistence.restore(registry, opts)
+        end
+      end)
     end,
   })
 end

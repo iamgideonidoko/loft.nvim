@@ -139,6 +139,37 @@ require("loft").setup({
 })
 ```
 
+### Session plugin compatibility
+
+When `persistence.enabled = true`, loft hooks into the following events to
+restore state after a session is loaded:
+
+| Plugin                                                                            | Event hooked                                   |
+| --------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Native `:mksession` / any `:source session.vim`                                   | `SessionLoadPost` (Neovim built-in)            |
+| [folke/persistence.nvim](https://github.com/folke/persistence.nvim)               | `User PersistenceLoadPost` + `SessionLoadPost` |
+| [olimorris/persisted.nvim](https://github.com/olimorris/persisted.nvim)           | `User PersistedLoadPost` + `SessionLoadPost`   |
+| [stevearc/resession.nvim](https://github.com/stevearc/resession.nvim)             | `User ResessionLoadPost`                       |
+| [rmagatti/auto-session](https://github.com/rmagatti/auto-session)                 | `SessionLoadPost`                              |
+| [Shatur/neovim-session-manager](https://github.com/Shatur/neovim-session-manager) | `SessionLoadPost`                              |
+| No session plugin                                                                 | deferred `VimEnter` fallback                   |
+
+**possession.nvim note**: [jedrzejboczar/possession.nvim](https://github.com/jedrzejboczar/possession.nvim) executes sessions via `nvim_exec2` instead of `:source`, so neither `SessionLoadPost` nor a post-load User event fires. Call loft's restore manually in your `after_load` hook:
+
+```lua
+require("possession").setup({
+  hooks = {
+    after_load = function()
+      local p = require("loft.persistence")
+      local cfg = require("loft.config").all.persistence
+      p.restore(require("loft.registry"), cfg)
+    end,
+  },
+})
+```
+
+````
+
 ## Commands
 
 | Commands                | Description                                |
@@ -177,7 +208,7 @@ MiniStatusline.combine_groups({
   "%=",
   -- ...
 })
-```
+````
 
 Then listen for the following Loft's user autocmds and redraw your statusline:
 
