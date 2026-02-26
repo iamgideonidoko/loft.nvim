@@ -17,9 +17,7 @@
 
 ## Introduction
 
-https://github.com/user-attachments/assets/312a06be-a2c0-4f4f-9fd2-e404c737cb89
-
-Loft is a powerful yet lightweight Neovim plugin that makes buffer management fast, intuitive, and frustration-free—so you can focus on what truly matters. 🚀
+Loft is a powerful yet lightweight Neovim plugin that makes buffer management fast, intuitive, and frustration-free—so you can focus on what truly matters.
 
 ### 🛑 The Problem: Buffer Chaos!
 
@@ -27,7 +25,7 @@ Imagine your Neovim buffer list is like a messy desk. You start with a clean wor
 
 Ever rage-quit Neovim just to start fresh? You’re not alone.
 
-### ✅ The Solution: Loft 🔥
+### ✅ The Solution: Loft
 
 <div align="center">
   <img src="assets/showcase.png" alt="Showcase" />
@@ -43,7 +41,7 @@ Loft uses a registry to manage state and track buffers that can be cyclically na
 
   The marking feature allows you to bookmark important buffers. The marked buffers/entries (identified by the symbol `(✓)`) can be specially navigated to cyclically or by keybinding. You read right, keybinding; the nine most recent buffers are automatically mapped for quick access anytime.
 
-No more scrambling to find where you left off. No more accidental closures. **Just smooth, intelligent buffer management.** 🚀
+No more scrambling to find where you left off. No more accidental closures. **Just smooth, intelligent buffer management.** 🔥
 
 ## Installation
 
@@ -454,8 +452,8 @@ vim.api.nvim_create_autocmd("User", {
 
 Here's what your statusline would look like:
 
-<div>
-  <img src="assets/statusline_showcase.png" width="300" alt="Statusline Showcase" />
+<div align="center">
+  <img src="assets/statusline_showcase.png" alt="Statusline Showcase" />
 </div>
 <br />
 
