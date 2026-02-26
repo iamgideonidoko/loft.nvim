@@ -39,6 +39,7 @@ loft.setup = function(opts)
     enable_smart_order_by_default = config.all.enable_smart_order_by_default,
     smart_order_marked_bufs = config.all.smart_order_marked_bufs,
     smart_order_alt_bufs = config.all.smart_order_alt_bufs,
+    smart_order_on_window_switch = config.all.smart_order_on_window_switch,
     enable_recent_marked_mapping = config.all.enable_recent_marked_mapping,
     post_leader_marked_mapping = config.all.post_leader_marked_mapping,
     reverse_order = config.all.reverse_order,

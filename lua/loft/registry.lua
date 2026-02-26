@@ -6,6 +6,7 @@ local constants = require("loft.constants")
 ---@field close_invalid_buf_on_switch boolean
 ---@field smart_order_marked_bufs boolean
 ---@field smart_order_alt_bufs boolean
+---@field smart_order_on_window_switch boolean
 ---@field enable_smart_order_by_default boolean
 ---@field enable_recent_marked_mapping boolean
 ---@field post_leader_marked_mapping string
@@ -16,6 +17,7 @@ local constants = require("loft.constants")
 ---@field private _update_paused boolean
 ---@field private _update_paused_once boolean
 ---@field private _is_smart_order_on boolean
+---@field private _prev_win_id integer|nil
 ---@field opts loft.RegistrySetupOpts
 local Registry = {}
 Registry.__index = Registry
@@ -26,6 +28,7 @@ function Registry:new()
   instance._update_paused = false
   instance._update_paused_once = false
   instance._is_smart_order_on = true
+  instance._prev_win_id = nil
   return instance
 end
 
@@ -52,12 +55,21 @@ function Registry:_update(buffer)
   if not is_buf_valid then
     return
   end
+  -- Detect a window-focus change (split/tab navigation) vs. a buffer switch.
+  local current_win = vim.api.nvim_get_current_win()
+  local is_window_switch = self._prev_win_id ~= nil and current_win ~= self._prev_win_id
+  self._prev_win_id = current_win
   self:clean()
   local is_buffer_in_registry = false
   local is_alt_buffer_in_registry = false
+  -- Suppress smart-reordering when the user just moved focus to a different
+  -- split/tab (and smart_order_on_window_switch is false).
+  local allow_smart_order = not is_window_switch or self.opts.smart_order_on_window_switch
   local should_smart_order_buf = self._is_smart_order_on
+    and allow_smart_order
     and (not self.is_buffer_marked(buf) or (self.opts.smart_order_marked_bufs and self.is_buffer_marked(buf)))
   local should_smart_order_alt_buf = self._is_smart_order_on
+    and allow_smart_order
     and self.opts.smart_order_alt_bufs
     and (not self.is_buffer_marked(alt_buf) or (self.opts.smart_order_marked_bufs and self.is_buffer_marked(alt_buf)))
     and utils.is_buffer_valid(alt_buf)

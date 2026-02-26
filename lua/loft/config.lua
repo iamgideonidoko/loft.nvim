@@ -12,6 +12,7 @@ local actions = require("loft.actions")
 ---@field enable_smart_order_by_default? boolean Whether to enable smart order by default
 ---@field smart_order_marked_bufs? boolean Whether smart order should reposition marked buffers
 ---@field smart_order_alt_bufs? boolean Whether smart order should reposition alternate buffer by moving it to just before the current buffer
+---@field smart_order_on_window_switch? boolean Whether smart order should reorder when switching between window splits/tabs. Defaults to false.
 ---@field enable_recent_marked_mapping? boolean Whether the 9 most recently marked buffers should be switched to with a mapping (with keymaps)
 ---@field post_leader_marked_mapping? string The character to use after leader when assigning keymap to the 9 most recently marked buffers
 ---@field show_marked_mapping_num? boolean Whether to show the mapping number for the 9 most recently marked buffers
@@ -63,6 +64,7 @@ local default_config = {
   enable_smart_order_by_default = true,
   smart_order_marked_bufs = false,
   smart_order_alt_bufs = true,
+  smart_order_on_window_switch = false,
   enable_recent_marked_mapping = true,
   post_leader_marked_mapping = "l",
   show_marked_mapping_num = true,

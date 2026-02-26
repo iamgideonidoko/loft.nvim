@@ -316,4 +316,43 @@ test_set["reverse_order: get_prev_buffer wraps from last to registry[1]"] = func
   eq(prev_buf, registry[1])
 end
 
+-- ── smart_order_on_window_switch ────────────────────────────────────────
+
+test_set["smart order does not reorder on window switch by default"] = function()
+  child.lua([[require("loft").setup({ enable_smart_order_by_default = true, smart_order_on_window_switch = false })]])
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  local initial = child.lua_get([[require("loft.registry"):get_registry()]])
+  -- Simulate a window switch: set _prev_win_id to a different win ID, then call _update()
+  child.lua([[
+    local reg = require("loft.registry")
+    local current_win = vim.api.nvim_get_current_win()
+    reg._prev_win_id = current_win + 999  -- pretend we came from a different window
+    reg:_update()
+  ]])
+  local after = child.lua_get([[require("loft.registry"):get_registry()]])
+  -- Order must be unchanged: window-switch with flag=false should not reorder
+  eq(after[1], initial[1])
+  eq(after[#after], initial[#initial])
+end
+
+test_set["smart order DOES reorder on window switch when smart_order_on_window_switch=true"] = function()
+  child.lua([[require("loft").setup({ enable_smart_order_by_default = true, smart_order_on_window_switch = true })]])
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  local current_buf = child.lua_get([[vim.api.nvim_get_current_buf()]])
+  -- Simulate a window switch and trigger _update()
+  child.lua([[
+    local reg = require("loft.registry")
+    local current_win = vim.api.nvim_get_current_win()
+    reg._prev_win_id = current_win + 999  -- pretend we came from a different window
+    reg:_update()
+  ]])
+  local after = child.lua_get([[require("loft.registry"):get_registry()]])
+  -- Current buf should be at the end (most recently used position) after smart order
+  eq(after[#after], current_buf)
+end
+
 return test_set

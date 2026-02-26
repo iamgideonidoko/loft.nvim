@@ -117,6 +117,7 @@ Fields ~
 {enable_smart_order_by_default} `(optional)` `(boolean)` Whether to enable smart order by default
 {smart_order_marked_bufs} `(optional)` `(boolean)` Whether smart order should reposition marked buffers
 {smart_order_alt_bufs} `(optional)` `(boolean)` Whether smart order should reposition alternate buffer by moving it to just before the current buffer
+{smart_order_on_window_switch} `(optional)` `(boolean)` Whether smart order should reorder when switching between window splits/tabs. Defaults to false.
 {enable_recent_marked_mapping} `(optional)` `(boolean)` Whether the 9 most recently marked buffers should be switched to with a mapping (with keymaps)
 {post_leader_marked_mapping} `(optional)` `(string)` The character to use after leader when assigning keymap to the 9 most recently marked buffers
 {show_marked_mapping_num} `(optional)` `(boolean)` Whether to show the mapping number for the 9 most recently marked buffers
@@ -328,6 +329,7 @@ Fields ~
 {close_invalid_buf_on_switch} `(boolean)`
 {smart_order_marked_bufs} `(boolean)`
 {smart_order_alt_bufs} `(boolean)`
+{smart_order_on_window_switch} `(boolean)`
 {enable_smart_order_by_default} `(boolean)`
 {enable_recent_marked_mapping} `(boolean)`
 {post_leader_marked_mapping} `(string)`
@@ -343,6 +345,7 @@ Fields ~
 {private} _`(update_paused)` boolean
 {private} _`(update_paused_once)` boolean
 {private} _`(is_smart_order_on)` boolean
+{private} _`(prev_win_id)` integer|nil
 {opts} `(loft.RegistrySetupOpts)`
 
 ------------------------------------------------------------------------------

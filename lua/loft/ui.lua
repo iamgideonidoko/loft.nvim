@@ -292,10 +292,7 @@ function UI:_setup_autocmd()
           end)
         end
       end
-      if
-        utils.window_exists(self._help_win_id)
-        and vim.api.nvim_get_current_win() == self._help_win_id
-      then
+      if utils.window_exists(self._help_win_id) and vim.api.nvim_get_current_win() == self._help_win_id then
         local current_buf = vim.api.nvim_get_current_buf()
         if current_buf ~= self._help_buf_id then
           vim.schedule(function()

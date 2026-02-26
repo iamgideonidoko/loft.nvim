@@ -75,6 +75,10 @@ require("loft").setup({
   enable_smart_order_by_default = true, -- Whether to enable smart order by default
   smart_order_marked_bufs = false, -- Whether smart order (`⟅⇅⟆`) should reposition marked buffers
   smart_order_alt_bufs = false, -- Whether smart order (`⟅⇅⟆`) should reposition alternate buffers
+  -- When false (default), switching focus to a different window split or tab will NOT
+  -- reorder the registry. Smart reordering only applies when the buffer itself changes
+  -- within the same window. Set to true to restore the old behaviour.
+  smart_order_on_window_switch = false,
   enable_recent_marked_mapping = true, -- Whether the 9 most recently marked buffers should be switched to with a mapping (with keymaps)
 
   -- The character to use after leader when assigning keymap to the 9 most recently marked buffers
