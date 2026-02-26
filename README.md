@@ -1,7 +1,6 @@
 <div align="center">
-  <img src="assets/loft.nvim.png" alt="Logo" />
   <h3 align="center"><code> ⨳⨳ LOFT ⨳⨳ </code></h3>
-  <p align="center">Streamlined plugin for productive buffer management</p>
+  <p align="center">The missing buffer management tool<br />A sleek, no-nonsense plugin built to tame your buffers and supercharge your flow.</p>
 </div>
 <br />
 
