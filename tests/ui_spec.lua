@@ -715,4 +715,134 @@ test_set["reverse_order: _move_to_marked_entry up jumps to buffer visually above
   child.lua([[require("loft.ui"):close()]])
 end
 
+-- ── window customisation ────────────────────────────────────────────────
+
+test_set["window row_offset shifts window row"] = function()
+  child.lua([[require("loft").setup({ window = { row_offset = 5 } })]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  local cfg = child.lua_get([[vim.api.nvim_win_get_config(require("loft.ui")._win_id)]])
+  -- row must be at least 5 (offset is additive to the centered position)
+  eq(cfg.row >= 5, true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["window col_offset shifts window col"] = function()
+  child.lua([[require("loft").setup({ window = { col_offset = 8 } })]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  local cfg = child.lua_get([[vim.api.nvim_win_get_config(require("loft.ui")._win_id)]])
+  eq(cfg.col >= 8, true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["window explicit row/col are used as-is"] = function()
+  child.lua([[require("loft").setup({ window = { row = 3, col = 7 } })]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  local cfg = child.lua_get([[vim.api.nvim_win_get_config(require("loft.ui")._win_id)]])
+  eq(cfg.row, 3)
+  eq(cfg.col, 7)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["window custom border is applied"] = function()
+  child.lua([[require("loft").setup({ window = { border = "single" } })]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  -- nvim_win_get_config expands named borders to char arrays; check a corner char
+  local cfg = child.lua_get([[vim.api.nvim_win_get_config(require("loft.ui")._win_id)]])
+  -- "single" top-left corner is "┌"
+  local border_tl = type(cfg.border) == "table" and cfg.border[1] or cfg.border
+  eq(border_tl, "┌")
+  child.lua([[require("loft.ui"):close()]])
+end
+
+-- ── help_window options ─────────────────────────────────────────────────
+
+test_set["help_window disable prevents help window from opening"] = function()
+  child.lua([[require("loft").setup({ help_window = { disable = true } })]])
+  child.api.nvim_create_buf(true, true)
+  child.lua([[require("loft.ui"):open()]])
+  child.lua([[require("loft.ui"):_show_help()]])
+  eq(child.lua_get([[require("loft.ui")._help_win_id]]), vim.NIL)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["help_window zindex is always > main zindex"] = function()
+  -- Supply a zindex lower than the main window (100) – must be clamped
+  child.lua([[require("loft").setup({ window = { zindex = 100 }, help_window = { zindex = 50 } })]])
+  child.api.nvim_create_buf(true, true)
+  child.lua([[require("loft.ui"):open()]])
+  child.lua([[require("loft.ui"):_show_help()]])
+  local help_cfg = child.lua_get([[vim.api.nvim_win_get_config(require("loft.ui")._help_win_id)]])
+  local main_cfg = child.lua_get([[vim.api.nvim_win_get_config(require("loft.ui")._win_id)]])
+  eq(help_cfg.zindex > main_cfg.zindex, true)
+  child.lua([[require("loft.ui"):_close_help()]])
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["help_window custom border overrides main window border"] = function()
+  child.lua([[require("loft").setup({ window = { border = "rounded" }, help_window = { border = "double" } })]])
+  child.api.nvim_create_buf(true, true)
+  child.lua([[require("loft.ui"):open()]])
+  child.lua([[require("loft.ui"):_show_help()]])
+  local cfg = child.lua_get([[vim.api.nvim_win_get_config(require("loft.ui")._help_win_id)]])
+  -- "double" top-left corner is "╔"
+  local border_tl = type(cfg.border) == "table" and cfg.border[1] or cfg.border
+  eq(border_tl, "╔")
+  child.lua([[require("loft.ui"):_close_help()]])
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["help_window inherits main window border when not set"] = function()
+  child.lua([[require("loft").setup({ window = { border = "single" } })]])
+  child.api.nvim_create_buf(true, true)
+  child.lua([[require("loft.ui"):open()]])
+  child.lua([[require("loft.ui"):_show_help()]])
+  local help_cfg = child.lua_get([[vim.api.nvim_win_get_config(require("loft.ui")._help_win_id)]])
+  local main_cfg = child.lua_get([[vim.api.nvim_win_get_config(require("loft.ui")._win_id)]])
+  -- Both windows should have the same border style (resolved to the same array)
+  local htl = type(help_cfg.border) == "table" and help_cfg.border[1] or help_cfg.border
+  local mtl = type(main_cfg.border) == "table" and main_cfg.border[1] or main_cfg.border
+  eq(htl, mtl)
+  child.lua([[require("loft.ui"):_close_help()]])
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["help_window row_offset shifts help window"] = function()
+  child.lua([[require("loft").setup({ help_window = { row_offset = 4 } })]])
+  child.api.nvim_create_buf(true, true)
+  child.lua([[require("loft.ui"):open()]])
+  child.lua([[require("loft.ui"):_show_help()]])
+  local cfg = child.lua_get([[vim.api.nvim_win_get_config(require("loft.ui")._help_win_id)]])
+  eq(cfg.row >= 4, true)
+  child.lua([[require("loft.ui"):_close_help()]])
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["help_window explicit row/col used as-is"] = function()
+  child.lua([[require("loft").setup({ help_window = { row = 2, col = 5 } })]])
+  child.api.nvim_create_buf(true, true)
+  child.lua([[require("loft.ui"):open()]])
+  child.lua([[require("loft.ui"):_show_help()]])
+  local cfg = child.lua_get([[vim.api.nvim_win_get_config(require("loft.ui")._help_win_id)]])
+  eq(cfg.row, 2)
+  eq(cfg.col, 5)
+  child.lua([[require("loft.ui"):_close_help()]])
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["help keymaps loop does not abort early on false/non-string values"] = function()
+  -- Disable one keymap (false) – help window should still build all other entries
+  child.lua([[require("loft").setup({ keymaps = { ui = { ["q"] = false, ["<Esc>"] = "close" } } })]])
+  child.api.nvim_create_buf(true, true)
+  child.lua([[require("loft.ui"):open()]])
+  child.lua([[require("loft.ui"):_show_help()]])
+  -- Help window must have been created (previously a bug caused early return)
+  eq(child.lua_get([[type(require("loft.ui")._help_win_id)]]), "number")
+  child.lua([[require("loft.ui"):_close_help()]])
+  child.lua([[require("loft.ui"):close()]])
+end
+
 return test_set

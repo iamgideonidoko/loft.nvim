@@ -17,6 +17,7 @@ local actions = require("loft.actions")
 ---@field ui_timeout_on_curr_buf_move? integer The timeout in milliseconds to wait before closing the UI after moving the current buffer. Defaults to 800. Set to 0 to disable the UI from showing.
 ---@field reverse_order? boolean Whether to display the buffer list in reverse order (first registry entry at the bottom). Defaults to false.
 ---@field window? loft.WinOpts
+---@field help_window? loft.HelpWinOpts
 ---@field persistence? loft.PersistenceConfig
 
 ---@class (exact) loft.PersistenceConfig
@@ -26,9 +27,27 @@ local actions = require("loft.actions")
 ---@class (exact) loft.WinOpts
 ---@field width? integer Defaults to calculated width
 ---@field height? integer Defaults to calculated height
----@field zindex? integer
+---@field row? integer Explicit row; overrides centered calculation
+---@field col? integer Explicit col; overrides centered calculation
+---@field row_offset? integer Value added to the computed row (default 0)
+---@field col_offset? integer Value added to the computed col (default 0)
+---@field title? string Custom title string; defaults to auto-generated Loft title
 ---@field title_pos? "left"|"right"|"center"
+---@field footer? string Custom footer string; defaults to the smart-order indicator
+---@field footer_pos? "left"|"right"|"center"
+---@field zindex? integer
 ---@field border? "none"|"single"|"double"|"rounded"|"solid"|"shadow"|string[]
+
+---@class (exact) loft.HelpWinOpts
+---@field disable? boolean Disable the help window entirely (default false)
+---@field width? integer Defaults to calculated width
+---@field height? integer Defaults to calculated height
+---@field row? integer Explicit row; overrides centered calculation
+---@field col? integer Explicit col; overrides centered calculation
+---@field row_offset? integer Value added to the computed row (default 0)
+---@field col_offset? integer Value added to the computed col (default 0)
+---@field border? "none"|"single"|"double"|"rounded"|"solid"|"shadow"|string[] Defaults to main window border
+---@field zindex? integer Clamped to >= main window zindex + 1
 
 ---@class (exact) loft.KeymapConfig
 ---@field ui? loft.UIKeymapsConfig
@@ -49,9 +68,27 @@ local default_config = {
   window = {
     width = nil,
     height = nil,
-    zindex = 100,
+    row = nil,
+    col = nil,
+    row_offset = 0,
+    col_offset = 0,
+    title = nil,
     title_pos = "center",
+    footer = nil,
+    footer_pos = "center",
+    zindex = 100,
     border = "rounded",
+  },
+  help_window = {
+    disable = false,
+    width = nil,
+    height = nil,
+    row = nil,
+    col = nil,
+    row_offset = 0,
+    col_offset = 0,
+    border = nil,
+    zindex = nil,
   },
   keymaps = {
     ui = {

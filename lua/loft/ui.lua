@@ -15,6 +15,7 @@ local hl_ns = vim.api.nvim_create_namespace("loft_ui")
 ---@field keymaps loft.UIKeymapsConfig
 ---@field general_keymaps loft.GeneralKeymapsConfig
 ---@field window loft.WinOpts
+---@field help_window loft.HelpWinOpts
 ---@field other_opts loft.UIOtherOpts
 
 ---@class loft.UI
@@ -28,6 +29,7 @@ local hl_ns = vim.api.nvim_create_namespace("loft_ui")
 ---@field private _help_win_id integer|nil
 ---@field private _help_buf_id integer|nil
 ---@field private _window loft.WinOpts|nil
+---@field private _help_window loft.HelpWinOpts|nil
 ---@field private _marked_nums_solid string[]
 ---@field private _marked_nums_outline string[]
 ---@field private _other_opts loft.UIOtherOpts
@@ -53,6 +55,7 @@ function UI:setup(opts)
   self._keymaps = opts.keymaps
   self._general_keymaps = opts.general_keymaps
   self._window = opts.window
+  self._help_window = opts.help_window
   self._other_opts = opts.other_opts
   self._debounce_close = utils.debounce(function()
     self:close()
@@ -201,42 +204,46 @@ function UI:open()
       #self.registry_instance:get_registry() > 0 and #self.registry_instance:get_registry() or 1,
       math.floor(vim.o.lines * 0.8)
     )
-  self._buf_id = vim.api.nvim_create_buf(false, true)
   local width = self._window.width or math.floor(vim.o.columns * 0.8)
+  local row = (self._window.row or math.floor((vim.o.lines - height) * 0.5)) + (self._window.row_offset or 0)
+  local col = (self._window.col or math.floor((vim.o.columns - width) * 0.5)) + (self._window.col_offset or 0)
+  self._buf_id = vim.api.nvim_create_buf(false, true)
   ---@type vim.api.keyset.win_config
   local win_opts = {
     relative = "editor",
     width = width,
     height = height,
-    row = math.floor((vim.o.lines - height) * 0.5),
-    col = math.floor((vim.o.columns - width) * 0.5),
+    row = row,
+    col = col,
     style = "minimal",
     border = self._window.border,
     noautocmd = true,
     zindex = self._window.zindex,
   }
-  -- Backward compatibility
+  -- Title / footer (version-gated)
   local major, minor = utils.get_nvim_version()
   if major > 0 or minor >= 9 then
-    win_opts.title = self._get_title()
+    win_opts.title = self._window.title or self._get_title()
     win_opts.title_pos = self._window.title_pos
   end
   if major > 0 or minor >= 10 then
-    win_opts.footer = self:_get_footer()
-    win_opts.footer_pos = self._window.title_pos
+    win_opts.footer = self._window.footer or self:_get_footer()
+    win_opts.footer_pos = self._window.footer_pos or self._window.title_pos
   elseif major > 0 or minor >= 9 then
-    win_opts.title = self._get_title(self:_get_footer())
+    -- Fold footer into title for 0.9
+    if not self._window.title then
+      win_opts.title = self._get_title(self:_get_footer())
+    end
   end
   self._win_id = vim.api.nvim_open_win(self._buf_id, true, win_opts)
-  vim.api.nvim_set_option_value("cursorline", true, {
-    win = self._win_id,
-  })
-  vim.api.nvim_set_option_value("modifiable", false, {
-    buf = self._buf_id,
-  })
-  vim.api.nvim_set_option_value("wrap", false, {
-    win = self._win_id,
-  })
+  vim.api.nvim_set_option_value("cursorline", true, { win = self._win_id })
+  vim.api.nvim_set_option_value("modifiable", false, { buf = self._buf_id })
+  vim.api.nvim_set_option_value("wrap", false, { win = self._win_id })
+  -- Disable spell-checking and column highlights in the Loft buffer
+  vim.api.nvim_set_option_value("spell", false, { win = self._win_id })
+  vim.api.nvim_set_option_value("cursorcolumn", false, { win = self._win_id })
+  -- Correct filetype so syntax engines don't accidentally activate
+  vim.api.nvim_set_option_value("filetype", "loft", { buf = self._buf_id })
   self:_render_entries()
   -- Move cursor to current entry
   local registry = self.registry_instance:get_registry()
@@ -486,19 +493,30 @@ function UI:toggle_smart_order()
     ---@type vim.api.keyset.win_config
     local win_opts = {}
     local major, minor = utils.get_nvim_version()
+    -- Only update the dynamic smart-order indicator when no custom title/footer was set
     if major > 0 or minor >= 10 then
-      win_opts.footer = self:_get_footer()
-      win_opts.footer_pos = self._window.title_pos
+      if not self._window.footer then
+        win_opts.footer = self:_get_footer()
+        win_opts.footer_pos = self._window.footer_pos or self._window.title_pos
+      end
     elseif major > 0 or minor >= 9 then
-      win_opts.title = self._get_title(self:_get_footer())
+      if not self._window.title then
+        win_opts.title = self._get_title(self:_get_footer())
+      end
     end
-    vim.api.nvim_win_set_config(self._win_id, win_opts)
+    if next(win_opts) then
+      vim.api.nvim_win_set_config(self._win_id, win_opts)
+    end
   end
   return new_state
 end
 
 ---@private
 function UI:_show_help()
+  -- Respect the disable flag
+  if self._help_window and self._help_window.disable then
+    return
+  end
   -- Focus existing window
   if utils.window_exists(self._help_win_id) then
     return vim.api.nvim_set_current_win(self._help_win_id)
@@ -525,20 +543,18 @@ function UI:_show_help()
     ["move_down_to_marked_entry"] = "Move down to the next marked entry",
   }
   for key, value in pairs(self._keymaps) do
-    if value == false or type(value) ~= "string" then
-      return
+    if value ~= false and type(value) == "string" then
+      local desc = ui_keymaps_desc[value]
+      table.insert(content, string.format("  %s: %s", key, desc))
     end
-    local desc = ui_keymaps_desc[value]
-    table.insert(content, string.format("  %s: %s", key, desc))
   end
   for key, value in pairs(self._general_keymaps) do
-    if value == false then
-      return
+    if value ~= false then
+      local desc = type(value) == "table" and value.desc
+        or type(value) == "table" and type(value.callback) == "table" and value.callback.desc
+        or "No description"
+      table.insert(content, string.format("  %s: %s", key, desc))
     end
-    local desc = type(value) == "table" and value.desc
-      or type(value) == "table" and type(value.callback) == "table" and value.callback.desc
-      or "No description"
-    table.insert(content, string.format("  %s: %s", key, desc))
   end
   for _, value in pairs({
     "",
@@ -551,32 +567,36 @@ function UI:_show_help()
     table.insert(content, value)
   end
   self._help_buf_id = vim.api.nvim_create_buf(false, true)
-  local width = 70
-  local height = math.min(#content + 1, math.floor(vim.o.lines * 0.8))
+  local hw = self._help_window or {}
+  local width = hw.width or 70
+  local height = hw.height or math.min(#content + 1, math.floor(vim.o.lines * 0.8))
+  local row = (hw.row or math.floor((vim.o.lines - height) * 0.5)) + (hw.row_offset or 0)
+  local col = (hw.col or math.floor((vim.o.columns - width) * 0.5)) + (hw.col_offset or 0)
+  -- zindex must always be > main window zindex so help floats on top
+  local main_zindex = self._window.zindex or 100
+  local help_zindex = hw.zindex or (main_zindex + 10)
+  if help_zindex <= main_zindex then
+    help_zindex = main_zindex + 1
+  end
   ---@type vim.api.keyset.win_config
   local opts = {
     relative = "editor",
     width = width,
     height = height,
-    row = math.floor((vim.o.lines - height) * 0.5),
-    col = math.floor((vim.o.columns - width) * 0.5),
+    row = row,
+    col = col,
     style = "minimal",
-    border = self._window.border,
+    border = hw.border or self._window.border,
     noautocmd = true,
-    zindex = self._window.zindex + 10,
+    zindex = help_zindex,
   }
   self._help_win_id = vim.api.nvim_open_win(self._help_buf_id, true, opts)
   vim.api.nvim_buf_set_lines(self._help_buf_id, 0, -1, false, content)
-  vim.api.nvim_set_option_value("wrap", false, {
-    win = self._help_win_id,
-  })
-  vim.api.nvim_set_option_value("wrap", true, {
-    scope = "local",
-    win = self._help_win_id,
-  })
-  vim.api.nvim_set_option_value("modifiable", false, {
-    buf = self._help_buf_id,
-  })
+  vim.api.nvim_set_option_value("wrap", false, { win = self._help_win_id })
+  vim.api.nvim_set_option_value("modifiable", false, { buf = self._help_buf_id })
+  vim.api.nvim_set_option_value("spell", false, { win = self._help_win_id })
+  vim.api.nvim_set_option_value("cursorcolumn", false, { win = self._help_win_id })
+  vim.api.nvim_set_option_value("filetype", "loft-help", { buf = self._help_buf_id })
   for _, key in ipairs({ "?", "q", "<CR>", "<Esc>" }) do
     vim.api.nvim_buf_set_keymap(self._help_buf_id, "n", key, "", {
       noremap = true,

@@ -124,6 +124,7 @@ Fields ~
 {ui_timeout_on_curr_buf_move} `(optional)` `(integer)` The timeout in milliseconds to wait before closing the UI after moving the current buffer. Defaults to 800. Set to 0 to disable the UI from showing.
 {reverse_order} `(optional)` `(boolean)` Whether to display the buffer list in reverse order (first registry entry at the bottom). Defaults to false.
 {window} `(optional)` `(loft.WinOpts)`
+{help_window} `(optional)` `(loft.HelpWinOpts)`
 {persistence} `(optional)` `(loft.PersistenceConfig)`
 
 ------------------------------------------------------------------------------
@@ -139,9 +140,30 @@ Class ~
 Fields ~
 {width} `(optional)` `(integer)` Defaults to calculated width
 {height} `(optional)` `(integer)` Defaults to calculated height
-{zindex} `(optional)` `(integer)`
+{row} `(optional)` `(integer)` Explicit row; overrides centered calculation
+{col} `(optional)` `(integer)` Explicit col; overrides centered calculation
+{row_offset} `(optional)` `(integer)` Value added to the computed row (default 0)
+{col_offset} `(optional)` `(integer)` Value added to the computed col (default 0)
+{title} `(optional)` `(string)` Custom title string; defaults to auto-generated Loft title
 {title_pos} `(optional)` "`(left)`"|"right"|"center"
+{footer} `(optional)` `(string)` Custom footer string; defaults to the smart-order indicator
+{footer_pos} `(optional)` "`(left)`"|"right"|"center"
+{zindex} `(optional)` `(integer)`
 {border} `(optional)` "`(none)`"|"single"|"double"|"rounded"|"solid"|"shadow"|string[]
+
+------------------------------------------------------------------------------
+Class ~
+{(exact)} loft.HelpWinOpts
+Fields ~
+{disable} `(optional)` `(boolean)` Disable the help window entirely (default false)
+{width} `(optional)` `(integer)` Defaults to calculated width
+{height} `(optional)` `(integer)` Defaults to calculated height
+{row} `(optional)` `(integer)` Explicit row; overrides centered calculation
+{col} `(optional)` `(integer)` Explicit col; overrides centered calculation
+{row_offset} `(optional)` `(integer)` Value added to the computed row (default 0)
+{col_offset} `(optional)` `(integer)` Value added to the computed col (default 0)
+{border} `(optional)` "`(none)`"|"single"|"double"|"rounded"|"solid"|"shadow"|string[] Defaults to main window border
+{zindex} `(optional)` `(integer)` Clamped to >= main window zindex + 1
 
 ------------------------------------------------------------------------------
 Class ~
@@ -218,6 +240,8 @@ Type ~
                               `highlights.setup`()
 Set up all Loft highlight groups.
 Safe to call multiple times (e.g. after a ColorScheme change).
+Uses `default = true` on Neovim 0.9+ so colorschemes can override any group.
+On 0.8 the flag is omitted (not supported) and groups are set unconditionally.
 
 
 ==============================================================================
@@ -438,6 +462,7 @@ Fields ~
 {keymaps} `(table<string, ('move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'|'show_help'|'move_up_to_marked_entry'|'move_down_to_marked_entry')|function|false>)`
 {general_keymaps} `(table<string, { callback: function|loft.Action, desc: string }|function|loft.Action|false>)` For keys mapped outside of Loft in `normal` mode
 {window} `(loft.WinOpts)`
+{help_window} `(loft.HelpWinOpts)`
 {other_opts} `(loft.UIOtherOpts)`
 
 ------------------------------------------------------------------------------
@@ -456,6 +481,7 @@ Fields ~
 {private} _`(help_win_id)` integer|nil
 {private} _`(help_buf_id)` integer|nil
 {private} _`(window)` loft.WinOpts|nil
+{private} _`(help_window)` loft.HelpWinOpts|nil
 {private} _`(marked_nums_solid)` string[]
 {private} _`(marked_nums_outline)` string[]
 {private} _`(other_opts)` loft.UIOtherOpts
