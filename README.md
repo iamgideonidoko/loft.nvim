@@ -90,6 +90,10 @@ require("loft").setup({
   -- All navigation, reordering, and marked-buffer jumps continue to work correctly.
   reverse_order = false,
 
+  -- Whether to show a confirmation prompt before force-deleting buffers (D / visual D).
+  -- Set to false to skip the prompt (useful for advanced users or CI environments).
+  confirm_force_delete = true,
+
   -- ── Main UI window ───────────────────────────────────────────────────────
   window = {
     width = nil,   -- Explicit width; defaults to 80% of editor columns
@@ -133,21 +137,27 @@ require("loft").setup({
   },
   keymaps = {
     --NB: all movements/navigations are cyclic
-    -- Keybindings specific to Loft main UI
+    -- Keybindings specific to Loft main UI (normal mode)
     ui = {
       ["k"] = "move_up", -- Move cursor up
       ["j"] = "move_down", -- Move cursor down
       ["<C-k>"] = "move_entry_up", -- Move entry (+buffer)
       ["<C-j>"] = "move_entry_down", -- Move entry (+buffer)
-      ["<C-d>"] = "delete_entry", -- Delete entry (+buffer)
+      ["dd"] = "delete_entry", -- Delete entry (+buffer)
+      ["D"] = "force_delete_entry", -- Force delete entry (no save prompt)
       ["<CR>"] = "select_entry", -- Select entry (+buffer)
       ["<Esc>"] = "close", -- Close Loft
       ["q"] = "close",
-      ["x"] = "toggle_mark_entry", -- Mark or unmark entry
+      ["m"] = "toggle_mark_entry", -- Mark or unmark entry
       ["<C-s>"] = "toggle_smart_order", -- Enable or disable smart order status
       ["?"] = "show_help", -- Show Loft help menu
       ["<M-k>"] = "move_up_to_marked_entry", -- Move up to the next marked entry
       ["<M-j>"] = "move_down_to_marked_entry", -- Move down to the next marked entry
+    },
+    -- Keybindings specific to Loft main UI (visual mode)
+    ui_visual = {
+      ["d"] = "delete_selected_entries", -- Delete visually selected entries
+      ["D"] = "force_delete_selected_entries", -- Force delete selected entries (no save)
     },
     -- Keybindings specific to editor
     general = {
@@ -215,6 +225,56 @@ require("possession").setup({
 | `:LoftToggle`           | Open or close the Loft UI.                 |
 | `:LoftToggleSmartOrder` | Enable or disable the smart order feature. |
 | `:LoftToggleMark`       | Toggle mark current buffer.                |
+
+## Native UI keymaps
+
+Loft uses **normal-mode** mappings so you never have to enter insert mode.
+
+### Normal mode (inside Loft)
+
+| Key         | Action                       | Notes                                                             |
+| ----------- | ---------------------------- | ----------------------------------------------------------------- |
+| `k`         | Move cursor up (cyclic)      |                                                                   |
+| `j`         | Move cursor down (cyclic)    |                                                                   |
+| `<C-k>`     | Move entry up in list        |                                                                   |
+| `<C-j>`     | Move entry down in list      |                                                                   |
+| `dd`        | Delete entry + buffer        | Closes the buffer (no save prompt)                                |
+| `D`         | Force-delete entry + buffer  | Bypasses modified check; prompts if `confirm_force_delete = true` |
+| `m`         | Toggle mark on entry         |                                                                   |
+| `<CR>`      | Select entry (switch to buf) |                                                                   |
+| `q`/`<Esc>` | Close Loft                   |                                                                   |
+| `<C-s>`     | Toggle smart order           |                                                                   |
+| `?`         | Open help window             |                                                                   |
+| `<M-k>`     | Jump to prev marked entry    |                                                                   |
+| `<M-j>`     | Jump to next marked entry    |                                                                   |
+
+### Visual mode (inside Loft)
+
+Select multiple lines with `V` then:
+
+| Key | Action                            | Notes                                         |
+| --- | --------------------------------- | --------------------------------------------- |
+| `d` | Delete selected entries + buffers |                                               |
+| `D` | Force-delete selected entries     | Prompts once if `confirm_force_delete = true` |
+
+### Disabling or remapping
+
+Set any keymap to `false` to disable it, or provide a different key:
+
+```lua
+require("loft").setup({
+  keymaps = {
+    ui = {
+      ["D"] = false,       -- Disable force-delete
+      ["<C-d>"] = "delete_entry", -- Add back an old-style binding
+    },
+    ui_visual = {
+      ["D"] = false,       -- Disable visual force-delete
+    },
+  },
+  confirm_force_delete = false, -- Skip confirmation prompt
+})
+```
 
 ## Highlights
 

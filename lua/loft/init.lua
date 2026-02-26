@@ -45,6 +45,7 @@ loft.setup = function(opts)
   })
   ui_instance:setup({
     keymaps = config.all.keymaps.ui,
+    visual_keymaps = config.all.keymaps.ui_visual,
     general_keymaps = config.all.keymaps.general,
     window = config.all.window,
     help_window = config.all.help_window,
@@ -53,6 +54,7 @@ loft.setup = function(opts)
       marked_mapping_num_style = config.all.marked_mapping_num_style,
       timeout_on_curr_buf_move = config.all.ui_timeout_on_curr_buf_move,
       reverse_order = config.all.reverse_order,
+      confirm_force_delete = config.all.confirm_force_delete,
     },
   })
   setup_general_keymap(config.all.keymaps.general)

@@ -1,7 +1,9 @@
 local actions = require("loft.actions")
 
----@alias loft.UIKeymapsActions 'move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'|'show_help'|'move_up_to_marked_entry'|'move_down_to_marked_entry'
+---@alias loft.UIKeymapsActions 'move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'force_delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'|'show_help'|'move_up_to_marked_entry'|'move_down_to_marked_entry'
 ---@alias loft.UIKeymapsConfig table<string, loft.UIKeymapsActions|function|false>
+---@alias loft.UIVisualKeymapsActions 'delete_selected_entries'|'force_delete_selected_entries'
+---@alias loft.UIVisualKeymapsConfig table<string, loft.UIVisualKeymapsActions|function|false>
 ---@alias loft.GeneralKeymapsConfig table<string, { callback: function|loft.Action, desc: string }|function|loft.Action|false> For keys mapped outside of Loft in `normal` mode
 
 ---@class (exact) loft.SetupConfig
@@ -16,6 +18,7 @@ local actions = require("loft.actions")
 ---@field marked_mapping_num_style? 'solid'|'outline' The style of the mapping number
 ---@field ui_timeout_on_curr_buf_move? integer The timeout in milliseconds to wait before closing the UI after moving the current buffer. Defaults to 800. Set to 0 to disable the UI from showing.
 ---@field reverse_order? boolean Whether to display the buffer list in reverse order (first registry entry at the bottom). Defaults to false.
+---@field confirm_force_delete? boolean Whether to show a confirmation prompt before force-deleting buffers. Defaults to true.
 ---@field window? loft.WinOpts
 ---@field help_window? loft.HelpWinOpts
 ---@field persistence? loft.PersistenceConfig
@@ -51,6 +54,7 @@ local actions = require("loft.actions")
 
 ---@class (exact) loft.KeymapConfig
 ---@field ui? loft.UIKeymapsConfig
+---@field ui_visual? loft.UIVisualKeymapsConfig
 ---@field general? loft.GeneralKeymapsConfig
 
 ---@type loft.SetupConfig
@@ -65,6 +69,7 @@ local default_config = {
   marked_mapping_num_style = "solid",
   ui_timeout_on_curr_buf_move = 800,
   reverse_order = false,
+  confirm_force_delete = true,
   window = {
     width = nil,
     height = nil,
@@ -96,15 +101,20 @@ local default_config = {
       ["j"] = "move_down",
       ["<C-k>"] = "move_entry_up",
       ["<C-j>"] = "move_entry_down",
-      ["<C-d>"] = "delete_entry",
+      ["dd"] = "delete_entry",
+      ["D"] = "force_delete_entry",
       ["<CR>"] = "select_entry",
       ["<Esc>"] = "close",
       ["q"] = "close",
-      ["x"] = "toggle_mark_entry",
+      ["m"] = "toggle_mark_entry",
       ["<C-s>"] = "toggle_smart_order",
       ["?"] = "show_help",
       ["<M-k>"] = "move_up_to_marked_entry",
       ["<M-j>"] = "move_down_to_marked_entry",
+    },
+    ui_visual = {
+      ["d"] = "delete_selected_entries",
+      ["D"] = "force_delete_selected_entries",
     },
     general = {
       ["<leader>lf"] = actions.open_loft,

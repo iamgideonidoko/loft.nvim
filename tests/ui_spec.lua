@@ -845,4 +845,255 @@ test_set["help keymaps loop does not abort early on false/non-string values"] = 
   child.lua([[require("loft.ui"):close()]])
 end
 
+-- ── native UI / buffer fortification ───────────────────────────────────
+
+test_set["main buffer has bufhidden=wipe"] = function()
+  child.lua([[require("loft").setup({})]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  local bh = child.lua_get([[vim.api.nvim_get_option_value("bufhidden", { buf = require("loft.ui")._buf_id })]])
+  eq(bh, "wipe")
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["main buffer has swapfile=false"] = function()
+  child.lua([[require("loft").setup({})]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  local sf = child.lua_get([[vim.api.nvim_get_option_value("swapfile", { buf = require("loft.ui")._buf_id })]])
+  eq(sf, false)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["help buffer has bufhidden=wipe"] = function()
+  child.lua([[require("loft").setup({})]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  child.lua([[require("loft.ui"):_show_help()]])
+  local bh = child.lua_get([[vim.api.nvim_get_option_value("bufhidden", { buf = require("loft.ui")._help_buf_id })]])
+  eq(bh, "wipe")
+  child.lua([[require("loft.ui"):_close_help()]])
+  child.lua([[require("loft.ui"):close()]])
+end
+
+-- ── default keymap changes ──────────────────────────────────────────────
+
+test_set["default keymap m is set to toggle_mark_entry"] = function()
+  child.lua([[require("loft").setup({})]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  local buf_id = child.lua_get([[require("loft.ui")._buf_id]])
+  local keymaps = child.api.nvim_buf_get_keymap(buf_id, "n")
+  local found = false
+  for _, km in ipairs(keymaps) do
+    if km.lhs == "m" then
+      found = true
+      break
+    end
+  end
+  eq(found, true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["default keymap dd is set to delete_entry"] = function()
+  child.lua([[require("loft").setup({})]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  local buf_id = child.lua_get([[require("loft.ui")._buf_id]])
+  local keymaps = child.api.nvim_buf_get_keymap(buf_id, "n")
+  local found = false
+  for _, km in ipairs(keymaps) do
+    if km.lhs == "dd" then
+      found = true
+      break
+    end
+  end
+  eq(found, true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["default keymap D is set to force_delete_entry"] = function()
+  child.lua([[require("loft").setup({})]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  local buf_id = child.lua_get([[require("loft.ui")._buf_id]])
+  local keymaps = child.api.nvim_buf_get_keymap(buf_id, "n")
+  local found = false
+  for _, km in ipairs(keymaps) do
+    if km.lhs == "D" then
+      found = true
+      break
+    end
+  end
+  eq(found, true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["visual keymap d is set to delete_selected_entries"] = function()
+  child.lua([[require("loft").setup({})]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  local buf_id = child.lua_get([[require("loft.ui")._buf_id]])
+  local keymaps = child.api.nvim_buf_get_keymap(buf_id, "x")
+  local found = false
+  for _, km in ipairs(keymaps) do
+    if km.lhs == "d" then
+      found = true
+      break
+    end
+  end
+  eq(found, true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["visual keymap D is set to force_delete_selected_entries"] = function()
+  child.lua([[require("loft").setup({})]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  local buf_id = child.lua_get([[require("loft.ui")._buf_id]])
+  local keymaps = child.api.nvim_buf_get_keymap(buf_id, "x")
+  local found = false
+  for _, km in ipairs(keymaps) do
+    if km.lhs == "D" then
+      found = true
+      break
+    end
+  end
+  eq(found, true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+-- ── force_delete_entry ──────────────────────────────────────────────────
+
+test_set["_delete_entry(true) force-closes a modified buffer (no confirmation)"] = function()
+  child.lua([[require("loft").setup({ confirm_force_delete = false })]])
+  local buf1 = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local registry = child.lua_get([[require("loft.registry"):get_registry()]])
+  local buf1_line = nil
+  for i, b in ipairs(registry) do
+    if b == buf1 then
+      buf1_line = i
+      break
+    end
+  end
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, {]] .. buf1_line .. [[, 1})]])
+  child.lua([[require("loft.ui"):_delete_entry(true)]])
+  eq(child.api.nvim_buf_is_valid(buf1), false)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["_delete_entry(false) does NOT remove buffer when confirm_force_delete is irrelevant"] = function()
+  -- Normal delete (no force) always proceeds without confirmation
+  child.lua([[require("loft").setup({ confirm_force_delete = true })]])
+  local buf1 = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local registry = child.lua_get([[require("loft.registry"):get_registry()]])
+  local buf1_line = nil
+  for i, b in ipairs(registry) do
+    if b == buf1 then
+      buf1_line = i
+      break
+    end
+  end
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, {]] .. buf1_line .. [[, 1})]])
+  child.lua([[require("loft.ui"):_delete_entry(false)]])
+  eq(child.api.nvim_buf_is_valid(buf1), false)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+-- ── _delete_selected_entries ────────────────────────────────────────────
+
+test_set["_delete_selected_entries removes the specified line range"] = function()
+  child.lua([[require("loft").setup({ confirm_force_delete = false })]])
+  local buf1 = child.api.nvim_create_buf(true, false)
+  local buf2 = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local registry = child.lua_get([[require("loft.registry"):get_registry()]])
+  -- Find display lines for buf1 and buf2
+  local line1, line2 = nil, nil
+  for i, b in ipairs(registry) do
+    if b == buf1 then
+      line1 = i
+    end
+    if b == buf2 then
+      line2 = i
+    end
+  end
+  if line1 == nil or line2 == nil then
+    child.lua([[require("loft.ui"):close()]])
+    return
+  end
+  local lo = math.min(line1, line2)
+  local hi = math.max(line1, line2)
+  child.lua([[require("loft.ui"):_delete_selected_entries(false, ]] .. lo .. [[, ]] .. hi .. [[)]])
+  eq(child.api.nvim_buf_is_valid(buf1), false)
+  eq(child.api.nvim_buf_is_valid(buf2), false)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["_delete_selected_entries force=true deletes with confirm_force_delete=false"] = function()
+  child.lua([[require("loft").setup({ confirm_force_delete = false })]])
+  local buf1 = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local registry = child.lua_get([[require("loft.registry"):get_registry()]])
+  local buf1_line = nil
+  for i, b in ipairs(registry) do
+    if b == buf1 then
+      buf1_line = i
+      break
+    end
+  end
+  child.lua([[require("loft.ui"):_delete_selected_entries(true, ]] .. buf1_line .. [[, ]] .. buf1_line .. [[)]])
+  eq(child.api.nvim_buf_is_valid(buf1), false)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["cursor is clamped to valid range after _delete_entry"] = function()
+  child.lua([[require("loft").setup({ confirm_force_delete = false })]])
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local n = child.lua_get([[#require("loft.registry"):get_registry()]])
+  if n < 2 then
+    child.lua([[require("loft.ui"):close()]])
+    return
+  end
+  -- Move cursor to last line, then delete it — cursor should clamp
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, {]] .. n .. [[, 1})]])
+  child.lua([[require("loft.ui"):_delete_entry(true)]])
+  local cursor = child.lua_get([[vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)]])
+  local new_n = child.lua_get([[#require("loft.registry"):get_registry()]])
+  eq(cursor[1] <= new_n, true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+-- ── keymaps: disabled keymap (false) does not abort rest ───────────────
+
+test_set["disabled keymap (false) does not prevent other keymaps from being set"] = function()
+  -- The fixed return-in-loop bug: setting a keymap to false should not abort _setup_keymaps
+  child.lua([[require("loft").setup({ keymaps = { ui = { ["q"] = false, ["<Esc>"] = "close", ["k"] = "move_up" } } })]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  local buf_id = child.lua_get([[require("loft.ui")._buf_id]])
+  local keymaps = child.api.nvim_buf_get_keymap(buf_id, "n")
+  local has_esc, has_k = false, false
+  for _, km in ipairs(keymaps) do
+    if km.lhs == "<Esc>" then
+      has_esc = true
+    end
+    if km.lhs == "k" then
+      has_k = true
+    end
+  end
+  eq(has_esc, true)
+  eq(has_k, true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
 return test_set

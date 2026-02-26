@@ -10,9 +10,11 @@ local hl_ns = vim.api.nvim_create_namespace("loft_ui")
 ---@field marked_mapping_num_style 'solid'|'outline'
 ---@field timeout_on_curr_buf_move integer
 ---@field reverse_order boolean
+---@field confirm_force_delete boolean
 
 ---@class (exact) loft.UIOpts
 ---@field keymaps loft.UIKeymapsConfig
+---@field visual_keymaps? loft.UIVisualKeymapsConfig
 ---@field general_keymaps loft.GeneralKeymapsConfig
 ---@field window loft.WinOpts
 ---@field help_window loft.HelpWinOpts
@@ -25,6 +27,7 @@ local hl_ns = vim.api.nvim_create_namespace("loft_ui")
 ---@field private _last_buf_before_loft integer|nil
 ---@field registry_instance loft.Registry
 ---@field private _keymaps loft.UIKeymapsConfig|nil
+---@field private _visual_keymaps loft.UIVisualKeymapsConfig|nil
 ---@field private _general_keymaps loft.GeneralKeymapsConfig|nil
 ---@field private _help_win_id integer|nil
 ---@field private _help_buf_id integer|nil
@@ -43,6 +46,7 @@ function UI:new(registry_instance)
   local instance = setmetatable({}, self)
   instance.registry_instance = registry_instance
   instance._keymaps = {}
+  instance._visual_keymaps = {}
   instance._general_keymaps = {}
   instance._marked_nums_solid = { "➊", "➋", "➌", "➍", "➎", "➏", "➐", "➑", "➒" }
   instance._marked_nums_outline = { "➀", "➁", "➂", "➃", "➄", "➅", "➆", "➇", "➈" }
@@ -53,6 +57,7 @@ end
 ---@param opts loft.UIOpts
 function UI:setup(opts)
   self._keymaps = opts.keymaps
+  self._visual_keymaps = opts.visual_keymaps
   self._general_keymaps = opts.general_keymaps
   self._window = opts.window
   self._help_window = opts.help_window
@@ -242,6 +247,10 @@ function UI:open()
   -- Disable spell-checking and column highlights in the Loft buffer
   vim.api.nvim_set_option_value("spell", false, { win = self._win_id })
   vim.api.nvim_set_option_value("cursorcolumn", false, { win = self._win_id })
+  -- Fortify: no swap file, wipe on hide, disable undo
+  vim.api.nvim_set_option_value("swapfile", false, { buf = self._buf_id })
+  vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = self._buf_id })
+  vim.api.nvim_set_option_value("undolevels", -1, { buf = self._buf_id })
   -- Correct filetype so syntax engines don't accidentally activate
   vim.api.nvim_set_option_value("filetype", "loft", { buf = self._buf_id })
   self:_render_entries()
@@ -315,7 +324,10 @@ function UI:_setup_keymaps()
       self:_move_entry_down()
     end,
     ["delete_entry"] = function()
-      self:_delete_entry()
+      self:_delete_entry(false)
+    end,
+    ["force_delete_entry"] = function()
+      self:_delete_entry(true)
     end,
     ["select_entry"] = function()
       self:_select_entry()
@@ -339,16 +351,48 @@ function UI:_setup_keymaps()
       self:_move_to_marked_entry("down")
     end,
   }
+  -- Normal mode keymaps
   for key, value in pairs(self._keymaps) do
-    if value == false then
-      return
+    if value ~= false then
+      local action = type(value) == "function" and value or mappings[value]
+      if action then
+        vim.api.nvim_buf_set_keymap(self._buf_id, "n", key, "", {
+          noremap = true,
+          silent = true,
+          callback = action,
+        })
+      end
     end
-    local action = type(value) == "function" and value or mappings[value]
-    vim.api.nvim_buf_set_keymap(self._buf_id, "n", key, "", {
-      noremap = true,
-      silent = true,
-      callback = action,
-    })
+  end
+  -- Visual mode keymaps
+  if self._visual_keymaps then
+    ---@type table<loft.UIVisualKeymapsActions, function>
+    local visual_mappings = {
+      ["delete_selected_entries"] = function()
+        local start_line = vim.fn.line("'<")
+        local end_line = vim.fn.line("'>")
+        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
+        self:_delete_selected_entries(false, start_line, end_line)
+      end,
+      ["force_delete_selected_entries"] = function()
+        local start_line = vim.fn.line("'<")
+        local end_line = vim.fn.line("'>")
+        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
+        self:_delete_selected_entries(true, start_line, end_line)
+      end,
+    }
+    for key, value in pairs(self._visual_keymaps) do
+      if value ~= false then
+        local action = type(value) == "function" and value or visual_mappings[value]
+        if action then
+          vim.api.nvim_buf_set_keymap(self._buf_id, "x", key, "", {
+            noremap = true,
+            silent = true,
+            callback = action,
+          })
+        end
+      end
+    end
   end
 end
 
@@ -422,9 +466,38 @@ function UI:_move_entry_down()
   self:_render_entries()
 end
 
---- Delete an entry (with its buffer)
+--- Resize the floating window to match the current registry size.
 ---@private
-function UI:_delete_entry()
+function UI:_resize_win()
+  if not utils.window_exists(self._win_id) then
+    return
+  end
+  local win_config = vim.api.nvim_win_get_config(self._win_id)
+  local no_of_entries = #self.registry_instance:get_registry()
+  win_config.height = math.min(no_of_entries > 0 and no_of_entries or 1, vim.o.lines - 2)
+  vim.api.nvim_win_set_config(self._win_id, win_config)
+end
+
+--- Show a confirmation dialog for force-delete operations.
+--- Returns true if the operation should proceed.
+---@param count integer number of buffers to be deleted
+---@return boolean
+---@private
+function UI:_confirm_force_delete(count)
+  if not self._other_opts.confirm_force_delete then
+    return true
+  end
+  local msg = count == 1 and "Force delete 1 buffer? Unsaved changes will be lost."
+    or string.format("Force delete %d buffers? Unsaved changes will be lost.", count)
+  local answer = vim.fn.confirm(msg, "&Yes\n&No", 2)
+  return answer == 1
+end
+
+--- Delete an entry (with its buffer).
+---@param force? boolean When true, close without saving. Defaults to false.
+---@private
+function UI:_delete_entry(force)
+  force = force or false
   local current_line = vim.fn.line(".")
   local n = #self.registry_instance:get_registry()
   if n == 0 then
@@ -435,12 +508,63 @@ function UI:_delete_entry()
   if buf == nil then
     return
   end
-  actions.close_buffer({ force = false, buffer = buf })
+  if force and not self:_confirm_force_delete(1) then
+    return
+  end
+  actions.close_buffer({ force = force, buffer = buf })
   self:_render_entries()
-  local win_config = vim.api.nvim_win_get_config(self._win_id)
-  local no_of_entries = #self.registry_instance:get_registry()
-  win_config.height = math.min(no_of_entries > 0 and no_of_entries or 1, vim.o.lines - 2)
-  vim.api.nvim_win_set_config(self._win_id, win_config)
+  self:_resize_win()
+  -- Clamp cursor to valid range after deletion
+  local new_n = #self.registry_instance:get_registry()
+  if new_n > 0 and utils.window_exists(self._win_id) then
+    local cursor_line = vim.fn.line(".")
+    if cursor_line > new_n then
+      vim.api.nvim_win_set_cursor(self._win_id, { new_n, 1 })
+    end
+  end
+end
+
+--- Delete a range of entries selected in visual mode.
+---@param force boolean When true, close without saving.
+---@param start_line integer 1-indexed display start line of the selection.
+---@param end_line integer 1-indexed display end line of the selection.
+---@private
+function UI:_delete_selected_entries(force, start_line, end_line)
+  local registry = self.registry_instance:get_registry()
+  local n = #registry
+  if n == 0 then
+    return
+  end
+  -- Snapshot buffers to delete before mutating the registry
+  local bufs_to_delete = {}
+  local lo = math.min(start_line, end_line)
+  local hi = math.max(start_line, end_line)
+  for line = lo, hi do
+    local reg_idx = self:_line_to_reg_idx(line, n)
+    local buf = registry[reg_idx]
+    if buf then
+      table.insert(bufs_to_delete, buf)
+    end
+  end
+  if #bufs_to_delete == 0 then
+    return
+  end
+  if force and not self:_confirm_force_delete(#bufs_to_delete) then
+    return
+  end
+  for _, buf in ipairs(bufs_to_delete) do
+    actions.close_buffer({ force = force, buffer = buf })
+  end
+  self:_render_entries()
+  self:_resize_win()
+  -- Clamp cursor to valid range after deletion
+  local new_n = #self.registry_instance:get_registry()
+  if new_n > 0 and utils.window_exists(self._win_id) then
+    local cursor_line = vim.fn.line(".")
+    if cursor_line > new_n then
+      vim.api.nvim_win_set_cursor(self._win_id, { new_n, 1 })
+    end
+  end
 end
 
 ---@private
@@ -541,11 +665,25 @@ function UI:_show_help()
     ["show_help"] = "Show this help",
     ["move_up_to_marked_entry"] = "Move up to the next marked entry",
     ["move_down_to_marked_entry"] = "Move down to the next marked entry",
+    ["force_delete_entry"] = "Force delete entry (+buffer, no save)",
   }
   for key, value in pairs(self._keymaps) do
     if value ~= false and type(value) == "string" then
       local desc = ui_keymaps_desc[value]
       table.insert(content, string.format("  %s: %s", key, desc))
+    end
+  end
+  -- Visual mode keymaps
+  if self._visual_keymaps then
+    local visual_desc = {
+      ["delete_selected_entries"] = "Delete selected entries (+buffers)",
+      ["force_delete_selected_entries"] = "Force delete selected entries (no save)",
+    }
+    for key, value in pairs(self._visual_keymaps) do
+      if value ~= false and type(value) == "string" then
+        local desc = visual_desc[value]
+        table.insert(content, string.format("  %s (visual): %s", key, desc))
+      end
     end
   end
   for key, value in pairs(self._general_keymaps) do
@@ -596,6 +734,10 @@ function UI:_show_help()
   vim.api.nvim_set_option_value("modifiable", false, { buf = self._help_buf_id })
   vim.api.nvim_set_option_value("spell", false, { win = self._help_win_id })
   vim.api.nvim_set_option_value("cursorcolumn", false, { win = self._help_win_id })
+  -- Fortify: no swap file, wipe on hide, disable undo
+  vim.api.nvim_set_option_value("swapfile", false, { buf = self._help_buf_id })
+  vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = self._help_buf_id })
+  vim.api.nvim_set_option_value("undolevels", -1, { buf = self._help_buf_id })
   vim.api.nvim_set_option_value("filetype", "loft-help", { buf = self._help_buf_id })
   for _, key in ipairs({ "?", "q", "<CR>", "<Esc>" }) do
     vim.api.nvim_buf_set_keymap(self._help_buf_id, "n", key, "", {
