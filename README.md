@@ -224,11 +224,15 @@ require("possession").setup({
 
 ## Commands
 
-| Commands                | Description                                |
-| ----------------------- | ------------------------------------------ |
-| `:LoftToggle`           | Open or close the Loft UI.                 |
-| `:LoftToggleSmartOrder` | Enable or disable the smart order feature. |
-| `:LoftToggleMark`       | Toggle mark current buffer.                |
+| Command                 | Description                                                                              |
+| ----------------------- | ---------------------------------------------------------------------------------------- |
+| `:LoftToggle`           | Open or close the Loft UI.                                                               |
+| `:LoftToggleSmartOrder` | Enable or disable the smart order feature.                                               |
+| `:LoftToggleMark`       | Toggle mark on the current buffer.                                                       |
+| `:LoftCloseOthers`      | Close all buffers except the current one.                                                |
+| `:LoftCloseOthers!`     | Force-close all other buffers (ignores modified state).                                  |
+| `:LoftCloseUnmarked`    | Close all unmarked buffers. Mark what you want to keep, then run this to clear the rest. |
+| `:LoftCloseUnmarked!`   | Force-close all unmarked buffers.                                                        |
 
 ## Native UI keymaps
 
@@ -392,12 +396,27 @@ require("loft").setup({
 
 ## Autocmds
 
-Loft user autocmds:
+Loft fires the following `User` autocmds:
 
-| Event                       | Description                                    | Argument                                  |
-| --------------------------- | ---------------------------------------------- | ----------------------------------------- |
-| `User LoftBufferMark`       | Triggered when a buffer is marked or unmarked. | `{ mark_state: boolean, buffer: number }` |
-| `User LoftSmartOrderToggle` | Triggered when smart order state is toggled.   | `smart_order_state: number`               |
+| Event                       | Description                                        | `ev.data`                                 |
+| --------------------------- | -------------------------------------------------- | ----------------------------------------- |
+| `User LoftBufferMark`       | A buffer was marked or unmarked.                   | `{ buffer: number, mark_state: boolean }` |
+| `User LoftSmartOrderToggle` | Smart order was toggled on or off.                 | `{ smart_order_state: boolean }`          |
+| `User LoftRegistryChanged`  | The registry mutated (add, remove, reorder, mark). | _(no data)_                               |
+| `User LoftBufferSwitch`     | Loft navigated to a buffer (next/prev/marked/alt). | `{ buffer: number, source: string }`      |
+
+The `source` field in `LoftBufferSwitch` is one of: `"next"`, `"prev"`, `"marked_next"`, `"marked_prev"`, `"alt"`.
+
+Example — redraw statusline on any registry change or buffer navigation:
+
+```lua
+vim.api.nvim_create_autocmd("User", {
+  pattern = { "LoftRegistryChanged", "LoftBufferSwitch", "LoftSmartOrderToggle", "LoftBufferMark" },
+  callback = function()
+    vim.cmd("redrawstatus")
+  end,
+})
+```
 
 ## Tips
 
@@ -422,11 +441,11 @@ MiniStatusline.combine_groups({
 })
 ```
 
-Then listen for the following Loft's user autocmds and redraw your statusline:
+Then listen for Loft's user autocmds and redraw your statusline:
 
 ```lua
 vim.api.nvim_create_autocmd("User", {
-  pattern = { "LoftSmartOrderToggle", "LoftBufferMark" },
+  pattern = { "LoftSmartOrderToggle", "LoftBufferMark", "LoftRegistryChanged", "LoftBufferSwitch" },
   callback = function()
     vim.cmd("redrawstatus")
   end,
@@ -475,9 +494,4 @@ Contributions are welcome! Please feel free to check out the [contribution guide
 
 ## Roadmap
 
-- **`LoftCloseOthers` command** — Close all buffers in the registry except the current one.
-- **`LoftCloseUnmarked` command** — Close all unmarked buffers. Pairs naturally with marking: mark what you want to keep, then run this to clear the rest.
-- **`LoftBufferSwitch` event** — A `User` autocmd fired whenever Loft navigates to a buffer (next/prev/marked/alt), useful for statusline and other integrations.
-- **`LoftRegistryChanged` event** — A `User` autocmd fired whenever the registry mutates (entries added, removed, reordered), enabling reactive integrations.
-- **Tab-local registries** — Option for each tab to maintain its own independent buffer registry, supporting project-separation workflows across tabs.
 - **In-UI fuzzy filter** — A keymap (e.g. `f`) to filter registry entries in-place by filename/path, making the UI useful in very large buffer lists.

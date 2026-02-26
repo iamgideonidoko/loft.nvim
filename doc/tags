@@ -25,6 +25,8 @@ UI:toggle()	loft.txt	/*UI:toggle()*
 UI:toggle_smart_order()	loft.txt	/*UI:toggle_smart_order()*
 actions	loft.txt	/*actions*
 actions.close_buffer	loft.txt	/*actions.close_buffer*
+actions.close_others	loft.txt	/*actions.close_others*
+actions.close_unmarked	loft.txt	/*actions.close_unmarked*
 actions.move_buffer_down	loft.txt	/*actions.move_buffer_down*
 actions.move_buffer_up	loft.txt	/*actions.move_buffer_up*
 actions.open_loft	loft.txt	/*actions.open_loft*
@@ -40,6 +42,8 @@ config.all	loft.txt	/*config.all*
 config.setup()	loft.txt	/*config.setup()*
 default_config	loft.txt	/*default_config*
 events.buffer_mark()	loft.txt	/*events.buffer_mark()*
+events.buffer_switch()	loft.txt	/*events.buffer_switch()*
+events.registry_changed()	loft.txt	/*events.registry_changed()*
 events.smart_order_toggle()	loft.txt	/*events.smart_order_toggle()*
 get_file_path()	loft.txt	/*get_file_path()*
 helpers	loft.txt	/*helpers*

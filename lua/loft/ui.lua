@@ -708,14 +708,17 @@ function UI:_show_help()
     " :LoftToggle - Toggle the Loft UI",
     " :LoftToggleSmartOrder - Toggle Smart Order ON and OFF",
     " :LoftToggleMark - Toggle mark current buffer",
-    "",
+    " :LoftCloseOthers - Close all buffers except the current one.",
+    " :LoftCloseOthers! - Force-close all other buffers (ignores modified state).",
+    " :LoftCloseUnmarked - Close all unmarked buffers. Mark what you want to keep, then run this to clear the rest.",
+    " :LoftCloseUnmarked! - Force-close all unmarked buffers.",
   }) do
     table.insert(content, value)
   end
   self._help_buf_id = vim.api.nvim_create_buf(false, true)
   local hw = self._help_window or {}
   local width = hw.width or 70
-  local height = hw.height or math.min(#content + 1, math.floor(vim.o.lines * 0.8))
+  local height = hw.height or math.min(#content, math.floor(vim.o.lines * 0.8))
   local row = (hw.row or math.floor((vim.o.lines - height) * 0.5)) + (hw.row_offset or 0)
   local col = (hw.col or math.floor((vim.o.columns - width) * 0.5)) + (hw.col_offset or 0)
   -- zindex must always be > main window zindex so help floats on top

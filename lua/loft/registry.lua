@@ -261,9 +261,7 @@ function Registry:_mark_buffer(buffer, mark_state)
     pcall(vim.api.nvim_buf_del_var, buffer, constants.MARK_STATE_ID)
   end
   events.buffer_mark(buffer, self.is_buffer_marked(buffer))
-  if self.opts.enable_recent_marked_mapping then
-    debounced_keymap_recent_marked_buffers(self)
-  end
+  self:on_change()
 end
 
 --- Check if a given buffer is marked
@@ -384,6 +382,7 @@ function Registry:on_change()
   if self.opts.enable_recent_marked_mapping then
     debounced_keymap_recent_marked_buffers(self)
   end
+  events.registry_changed()
 end
 
 return Registry:new()

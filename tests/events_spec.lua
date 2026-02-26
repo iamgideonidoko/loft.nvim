@@ -123,4 +123,80 @@ test_set["smart_order_toggle fires on registry toggle_smart_order"] = function()
   eq(child.lua_get([[_G.loft_test_sot_via_registry]]), false)
 end
 
+-- ── registry_changed event ─────────────────────────────────────────────
+
+test_set["registry_changed fires LoftRegistryChanged autocmd on buffer add"] = function()
+  child.lua([[
+    _G.loft_test_reg_changed = 0
+    vim.api.nvim_create_autocmd("User", {
+      pattern = "LoftRegistryChanged",
+      callback = function() _G.loft_test_reg_changed = _G.loft_test_reg_changed + 1 end,
+    })
+  ]])
+  -- _update() fires on_change() when a new buffer is added
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  -- Trigger an explicit update to fire on_change
+  child.lua([[require("loft.registry"):_update()]])
+  local count = child.lua_get([[_G.loft_test_reg_changed]])
+  eq(count > 0, true)
+end
+
+test_set["registry_changed fires LoftRegistryChanged autocmd on toggle_mark"] = function()
+  child.lua([[
+    _G.loft_test_reg_changed2 = false
+    vim.api.nvim_create_autocmd("User", {
+      pattern = "LoftRegistryChanged",
+      callback = function() _G.loft_test_reg_changed2 = true end,
+    })
+  ]])
+  local buf = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf .. [[)]])
+  eq(child.lua_get([[_G.loft_test_reg_changed2]]), true)
+end
+
+-- ── buffer_switch event ────────────────────────────────────────────────
+
+test_set["buffer_switch fires LoftBufferSwitch with correct source and buffer"] = function()
+  child.lua([[
+    _G.loft_test_switch_data = nil
+    vim.api.nvim_create_autocmd("User", {
+      pattern = "LoftBufferSwitch",
+      callback = function(ev) _G.loft_test_switch_data = ev.data end,
+    })
+  ]])
+  local buf = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.events").buffer_switch(]] .. buf .. [[, "next")]])
+  eq(child.lua_get([[_G.loft_test_switch_data.buffer]]), buf)
+  eq(child.lua_get([[_G.loft_test_switch_data.source]]), "next")
+end
+
+test_set["buffer_switch fires on switch_to_next_buffer action"] = function()
+  child.lua([[
+    _G.loft_test_next_source = nil
+    vim.api.nvim_create_autocmd("User", {
+      pattern = "LoftBufferSwitch",
+      callback = function(ev) _G.loft_test_next_source = ev.data.source end,
+    })
+  ]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.actions").switch_to_next_buffer()]])
+  eq(child.lua_get([[_G.loft_test_next_source]]), "next")
+end
+
+test_set["buffer_switch fires on switch_to_prev_buffer action"] = function()
+  child.lua([[
+    _G.loft_test_prev_source = nil
+    vim.api.nvim_create_autocmd("User", {
+      pattern = "LoftBufferSwitch",
+      callback = function(ev) _G.loft_test_prev_source = ev.data.source end,
+    })
+  ]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.actions").switch_to_prev_buffer()]])
+  eq(child.lua_get([[_G.loft_test_prev_source]]), "prev")
+end
+
 return test_set

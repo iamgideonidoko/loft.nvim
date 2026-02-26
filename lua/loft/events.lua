@@ -17,4 +17,20 @@ events.smart_order_toggle = function(smart_order_state)
   )
 end
 
+--- Fired whenever the registry mutates (entries added, removed, or reordered).
+events.registry_changed = function()
+  vim.api.nvim_exec_autocmds("User", { pattern = "LoftRegistryChanged", modeline = false })
+end
+
+--- Fired whenever Loft navigates to a buffer (next/prev/marked/alt).
+---@param buffer integer The buffer that was switched to.
+---@param source string A short label describing what triggered the switch
+---   (e.g. "next", "prev", "marked_next", "marked_prev", "alt").
+events.buffer_switch = function(buffer, source)
+  vim.api.nvim_exec_autocmds(
+    "User",
+    { pattern = "LoftBufferSwitch", modeline = false, data = { buffer = buffer, source = source } }
+  )
+end
+
 return events

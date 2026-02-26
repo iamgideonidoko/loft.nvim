@@ -1,6 +1,7 @@
 ---@diagnostic disable: assign-type-mismatch
 local registry_instance = require("loft.registry")
 local utils = require("loft.utils")
+local events = require("loft.events")
 
 ---@class (exact) loft.Action
 ---@field desc string
@@ -74,6 +75,7 @@ actions.switch_to_next_buffer = {
     registry_instance:pause_update()
     vim.api.nvim_set_current_buf(next_buf)
     registry_instance:resume_update()
+    events.buffer_switch(next_buf, "next")
   end,
 }
 
@@ -94,6 +96,7 @@ actions.switch_to_prev_buffer = {
     registry_instance:pause_update()
     vim.api.nvim_set_current_buf(prev_buf)
     registry_instance:resume_update()
+    events.buffer_switch(prev_buf, "prev")
   end,
 }
 
@@ -118,6 +121,7 @@ actions.switch_to_next_marked_buffer = {
     registry_instance:pause_update()
     vim.api.nvim_set_current_buf(next_marked_buf)
     registry_instance:resume_update()
+    events.buffer_switch(next_marked_buf, "marked_next")
   end,
 }
 
@@ -134,6 +138,7 @@ actions.switch_to_prev_marked_buffer = {
     registry_instance:pause_update()
     vim.api.nvim_set_current_buf(prev_marked_buf)
     registry_instance:resume_update()
+    events.buffer_switch(prev_marked_buf, "marked_prev")
   end,
 }
 
@@ -190,11 +195,15 @@ actions.switch_to_alt_buffer = {
   func = function()
     registry_instance:pause_update()
     ---@diagnostic disable-next-line: param-type-mismatch
-    local ok = pcall(vim.cmd, "e #")
+    local ok, _ = pcall(vim.cmd, "e #")
     if not ok then
+      registry_instance:resume_update()
       vim.notify("No alternate buffer", vim.log.levels.ERROR)
+      return
     end
+    local buf = vim.api.nvim_get_current_buf()
     registry_instance:resume_update()
+    events.buffer_switch(buf, "alt")
   end,
 }
 
@@ -213,6 +222,50 @@ actions.move_buffer_down = {
   desc = "Move buffer down",
   func = function()
     require("loft.ui"):move_buffer_down()
+  end,
+}
+
+--- Close all buffers in the registry except the current one.
+---@type fun(opts?: { force?: boolean })
+actions.close_others = {
+  desc = "Close all other buffers",
+  ---@param opts? { force?: boolean }
+  func = function(opts)
+    opts = opts or {}
+    registry_instance:clean()
+    local current_buf = vim.api.nvim_get_current_buf()
+    -- Snapshot the registry so mutations during the loop don't affect iteration
+    local to_close = {}
+    for _, buf in ipairs(registry_instance:get_registry()) do
+      if buf ~= current_buf then
+        table.insert(to_close, buf)
+      end
+    end
+    for _, buf in ipairs(to_close) do
+      actions.close_buffer({ force = opts.force or false, buffer = buf })
+    end
+  end,
+}
+
+--- Close all unmarked buffers in the registry.
+--- Pair with marking: mark what you want to keep, then call this to clear the rest.
+---@type fun(opts?: { force?: boolean })
+actions.close_unmarked = {
+  desc = "Close all unmarked buffers",
+  ---@param opts? { force?: boolean }
+  func = function(opts)
+    opts = opts or {}
+    registry_instance:clean()
+    -- Snapshot before mutation
+    local to_close = {}
+    for _, buf in ipairs(registry_instance:get_registry()) do
+      if not registry_instance.is_buffer_marked(buf) then
+        table.insert(to_close, buf)
+      end
+    end
+    for _, buf in ipairs(to_close) do
+      actions.close_buffer({ force = opts.force or false, buffer = buf })
+    end
   end,
 }
 

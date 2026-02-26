@@ -94,4 +94,64 @@ test_set["LoftToggleMark fires LoftBufferMark event"] = function()
   eq(child.lua_get([[_G.loft_cmd_mark_fired]]), true)
 end
 
+-- ── :LoftCloseOthers ────────────────────────────────────────────────────
+
+test_set["LoftCloseOthers closes all buffers except current"] = function()
+  local buf1 = child.api.nvim_create_buf(true, false)
+  local buf2 = child.api.nvim_create_buf(true, false)
+  local buf3 = child.api.nvim_create_buf(true, false)
+  child.api.nvim_set_current_buf(buf2)
+  child.cmd("LoftCloseOthers")
+  eq(child.api.nvim_buf_is_valid(buf2), true)
+  eq(child.api.nvim_buf_is_valid(buf1), false)
+  eq(child.api.nvim_buf_is_valid(buf3), false)
+end
+
+test_set["LoftCloseOthers keeps current buffer in registry"] = function()
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  local buf_keep = child.api.nvim_create_buf(true, false)
+  child.api.nvim_set_current_buf(buf_keep)
+  child.cmd("LoftCloseOthers")
+  local registry = child.lua_get([[require("loft.registry"):get_registry()]])
+  local found = false
+  for _, b in ipairs(registry) do
+    if b == buf_keep then
+      found = true
+    end
+  end
+  eq(found, true)
+  eq(#registry, 1)
+end
+
+-- ── :LoftCloseUnmarked ──────────────────────────────────────────────────
+
+test_set["LoftCloseUnmarked closes only unmarked buffers"] = function()
+  child.lua([[require("loft.registry"):clean()]])
+  local buf_marked = child.api.nvim_create_buf(true, false)
+  local buf_plain = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf_marked .. [[)]])
+  child.cmd("LoftCloseUnmarked")
+  eq(child.api.nvim_buf_is_valid(buf_marked), true)
+  eq(child.api.nvim_buf_is_valid(buf_plain), false)
+end
+
+test_set["LoftCloseUnmarked leaves marked buffers in registry"] = function()
+  child.lua([[require("loft.registry"):clean()]])
+  local buf_marked = child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf_marked .. [[)]])
+  child.cmd("LoftCloseUnmarked")
+  local registry = child.lua_get([[require("loft.registry"):get_registry()]])
+  local found = false
+  for _, b in ipairs(registry) do
+    if b == buf_marked then
+      found = true
+    end
+  end
+  eq(found, true)
+end
+
 return test_set

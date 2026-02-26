@@ -106,6 +106,21 @@ Move the current buffer down the registry in a cyclic manner while showing the U
 Type ~
 `(fun())`
 
+------------------------------------------------------------------------------
+                                                          *actions.close_others*
+                             `actions.close_others`
+Close all buffers in the registry except the current one.
+Type ~
+`(fun(opts?: { force?: boolean }))`
+
+------------------------------------------------------------------------------
+                                                        *actions.close_unmarked*
+                            `actions.close_unmarked`
+Close all unmarked buffers in the registry.
+Pair with marking: mark what you want to keep, then call this to clear the rest.
+Type ~
+`(fun(opts?: { force?: boolean }))`
+
 
 ==============================================================================
 ------------------------------------------------------------------------------
@@ -215,6 +230,20 @@ Parameters ~
                 `events.smart_order_toggle`({smart_order_state})
 Parameters ~
 {smart_order_state} `(boolean)`
+
+------------------------------------------------------------------------------
+                                                     *events.registry_changed()*
+                          `events.registry_changed`()
+Fired whenever the registry mutates (entries added, removed, or reordered).
+
+------------------------------------------------------------------------------
+                                                        *events.buffer_switch()*
+                   `events.buffer_switch`({buffer}, {source})
+Fired whenever Loft navigates to a buffer (next/prev/marked/alt).
+Parameters ~
+{buffer} `(integer)` The buffer that was switched to.
+{source} `(string)` A short label describing what triggered the switch
+  (e.g. "next", "prev", "marked_next", "marked_prev", "alt").
 
 
 ==============================================================================
