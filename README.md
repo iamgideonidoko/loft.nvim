@@ -492,4 +492,5 @@ Contributions are welcome! Please feel free to check out the [contribution guide
 
 ## Roadmap
 
+- **Tab-local registries** — Option for each tab to maintain its own independent buffer registry, supporting project-separation workflows across tabs.
 - **In-UI fuzzy filter** — A keymap (e.g. `f`) to filter registry entries in-place by filename/path, making the UI useful in very large buffer lists.
