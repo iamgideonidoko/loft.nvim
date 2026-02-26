@@ -123,6 +123,7 @@ Fields ~
 {marked_mapping_num_style} `(optional)` '`(solid)`'|'outline' The style of the mapping number
 {ui_timeout_on_curr_buf_move} `(optional)` `(integer)` The timeout in milliseconds to wait before closing the UI after moving the current buffer. Defaults to 800. Set to 0 to disable the UI from showing.
 {reverse_order} `(optional)` `(boolean)` Whether to display the buffer list in reverse order (first registry entry at the bottom). Defaults to false.
+{confirm_force_delete} `(optional)` `(boolean)` Whether to show a confirmation prompt before force-deleting buffers. Defaults to true.
 {window} `(optional)` `(loft.WinOpts)`
 {help_window} `(optional)` `(loft.HelpWinOpts)`
 {persistence} `(optional)` `(loft.PersistenceConfig)`
@@ -169,7 +170,8 @@ Fields ~
 Class ~
 {(exact)} loft.KeymapConfig
 Fields ~
-{ui} `(optional)` `(table<string, ('move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'|'show_help'|'move_up_to_marked_entry'|'move_down_to_marked_entry')|function|false>)`
+{ui} `(optional)` `(table<string, ('move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'force_delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'|'show_help'|'move_up_to_marked_entry'|'move_down_to_marked_entry')|function|false>)`
+{ui_visual} `(optional)` `(table<string, ('delete_selected_entries'|'force_delete_selected_entries')|function|false>)`
 {general} `(optional)` `(table<string, { callback: function|loft.Action, desc: string }|function|loft.Action|false>)` For keys mapped outside of Loft in `normal` mode
 
 ------------------------------------------------------------------------------
@@ -454,12 +456,14 @@ Fields ~
 {marked_mapping_num_style} '`(solid)`'|'outline'
 {timeout_on_curr_buf_move} `(integer)`
 {reverse_order} `(boolean)`
+{confirm_force_delete} `(boolean)`
 
 ------------------------------------------------------------------------------
 Class ~
 {(exact)} loft.UIOpts
 Fields ~
-{keymaps} `(table<string, ('move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'|'show_help'|'move_up_to_marked_entry'|'move_down_to_marked_entry')|function|false>)`
+{keymaps} `(table<string, ('move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'force_delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'|'show_help'|'move_up_to_marked_entry'|'move_down_to_marked_entry')|function|false>)`
+{visual_keymaps} `(optional)` `(table<string, ('delete_selected_entries'|'force_delete_selected_entries')|function|false>)`
 {general_keymaps} `(table<string, { callback: function|loft.Action, desc: string }|function|loft.Action|false>)` For keys mapped outside of Loft in `normal` mode
 {window} `(loft.WinOpts)`
 {help_window} `(loft.HelpWinOpts)`
@@ -476,7 +480,8 @@ Fields ~
 {private} _`(last_win_before_loft)` integer|nil
 {private} _`(last_buf_before_loft)` integer|nil
 {registry_instance} `(loft.Registry)`
-{private} _`(keymaps)` (table<string, ('move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'|'show_help'|'move_up_to_marked_entry'|'move_down_to_marked_entry')|function|false>)|nil
+{private} _`(keymaps)` (table<string, ('move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'force_delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'|'show_help'|'move_up_to_marked_entry'|'move_down_to_marked_entry')|function|false>)|nil
+{private} _`(visual_keymaps)` (table<string, ('delete_selected_entries'|'force_delete_selected_entries')|function|false>)|nil
 {private} _`(general_keymaps)` (table<string, { callback: function|loft.Action, desc: string }|function|loft.Action|false> For keys mapped outside of Loft in `normal` mode)|nil
 {private} _`(help_win_id)` integer|nil
 {private} _`(help_buf_id)` integer|nil

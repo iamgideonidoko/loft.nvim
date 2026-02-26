@@ -282,22 +282,25 @@ function UI:_setup_autocmd()
   vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter" }, {
     group = utils.get_augroup("PreventOverride", true),
     callback = function()
-      if vim.api.nvim_get_current_win() == self._win_id then
+      if utils.window_exists(self._win_id) and vim.api.nvim_get_current_win() == self._win_id then
         local current_buf = vim.api.nvim_get_current_buf()
         if current_buf ~= self._buf_id then
-          vim.api.nvim_set_current_buf(self._buf_id)
-          if not utils.table_includes(self.registry_instance:get_registry(), current_buf) then
-            vim.api.nvim_buf_delete(current_buf, { force = true })
-          end
+          -- _buf_id was replaced in the loft window (e.g. it was wiped due to bufhidden=wipe).
+          -- Close the loft window gracefully instead of trying to restore the wiped buffer.
+          vim.schedule(function()
+            self:close()
+          end)
         end
       end
-      if vim.api.nvim_get_current_win() == self._help_win_id then
+      if
+        utils.window_exists(self._help_win_id)
+        and vim.api.nvim_get_current_win() == self._help_win_id
+      then
         local current_buf = vim.api.nvim_get_current_buf()
         if current_buf ~= self._help_buf_id then
-          vim.api.nvim_set_current_buf(self._help_buf_id)
-          if not utils.table_includes(self.registry_instance:get_registry(), current_buf) then
-            vim.api.nvim_buf_delete(current_buf, { force = true })
-          end
+          vim.schedule(function()
+            self:_close_help()
+          end)
         end
       end
     end,
@@ -369,16 +372,24 @@ function UI:_setup_keymaps()
     ---@type table<loft.UIVisualKeymapsActions, function>
     local visual_mappings = {
       ["delete_selected_entries"] = function()
-        local start_line = vim.fn.line("'<")
-        local end_line = vim.fn.line("'>")
+        -- Read the live visual range BEFORE exiting visual mode.
+        -- line(".") is the cursor end, line("v") is the anchor start.
+        -- '< / '> are only updated after leaving visual mode, so we don't use them.
+        local s = math.min(vim.fn.line("."), vim.fn.line("v"))
+        local e = math.max(vim.fn.line("."), vim.fn.line("v"))
         vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
-        self:_delete_selected_entries(false, start_line, end_line)
+        vim.schedule(function()
+          self:_delete_selected_entries(false, s, e)
+        end)
       end,
       ["force_delete_selected_entries"] = function()
-        local start_line = vim.fn.line("'<")
-        local end_line = vim.fn.line("'>")
+        local s = math.min(vim.fn.line("."), vim.fn.line("v"))
+        local e = math.max(vim.fn.line("."), vim.fn.line("v"))
+        -- Exit visual mode first so the confirm dialog isn't dismissed by the Esc key
         vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
-        self:_delete_selected_entries(true, start_line, end_line)
+        vim.schedule(function()
+          self:_delete_selected_entries(true, s, e)
+        end)
       end,
     }
     for key, value in pairs(self._visual_keymaps) do
