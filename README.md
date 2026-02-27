@@ -563,5 +563,10 @@ vim.api.nvim_create_autocmd("User", {
 
 ## Roadmap
 
-- **Tab-local registries** — Option for each tab to maintain its own independent buffer registry, supporting project-separation workflows across tabs.
-- **In-UI fuzzy filter** — A keymap (e.g. `f`) to filter registry entries in-place by filename/path, making the UI useful in very large buffer lists.
+- **In-UI fuzzy filter** — A keymap (e.g. `f`) to enter a live filter prompt inside the Loft window; entries are narrowed in-place by filename/path, making the UI practical in very large buffer lists.
+
+- **Tab-local registries** — An option for each tab page to maintain its own independent buffer registry, supporting project-separation workflows across tabs.
+
+- **Lualine / statusline component** — A first-class `require("loft.lualine")` module that returns a ready-made lualine component (and a plain statusline string for other statusline plugins) showing the smart-order indicator and current-buffer mark without requiring users to wire up the autocmds and API calls manually.
+
+- **Telescope extension** — A `require("telescope").extensions.loft` picker that surfaces the Loft registry as a Telescope results list, enabling fuzzy search, preview, and all Telescope actions (select, delete, mark) over your tracked buffers.
