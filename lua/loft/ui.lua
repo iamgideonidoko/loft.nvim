@@ -280,7 +280,7 @@ function UI:open()
       end
     end
     if target_line then
-      vim.api.nvim_win_set_cursor(self._win_id, { target_line, 1 })
+      vim.api.nvim_win_set_cursor(self._win_id, { target_line, 0 })
     end
   end
   self:_setup_autocmd()
@@ -566,7 +566,7 @@ function UI:_move_up()
     return
   end
   local new_line = ((current_line - vim.v.count1 - 1) % no_of_entries) + 1
-  vim.api.nvim_win_set_cursor(self._win_id, { new_line, 1 })
+  vim.api.nvim_win_set_cursor(self._win_id, { new_line, 0 })
 end
 
 --- Move cursor down in cyclic manner
@@ -578,7 +578,7 @@ function UI:_move_down()
     return
   end
   local new_line = ((current_line + vim.v.count1 - 1) % no_of_entries) + 1
-  vim.api.nvim_win_set_cursor(self._win_id, { new_line, 1 })
+  vim.api.nvim_win_set_cursor(self._win_id, { new_line, 0 })
 end
 
 --- Move entry up in cyclic manner
@@ -600,7 +600,7 @@ function UI:_move_entry_up()
   if current_line > 1 then
     new_line = current_line - 1
   end
-  vim.api.nvim_win_set_cursor(self._win_id, { new_line, 1 })
+  vim.api.nvim_win_set_cursor(self._win_id, { new_line, 0 })
   self:_render_entries()
 end
 
@@ -623,7 +623,7 @@ function UI:_move_entry_down()
   if current_line < no_of_entries then
     new_line = current_line + 1
   end
-  vim.api.nvim_win_set_cursor(self._win_id, { new_line, 1 })
+  vim.api.nvim_win_set_cursor(self._win_id, { new_line, 0 })
   self:_render_entries()
 end
 
@@ -724,7 +724,7 @@ function UI:_delete_entry(force)
   if new_n > 0 and utils.window_exists(self._win_id) then
     local cursor_line = vim.fn.line(".")
     if cursor_line > new_n then
-      vim.api.nvim_win_set_cursor(self._win_id, { new_n, 1 })
+      vim.api.nvim_win_set_cursor(self._win_id, { new_n, 0 })
     end
   end
 end
@@ -784,7 +784,7 @@ function UI:_delete_selected_entries(force, start_line, end_line)
   if new_n > 0 and utils.window_exists(self._win_id) then
     local cursor_line = vim.fn.line(".")
     if cursor_line > new_n then
-      vim.api.nvim_win_set_cursor(self._win_id, { new_n, 1 })
+      vim.api.nvim_win_set_cursor(self._win_id, { new_n, 0 })
     end
   end
 end
@@ -1038,7 +1038,7 @@ function UI:_move_to_marked_entry(direction)
     end
   end
   if goto_line then
-    vim.api.nvim_win_set_cursor(self._win_id, { goto_line, 1 })
+    vim.api.nvim_win_set_cursor(self._win_id, { goto_line, 0 })
   end
 end
 
@@ -1096,7 +1096,7 @@ function UI:move_buffer_up()
   if utils.window_exists(self._win_id) then
     local new_reg_idx = buf_idx > 1 and buf_idx - 1 or no_of_buffers
     local new_line = self:_reg_idx_to_line(new_reg_idx, no_of_buffers)
-    vim.api.nvim_win_set_cursor(self._win_id, { new_line, 1 })
+    vim.api.nvim_win_set_cursor(self._win_id, { new_line, 0 })
     self:_render_entries()
   end
 end
@@ -1125,7 +1125,7 @@ function UI:move_buffer_down()
   if utils.window_exists(self._win_id) then
     local new_reg_idx = buf_idx < no_of_buffers and buf_idx + 1 or 1
     local new_line = self:_reg_idx_to_line(new_reg_idx, no_of_buffers)
-    vim.api.nvim_win_set_cursor(self._win_id, { new_line, 1 })
+    vim.api.nvim_win_set_cursor(self._win_id, { new_line, 0 })
     self:_render_entries()
   end
 end
