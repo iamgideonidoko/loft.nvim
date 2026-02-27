@@ -95,11 +95,16 @@ function UI:_render_entries()
     utils.buffer_modifiable(self._buf_id, false)
     return
   end
+  -- Batch a single getbufinfo call and build a lookup map to avoid N vimscript calls.
+  local buf_info_map = {}
+  for _, info in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
+    buf_info_map[info.bufnr] = info
+  end
   for display_pos = 1, n do
     local reg_idx = self:_line_to_reg_idx(display_pos, n)
     local lnum = display_pos - 1 -- 0-indexed extmark row
     local buf_id = registry[reg_idx]
-    local buffer = vim.fn.getbufinfo(buf_id)[1]
+    local buffer = buf_info_map[buf_id]
     if buffer then
       local bufname = buffer.name ~= "" and buffer.name or "[No Name]"
       local bufnr = buffer.bufnr

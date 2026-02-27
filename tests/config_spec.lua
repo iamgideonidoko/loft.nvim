@@ -151,4 +151,26 @@ test_set["setting multiple general keymaps to false leaves them all unregistered
   eq(child.lua_get([[vim.fn.maparg("<leader>ly", "n")]]), "")
 end
 
+test_set["default confirm_force_delete is true"] = function()
+  eq(child.lua_get([[require("loft.config").all.confirm_force_delete]]), true)
+end
+
+test_set["default allow_delete_current_buffer is true"] = function()
+  eq(child.lua_get([[require("loft.config").all.allow_delete_current_buffer]]), true)
+end
+
+test_set["default reverse_order is false"] = function()
+  eq(child.lua_get([[require("loft.config").all.reverse_order]]), false)
+end
+
+test_set["default smart_order_on_window_switch is false"] = function()
+  eq(child.lua_get([[require("loft.config").all.smart_order_on_window_switch]]), false)
+end
+
+test_set["default exclude_buftypes is empty table"] = function()
+  local v = child.lua_get([[require("loft.config").all.exclude_buftypes]])
+  eq(type(v), "table")
+  eq(#v, 0)
+end
+
 return test_set

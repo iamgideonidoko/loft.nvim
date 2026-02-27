@@ -2,6 +2,12 @@ local constants = require("loft.constants")
 
 local utils = {}
 
+-- TTL cache for uv.fs_stat results inside buf_has_deleted_file.
+-- Keyed by file path; each entry is { exists: boolean, t: hrtime nanoseconds }.
+-- Avoids repeated disk I/O when clean() is called many times in rapid succession.
+local _stat_cache = {}
+local _STAT_CACHE_TTL_NS = 2000000000 -- 2 seconds in nanoseconds
+
 utils.is_dev = function()
   local lazy_config_ok, lazy_config = pcall(require, "lazy.core.config")
   if not lazy_config_ok then
@@ -159,16 +165,29 @@ utils.buf_has_deleted_file = function(buffer)
     return false
   end
   local file_path = vim.api.nvim_buf_get_name(buf)
-  local uv = vim.uv or vim.loop
-  return not (
+  -- Fast-exit checks that don't require disk I/O
+  if
     buftype ~= ""
     or file_path == ""
     or vim.bo[buf].modified
     or vim.fn.buflisted(buf) == 0
     or utils.in_temp_directory(file_path)
-    or file_path:match("^%a[%w+.-]+://") -- Check for uri schemes
-    or uv.fs_stat(file_path) ~= nil -- slow but necessary to check if the file exists on disk
-  )
+    or file_path:match("^%a[%w+.-]+://")
+  then
+    return false
+  end
+  -- Consult TTL cache before hitting disk
+  local uv = vim.uv or vim.loop
+  local now = uv.hrtime()
+  local cached = _stat_cache[file_path]
+  local file_exists
+  if cached and (now - cached.t) < _STAT_CACHE_TTL_NS then
+    file_exists = cached.exists
+  else
+    file_exists = uv.fs_stat(file_path) ~= nil
+    _stat_cache[file_path] = { exists = file_exists, t = now }
+  end
+  return not file_exists
 end
 
 --- Ensure that a function is called only once in a given time frame

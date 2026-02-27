@@ -154,4 +154,29 @@ test_set["LoftCloseUnmarked leaves marked buffers in registry"] = function()
   eq(found, true)
 end
 
+test_set["LoftCloseOthers! force-closes modified buffers"] = function()
+  child.lua([[require("loft.registry"):clean()]])
+  local buf_other = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  -- Mark the other buffer as modified so it survives non-force close
+  child.api.nvim_set_option_value("modified", true, { buf = buf_other })
+  -- LoftCloseOthers! SHOULD force-close it despite being modified
+  child.cmd("LoftCloseOthers!")
+  eq(child.api.nvim_buf_is_valid(buf_other), false)
+end
+
+test_set["LoftCloseUnmarked! force-closes modified unmarked buffers"] = function()
+  child.lua([[require("loft.registry"):clean()]])
+  local buf_plain = child.api.nvim_create_buf(true, false)
+  local buf_marked = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.registry"):toggle_mark_buffer(]] .. buf_marked .. [[)]])
+  -- Mark the plain buffer as modified
+  child.api.nvim_set_option_value("modified", true, { buf = buf_plain })
+  child.cmd("LoftCloseUnmarked!")
+  eq(child.api.nvim_buf_is_valid(buf_plain), false)
+  -- Marked buffer must survive
+  eq(child.api.nvim_buf_is_valid(buf_marked), true)
+end
+
 return test_set

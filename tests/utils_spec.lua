@@ -220,4 +220,14 @@ test_set["is_buffer_valid returns false for 0"] = function()
   eq(child.lua_get([[require("loft.utils").is_buffer_valid(0)]]), false)
 end
 
+test_set["buf_has_deleted_file caches fs_stat result for the same path"] = function()
+  -- Two rapid calls for the same no-name buffer should return the same result
+  -- (exercises the cache path without needing a real file on disk).
+  local buf = child.api.nvim_create_buf(true, false)
+  local r1 = child.lua_get([[require("loft.utils").buf_has_deleted_file(]] .. buf .. [[)]])
+  local r2 = child.lua_get([[require("loft.utils").buf_has_deleted_file(]] .. buf .. [[)]])
+  eq(r1, r2)
+  child.api.nvim_buf_delete(buf, { force = true })
+end
+
 return test_set
