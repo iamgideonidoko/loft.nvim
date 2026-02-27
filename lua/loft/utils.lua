@@ -21,6 +21,11 @@ end
 --- Check if the given buffer is valid (listed)
 ---@param buf number
 utils.is_buffer_valid = function(buf)
+  -- Guard against nil or invalid buffer numbers (e.g. bufnr("#") == -1 when there
+  -- is no alternate buffer, or nil passed by callers that haven't checked yet).
+  if not buf or buf < 1 then
+    return false
+  end
   return 1 == vim.fn.buflisted(buf) and not utils.buf_has_deleted_file(buf)
 end
 

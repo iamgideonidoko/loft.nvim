@@ -141,6 +141,7 @@ Fields ~
 {reverse_order} `(optional)` `(boolean)` Whether to display the buffer list in reverse order (first registry entry at the bottom). Defaults to false.
 {confirm_force_delete} `(optional)` `(boolean)` Whether to show a confirmation prompt before force-deleting buffers. Defaults to true.
 {allow_delete_current_buffer} `(optional)` `(boolean)` Whether deleting the current buffer (marked ●) from the Loft UI is allowed. Defaults to true.
+{exclude_buftypes} `(optional)` `(string[])` List of `buftype` values whose buffers are never tracked by Loft (e.g. `{"terminal","quickfix"}`). Defaults to `{}`.
 {window} `(optional)` `(loft.WinOpts)`
 {help_window} `(optional)` `(loft.HelpWinOpts)`
 {persistence} `(optional)` `(loft.PersistenceConfig)`
@@ -364,6 +365,7 @@ Fields ~
 {enable_recent_marked_mapping} `(boolean)`
 {post_leader_marked_mapping} `(string)`
 {reverse_order} `(boolean)`
+{exclude_buftypes} `(string[])`
 
 ------------------------------------------------------------------------------
                                                                       *Registry*

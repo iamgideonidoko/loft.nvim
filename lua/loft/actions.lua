@@ -25,6 +25,8 @@ actions.close_buffer = {
       return vim.api.nvim_err_writeln("Buffer is a terminal. Force required.")
     end
     registry_instance:clean()
+    -- bufnr("#") returns -1 when there is no alternate buffer; is_buffer_valid
+    -- handles negative numbers gracefully so no extra guard is needed here.
     local alt_buf = vim.fn.bufnr("#")
     local next_buf = nil
     local found_current = false

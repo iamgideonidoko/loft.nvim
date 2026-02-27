@@ -206,4 +206,18 @@ test_set["debounce uses vim.uv (not vim.loop) when available"] = function()
   eq(child.lua_get([[_G.loft_debounce_uv]]), 1)
 end
 
+-- ── is_buffer_valid nil / negative guard ─────────────────────────────
+
+test_set["is_buffer_valid returns false for nil"] = function()
+  eq(child.lua_get([[require("loft.utils").is_buffer_valid(nil)]]), false)
+end
+
+test_set["is_buffer_valid returns false for -1 (no alternate buffer sentinel)"] = function()
+  eq(child.lua_get([[require("loft.utils").is_buffer_valid(-1)]]), false)
+end
+
+test_set["is_buffer_valid returns false for 0"] = function()
+  eq(child.lua_get([[require("loft.utils").is_buffer_valid(0)]]), false)
+end
+
 return test_set

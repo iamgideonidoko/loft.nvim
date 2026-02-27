@@ -1381,4 +1381,30 @@ test_set["delete_entry: respects allow_delete_current_buffer = false"] = functio
   child.lua([[require("loft.ui"):close()]])
 end
 
+-- ── _select_entry window fallback ─────────────────────────────────────
+
+test_set["_select_entry falls back to current window when _last_win_before_loft is closed"] = function()
+  child.lua([[require("loft").setup({})]])
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  -- Forcibly invalidate _last_win_before_loft so it's as if the window was closed
+  child.lua([[require("loft.ui")._last_win_before_loft = 99999]])
+  -- Ensure buf_b is in registry so there's something to select
+  child.lua([[require("loft.registry"):clean()]])
+  -- Select first entry — should not error even with invalid _last_win_before_loft
+  child.lua([[
+    local ui = require("loft.ui")
+    local reg = ui.registry_instance:get_registry()
+    if #reg > 0 then
+      vim.api.nvim_win_set_cursor(ui._win_id, { 1, 0 })
+      ui:_select_entry()
+    else
+      ui:close()
+    end
+  ]])
+  -- Loft should be closed (no error, graceful fallback)
+  eq(child.lua_get([[require("loft.ui")._win_id]]), vim.NIL)
+end
+
 return test_set

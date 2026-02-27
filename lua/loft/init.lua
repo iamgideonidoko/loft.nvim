@@ -43,6 +43,7 @@ loft.setup = function(opts)
     enable_recent_marked_mapping = config.all.enable_recent_marked_mapping,
     post_leader_marked_mapping = config.all.post_leader_marked_mapping,
     reverse_order = config.all.reverse_order,
+    exclude_buftypes = config.all.exclude_buftypes,
   })
   ui_instance:setup({
     keymaps = config.all.keymaps.ui,

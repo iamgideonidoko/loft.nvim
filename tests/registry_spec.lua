@@ -355,4 +355,51 @@ test_set["smart order DOES reorder on window switch when smart_order_on_window_s
   eq(after[#after], current_buf)
 end
 
+-- ── exclude_buftypes ────────────────────────────────────────────────────
+
+test_set["exclude_buftypes prevents excluded buftype from entering registry"] = function()
+  child.lua([[require("loft").setup({ exclude_buftypes = { "nofile" } })]])
+  -- Create a nofile buffer and fire BufEnter on it
+  child.lua([[
+    local buf = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_set_option_value("buftype", "nofile", { buf = buf })
+    vim.api.nvim_set_option_value("buflisted", true, { buf = buf })
+    -- Manually call _update as if BufEnter fired for that buf
+    require("loft.registry"):_update(buf)
+  ]])
+  local reg = child.lua_get([[require("loft.registry"):get_registry()]])
+  -- The nofile buffer should NOT be in the registry
+  local found = false
+  for _, b in ipairs(reg) do
+    local bt = child.lua_get(string.format([[vim.api.nvim_get_option_value("buftype", { buf = %d })]], b))
+    if bt == "nofile" then
+      found = true
+    end
+  end
+  eq(found, false)
+end
+
+test_set["exclude_buftypes empty list allows all buftypes (default)"] = function()
+  -- Default is {}, so no buftype is excluded
+  local default_excludes = child.lua_get([[require("loft.config").all.exclude_buftypes]])
+  eq(#default_excludes, 0)
+end
+
+-- ── _quick_clean ────────────────────────────────────────────────────────
+
+test_set["_quick_clean removes deleted buffers without touching filesystem"] = function()
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  local before = child.lua_get([[#require("loft.registry"):get_registry()]])
+  -- Wipe a buffer from outside the registry mechanism
+  child.lua([[
+    local reg = require("loft.registry"):get_registry()
+    local buf = reg[1]
+    vim.api.nvim_buf_delete(buf, { force = true })
+    require("loft.registry"):_quick_clean()
+  ]])
+  local after = child.lua_get([[#require("loft.registry"):get_registry()]])
+  eq(after, before - 1)
+end
+
 return test_set

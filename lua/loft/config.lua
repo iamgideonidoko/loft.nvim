@@ -21,6 +21,7 @@ local actions = require("loft.actions")
 ---@field reverse_order? boolean Whether to display the buffer list in reverse order (first registry entry at the bottom). Defaults to false.
 ---@field confirm_force_delete? boolean Whether to show a confirmation prompt before force-deleting buffers. Defaults to true.
 ---@field allow_delete_current_buffer? boolean Whether deleting the current buffer (marked ●) from the Loft UI is allowed. Defaults to true.
+---@field exclude_buftypes? string[] List of `buftype` values whose buffers are never tracked by Loft (e.g. `{"terminal","quickfix"}`). Defaults to `{}`.
 ---@field window? loft.WinOpts
 ---@field help_window? loft.HelpWinOpts
 ---@field persistence? loft.PersistenceConfig
@@ -74,6 +75,7 @@ local default_config = {
   reverse_order = false,
   confirm_force_delete = true,
   allow_delete_current_buffer = true,
+  exclude_buftypes = {},
   window = {
     width = nil,
     height = nil,

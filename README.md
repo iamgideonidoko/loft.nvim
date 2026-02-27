@@ -10,9 +10,13 @@
 - [Installation](#installation)
 - [Configuration](#configuration)
   - [Default Options](#default-options)
+  - [Persistence options](#persistence-options-persistence)
+  - [Session plugin compatibility](#session-plugin-compatibility)
 - [Commands](#commands)
 - [Highlights](#highlights)
 - [Window options](#window-options)
+- [Autocmds](#autocmds)
+- [Public API](#public-api)
 - [Roadmap](#roadmap)
 
 ## Introduction
@@ -99,6 +103,11 @@ require("loft").setup({
   -- Whether deleting the current buffer (marked ●) from the Loft UI is allowed.
   -- Set to false to prevent the current buffer from being deleted via the UI, which can be a helpful safeguard against accidental closures.
   allow_delete_current_buffer = true,
+
+  -- List of `buftype` values whose buffers are never tracked by Loft.
+  -- e.g. { "terminal", "quickfix", "nofile" }
+  -- Defaults to {} (track all buftypes).
+  exclude_buftypes = {},
 
   -- ── Main UI window ───────────────────────────────────────────────────────
   window = {
@@ -223,6 +232,20 @@ require("possession").setup({
   },
 })
 ```
+
+### Persistence options (`persistence`)
+
+| Option    | Type          | Default                                | Description                                            |
+| --------- | ------------- | -------------------------------------- | ------------------------------------------------------ |
+| `enabled` | `boolean`     | `false`                                | Opt-in: set to `true` to persist state across sessions |
+| `path`    | `string\|nil` | `stdpath("data")/loft/<cwd_hash>.json` | Custom file path for the saved state                   |
+
+When `enabled = true`, Loft saves the registry order, buffer marks, and smart-order
+state to a JSON file on disk keyed by the current working directory. State is restored
+automatically the next time Neovim opens in the same directory.
+
+See [Session plugin compatibility](#session-plugin-compatibility) above for per-plugin
+restore hooks.
 
 ## Commands
 
@@ -424,7 +447,7 @@ vim.api.nvim_create_autocmd("User", {
 
 If you think bufferline sucks and prefer working with the info in statusline like me then you can show the smart order and marked info in your statusline.
 
-Get the info from Loft UI's `smart_order_indicator()` and `get_buffer_mark()` methods and infuse like so:
+Get the info from Loft's [public API](#public-api) (`smart_order_indicator()` and `get_buffer_mark()`) and infuse like so:
 
 ```lua
 vim.api.nvim_set_hl(0, "MiniStatuslineFilename", { fg = "#FFD700", bg = "#262D43", bold = true })
@@ -493,6 +516,50 @@ vim.api.nvim_create_autocmd("User", {
 ## Contributing
 
 Contributions are welcome! Please feel free to check out the [contribution guide](./CONTRIBUTING.md).
+
+## Public API
+
+These methods are available on the UI singleton (`require("loft.ui")`) for use in
+statuslines and other integrations. They are **stable** and safe to call at any time
+(they return empty strings when Loft has not been set up yet).
+
+### `UI:get_buffer_mark([buffer]) → string`
+
+Returns the mark symbol for a buffer, or `""` if the buffer is not marked.
+
+| Parameter | Type           | Description                                        |
+| --------- | -------------- | -------------------------------------------------- |
+| `buffer`  | `integer\|nil` | Buffer number to query; defaults to current buffer |
+
+**Returns** `string` — one of:
+
+- `""` — buffer is not marked
+- `"(✓)"` — marked, no keymap slot assigned
+- `"➊(✓)"` – `"➒(✓)"` — marked with a numbered keymap slot (`show_marked_mapping_num = true`)
+
+The number prefix style (`solid` vs `outline`) follows the `marked_mapping_num_style` config.
+
+### `UI:smart_order_indicator() → string`
+
+Returns the smart-order indicator string, or `""` when smart order is off.
+
+**Returns** `string` — `"⟅⇅⟆"` when smart order is enabled, `""` otherwise.
+
+**Statusline example** (mini.statusline):
+
+```lua
+local loft_ui = require("loft.ui")
+
+-- In your statusline build function:
+local smart_order_status = loft_ui:smart_order_indicator()
+local buffer_mark        = loft_ui:get_buffer_mark()
+
+-- Redraw on any Loft event
+vim.api.nvim_create_autocmd("User", {
+  pattern = { "LoftSmartOrderToggle", "LoftBufferMark", "LoftRegistryChanged", "LoftBufferSwitch" },
+  callback = function() vim.cmd("redrawstatus") end,
+})
+```
 
 ## Roadmap
 

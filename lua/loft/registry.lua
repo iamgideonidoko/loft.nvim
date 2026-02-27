@@ -11,6 +11,7 @@ local constants = require("loft.constants")
 ---@field enable_recent_marked_mapping boolean
 ---@field post_leader_marked_mapping string
 ---@field reverse_order boolean
+---@field exclude_buftypes string[]
 
 ---@class loft.Registry
 ---@field private _registry integer[]
@@ -55,11 +56,15 @@ function Registry:_update(buffer)
   if not is_buf_valid then
     return
   end
+  -- Skip buffers whose type is explicitly excluded (e.g. terminal, quickfix)
+  if self:_is_buftype_excluded(buf) then
+    return
+  end
   -- Detect a window-focus change (split/tab navigation) vs. a buffer switch.
   local current_win = vim.api.nvim_get_current_win()
   local is_window_switch = self._prev_win_id ~= nil and current_win ~= self._prev_win_id
   self._prev_win_id = current_win
-  self:clean()
+  self:_quick_clean()
   local is_buffer_in_registry = false
   local is_alt_buffer_in_registry = false
   -- Suppress smart-reordering when the user just moved focus to a different
@@ -98,7 +103,6 @@ function Registry:_update(buffer)
     table.insert(self._registry, alt_buf)
   end
   table.insert(self._registry, buf)
-  self:clean()
   self:on_change()
 end
 
@@ -110,11 +114,42 @@ function Registry:resume_update()
   self._update_paused = false
 end
 
+--- Fast in-place filter: removes buffers that are no longer valid without
+--- touching the filesystem or firing on_change. Used inside _update() to avoid
+--- repeated full clean() calls in a single event cycle.
+---@private
+function Registry:_quick_clean()
+  local kept = {}
+  for _, buf in ipairs(self._registry) do
+    if vim.api.nvim_buf_is_valid(buf) and vim.fn.buflisted(buf) == 1 then
+      table.insert(kept, buf)
+    end
+  end
+  self._registry = kept
+end
+
+--- Returns true if the buffer's buftype is in the exclude list
+---@private
+---@param buf integer
+---@return boolean
+function Registry:_is_buftype_excluded(buf)
+  if #self.opts.exclude_buftypes == 0 then
+    return false
+  end
+  local bt = vim.api.nvim_get_option_value("buftype", { buf = buf })
+  for _, excluded in ipairs(self.opts.exclude_buftypes) do
+    if bt == excluded then
+      return true
+    end
+  end
+  return false
+end
+
 --- Clean up invalid buffers from registry
 function Registry:clean()
   local valid_buffers = {}
   for _, buf in ipairs(self._registry) do
-    if utils.is_buffer_valid(buf) then
+    if utils.is_buffer_valid(buf) and not self:_is_buftype_excluded(buf) then
       table.insert(valid_buffers, buf)
     end
   end
@@ -127,7 +162,14 @@ function Registry:clean()
     end
   end
 
-  self._registry = utils.merge_distinct(valid_buffers, utils.get_all_valid_buffers())
+  -- Merge with all valid buffers, excluding any that are in the excluded buftypes list
+  local all_valid = {}
+  for _, buf in ipairs(utils.get_all_valid_buffers()) do
+    if not self:_is_buftype_excluded(buf) then
+      table.insert(all_valid, buf)
+    end
+  end
+  self._registry = utils.merge_distinct(valid_buffers, all_valid)
   self:on_change()
 end
 

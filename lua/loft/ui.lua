@@ -770,8 +770,12 @@ function UI:_select_entry()
   local reg_idx = self:_line_to_reg_idx(current_line, n)
   self:close()
   local selected_buffer = self.registry_instance:get_registry()[reg_idx]
-  if selected_buffer ~= nil and utils.window_exists(self._last_win_before_loft) then
-    pcall(vim.api.nvim_win_set_buf, self._last_win_before_loft, selected_buffer)
+  if selected_buffer ~= nil then
+    -- Prefer the window that was active before Loft opened.  When that window
+    -- was closed in the meantime, fall back to whatever window is now current.
+    local target_win = utils.window_exists(self._last_win_before_loft) and self._last_win_before_loft
+      or vim.api.nvim_get_current_win()
+    pcall(vim.api.nvim_win_set_buf, target_win, selected_buffer)
   end
   self.registry_instance:resume_update()
 end
