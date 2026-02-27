@@ -72,7 +72,7 @@ require("loft").setup({
   close_invalid_buf_on_switch = true, -- Whether to close invalid buffers during navigation
   enable_smart_order_by_default = true, -- Whether to enable smart order by default
   smart_order_marked_bufs = false, -- Whether smart order (`⟅⇅⟆`) should reposition marked buffers
-  smart_order_alt_bufs = false, -- Whether smart order (`⟅⇅⟆`) should reposition alternate buffers
+  smart_order_alt_bufs = true, -- Whether smart order (`⟅⇅⟆`) should reposition alternate buffers
   -- When false (default), switching focus to a different window split or tab will NOT
   -- reorder the registry. Smart reordering only applies when the buffer itself changes
   -- within the same window. Set to true to restore the old behaviour.

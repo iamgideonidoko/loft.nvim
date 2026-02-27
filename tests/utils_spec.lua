@@ -193,4 +193,17 @@ test_set["debounce only fires once for rapid calls"] = function()
   eq(child.lua_get([[_G.loft_debounce_count2]]), 1)
 end
 
+test_set["debounce uses vim.uv (not vim.loop) when available"] = function()
+  -- Verify debounce works correctly when vim.uv exists (no deprecation warnings)
+  child.lua([[
+    _G.loft_debounce_uv = 0
+    local fn = require("loft.utils").debounce(function()
+      _G.loft_debounce_uv = _G.loft_debounce_uv + 1
+    end, 50)
+    fn()
+    vim.wait(400, function() return _G.loft_debounce_uv > 0 end)
+  ]])
+  eq(child.lua_get([[_G.loft_debounce_uv]]), 1)
+end
+
 return test_set

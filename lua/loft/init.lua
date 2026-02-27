@@ -20,14 +20,14 @@ local loft = {}
 ---@private
 local function setup_general_keymap(keymaps)
   for key, value in pairs(keymaps) do
-    if value == false then
-      return
+    if value ~= false then
+      local is_plain_fn = type(value) == "function"
+      local action = (is_plain_fn or (value["func"] and not value["callback"])) and value or value.callback
+      local desc = type(value) == "table" and value.desc or ""
+      vim.keymap.set("n", key, function()
+        action()
+      end, { noremap = true, silent = true, desc = desc })
     end
-    local action = (type(value) == "function" or (value["func"] and not value["callback"])) and value or value.callback
-    local desc = type(value) == "table" and value.desc or ""
-    vim.keymap.set("n", key, function()
-      action()
-    end, { noremap = true, silent = true, desc = desc })
   end
 end
 

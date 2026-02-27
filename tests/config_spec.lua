@@ -116,4 +116,39 @@ test_set["setup with empty opts keeps all defaults"] = function()
   eq(child.lua_get([[require("loft.config").all.window.border]]), "rounded")
 end
 
+-- ── general keymap false-skip bug regression ───────────────────────────
+
+test_set["setting one general keymap to false does not prevent other keymaps from registering"] = function()
+  -- Before the fix, `return` inside the loop would abort ALL remaining keymaps
+  -- the moment any entry was false. Verify the other keymap is still registered.
+  child.lua([[
+    require("loft").setup({
+      keymaps = {
+        general = {
+          ["<leader>lx"] = false,
+          ["<leader>lt"] = require("loft.actions").open_loft,
+        },
+      },
+    })
+  ]])
+  -- vim.fn.maparg expands <leader> so it matches the stored keymap (e.g. \lt)
+  local result = child.lua_get([[vim.fn.maparg("<leader>lt", "n")]])
+  eq(result ~= "", true)
+end
+
+test_set["setting multiple general keymaps to false leaves them all unregistered"] = function()
+  child.lua([[
+    require("loft").setup({
+      keymaps = {
+        general = {
+          ["<leader>lx"] = false,
+          ["<leader>ly"] = false,
+        },
+      },
+    })
+  ]])
+  eq(child.lua_get([[vim.fn.maparg("<leader>lx", "n")]]), "")
+  eq(child.lua_get([[vim.fn.maparg("<leader>ly", "n")]]), "")
+end
+
 return test_set

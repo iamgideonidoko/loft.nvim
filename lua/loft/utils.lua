@@ -170,13 +170,14 @@ end
 ---@param func function
 ---@param timeout number Time in milliseconds
 utils.debounce = function(func, timeout)
+  local uv = vim.uv or vim.loop
   local timer = nil
   return function(...)
     local args = { ... }
     if timer then
-      vim.loop.timer_stop(timer)
+      uv.timer_stop(timer)
     else
-      timer = vim.loop.new_timer()
+      timer = uv.new_timer()
     end
     timer:start(timeout, 0, function()
       vim.schedule(function()
