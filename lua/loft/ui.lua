@@ -36,6 +36,7 @@ local _nvim_major, _nvim_minor = utils.get_nvim_version()
 ---@field private _help_buf_id integer|nil
 ---@field private _window loft.WinOpts|nil
 ---@field private _help_window loft.HelpWinOpts|nil
+---@field private _help_content_height integer|nil
 ---@field private _marked_nums_solid string[]
 ---@field private _marked_nums_outline string[]
 ---@field private _other_opts loft.UIOtherOpts
@@ -326,6 +327,15 @@ function UI:_setup_autocmd()
       end)
     end,
   })
+  -- Reposition and resize open Loft windows whenever the terminal is resized.
+  vim.api.nvim_create_autocmd("VimResized", {
+    group = utils.get_augroup("LoftVimResized", true),
+    callback = function()
+      vim.schedule(function()
+        self:_reposition_wins()
+      end)
+    end,
+  })
 end
 
 --- Apply full keymap lockdown to a Loft buffer, blocking all destructive/editing
@@ -609,6 +619,36 @@ function UI:_resize_win()
   vim.api.nvim_win_set_config(self._win_id, win_config)
 end
 
+--- Reposition and resize both open Loft windows after a terminal resize.
+--- Recalculates row/col/width/height using the same defaults as open()/_show_help().
+---@private
+function UI:_reposition_wins()
+  -- Main window
+  if utils.window_exists(self._win_id) then
+    local height = self._window.height
+      or math.min(
+        #self.registry_instance:get_registry() > 0 and #self.registry_instance:get_registry() or 1,
+        math.floor(vim.o.lines * 0.8)
+      )
+    local width = self._window.width or math.floor(vim.o.columns * 0.8)
+    local row = (self._window.row or math.floor((vim.o.lines - height) * 0.5)) + (self._window.row_offset or 0)
+    local col = (self._window.col or math.floor((vim.o.columns - width) * 0.5)) + (self._window.col_offset or 0)
+    local cfg = { relative = "editor", width = width, height = height, row = row, col = col }
+    vim.api.nvim_win_set_config(self._win_id, cfg)
+  end
+  -- Help window
+  if utils.window_exists(self._help_win_id) then
+    local hw = self._help_window or {}
+    local help_content_height = self._help_content_height or 10
+    local width = hw.width or 70
+    local height = hw.height or math.min(help_content_height, math.floor(vim.o.lines * 0.8))
+    local row = (hw.row or math.floor((vim.o.lines - height) * 0.5)) + (hw.row_offset or 0)
+    local col = (hw.col or math.floor((vim.o.columns - width) * 0.5)) + (hw.col_offset or 0)
+    local cfg = { relative = "editor", width = width, height = height, row = row, col = col }
+    vim.api.nvim_win_set_config(self._help_win_id, cfg)
+  end
+end
+
 --- Show a confirmation dialog for force-delete operations.
 --- Returns true if the operation should proceed.
 ---@param count integer number of buffers to be deleted
@@ -841,6 +881,7 @@ function UI:_show_help()
   local hw = self._help_window or {}
   local width = hw.width or 70
   local height = hw.height or math.min(#content, math.floor(vim.o.lines * 0.8))
+  self._help_content_height = #content -- store for reposition on VimResized
   local row = (hw.row or math.floor((vim.o.lines - height) * 0.5)) + (hw.row_offset or 0)
   local col = (hw.col or math.floor((vim.o.columns - width) * 0.5)) + (hw.col_offset or 0)
   -- zindex must always be > main window zindex so help floats on top
