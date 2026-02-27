@@ -20,6 +20,7 @@ local actions = require("loft.actions")
 ---@field ui_timeout_on_curr_buf_move? integer The timeout in milliseconds to wait before closing the UI after moving the current buffer. Defaults to 800. Set to 0 to disable the UI from showing.
 ---@field reverse_order? boolean Whether to display the buffer list in reverse order (first registry entry at the bottom). Defaults to false.
 ---@field confirm_force_delete? boolean Whether to show a confirmation prompt before force-deleting buffers. Defaults to true.
+---@field allow_delete_current_buffer? boolean Whether deleting the current buffer (marked ●) from the Loft UI is allowed. Defaults to true.
 ---@field window? loft.WinOpts
 ---@field help_window? loft.HelpWinOpts
 ---@field persistence? loft.PersistenceConfig
@@ -72,6 +73,7 @@ local default_config = {
   ui_timeout_on_curr_buf_move = 800,
   reverse_order = false,
   confirm_force_delete = true,
+  allow_delete_current_buffer = true,
   window = {
     width = nil,
     height = nil,

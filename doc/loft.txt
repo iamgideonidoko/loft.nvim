@@ -140,6 +140,7 @@ Fields ~
 {ui_timeout_on_curr_buf_move} `(optional)` `(integer)` The timeout in milliseconds to wait before closing the UI after moving the current buffer. Defaults to 800. Set to 0 to disable the UI from showing.
 {reverse_order} `(optional)` `(boolean)` Whether to display the buffer list in reverse order (first registry entry at the bottom). Defaults to false.
 {confirm_force_delete} `(optional)` `(boolean)` Whether to show a confirmation prompt before force-deleting buffers. Defaults to true.
+{allow_delete_current_buffer} `(optional)` `(boolean)` Whether deleting the current buffer (marked ●) from the Loft UI is allowed. Defaults to true.
 {window} `(optional)` `(loft.WinOpts)`
 {help_window} `(optional)` `(loft.HelpWinOpts)`
 {persistence} `(optional)` `(loft.PersistenceConfig)`
@@ -492,6 +493,7 @@ Fields ~
 {timeout_on_curr_buf_move} `(integer)`
 {reverse_order} `(boolean)`
 {confirm_force_delete} `(boolean)`
+{allow_delete_current_buffer} `(boolean)`
 
 ------------------------------------------------------------------------------
 Class ~

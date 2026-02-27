@@ -14,6 +14,7 @@ local _nvim_major, _nvim_minor = utils.get_nvim_version()
 ---@field timeout_on_curr_buf_move integer
 ---@field reverse_order boolean
 ---@field confirm_force_delete boolean
+---@field allow_delete_current_buffer boolean
 
 ---@class (exact) loft.UIOpts
 ---@field keymaps loft.UIKeymapsConfig
@@ -679,10 +680,20 @@ function UI:_delete_entry(force)
   if buf == nil then
     return
   end
+  -- Guard: deleting the current buffer (●) requires allow_delete_current_buffer
+  if buf == self._last_buf_before_loft and not self._other_opts.allow_delete_current_buffer then
+    vim.api.nvim_err_writeln("Loft: deleting the current buffer is disabled (allow_delete_current_buffer = false)")
+    return
+  end
   if force and not self:_confirm_force_delete(1) then
     return
   end
+  local is_current = buf == self._last_buf_before_loft
   actions.close_buffer({ force = force, buffer = buf })
+  -- After deleting the current buffer update our reference so the ● indicator is fresh
+  if is_current and utils.window_exists(self._last_win_before_loft) then
+    self._last_buf_before_loft = vim.api.nvim_win_get_buf(self._last_win_before_loft)
+  end
   self:_render_entries()
   self:_resize_win()
   -- Clamp cursor to valid range after deletion
@@ -714,7 +725,12 @@ function UI:_delete_selected_entries(force, start_line, end_line)
     local reg_idx = self:_line_to_reg_idx(line, n)
     local buf = registry[reg_idx]
     if buf then
-      table.insert(bufs_to_delete, buf)
+      -- Skip the current buffer if deletion of it is not allowed
+      if buf == self._last_buf_before_loft and not self._other_opts.allow_delete_current_buffer then
+        vim.api.nvim_err_writeln("Loft: deleting the current buffer is disabled (allow_delete_current_buffer = false)")
+      else
+        table.insert(bufs_to_delete, buf)
+      end
     end
   end
   if #bufs_to_delete == 0 then
@@ -723,8 +739,16 @@ function UI:_delete_selected_entries(force, start_line, end_line)
   if force and not self:_confirm_force_delete(#bufs_to_delete) then
     return
   end
+  local deleted_current = false
   for _, buf in ipairs(bufs_to_delete) do
+    if buf == self._last_buf_before_loft then
+      deleted_current = true
+    end
     actions.close_buffer({ force = force, buffer = buf })
+  end
+  -- Update the current-buffer reference after the current buffer was deleted
+  if deleted_current and utils.window_exists(self._last_win_before_loft) then
+    self._last_buf_before_loft = vim.api.nvim_win_get_buf(self._last_win_before_loft)
   end
   self:_render_entries()
   self:_resize_win()

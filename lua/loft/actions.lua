@@ -41,10 +41,15 @@ actions.close_buffer = {
       -- The next valid buffer is likely the first
       next_buf = registry_instance:get_registry()[1]
     end
+    -- Ensure next_buf is not the buffer we are deleting
+    if next_buf == current_buf then
+      next_buf = nil
+    end
     registry_instance:pause_update()
     -- Replace current buffer with alt or next or empty buffer in all windows
     for _, win in ipairs(vim.fn.win_findbuf(current_buf)) do
-      if utils.is_buffer_valid(alt_buf) then
+      -- alt_buf must differ from current_buf (e.g. from inside a Loft float, # == current_buf)
+      if utils.is_buffer_valid(alt_buf) and alt_buf ~= current_buf then
         vim.api.nvim_win_set_buf(win, alt_buf)
       elseif next_buf then
         vim.api.nvim_win_set_buf(win, next_buf)

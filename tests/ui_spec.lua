@@ -1328,4 +1328,57 @@ test_set["VimResized is no-op when loft is closed"] = function()
   eq(child.lua_get([[require("loft.ui")._win_id]]), vim.NIL)
 end
 
+-- ── delete current buffer from Loft UI ───────────────────────────────
+
+test_set["delete_entry: deletes current buffer and updates _last_buf_before_loft"] = function()
+  -- Setup two listed buffers so there is a valid replacement after deletion
+  child.lua([[require("loft").setup({ allow_delete_current_buffer = true })]])
+  local buf_a = child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  -- Make buf_a current so it becomes _last_buf_before_loft
+  child.api.nvim_set_current_buf(buf_a)
+  child.lua([[require("loft.ui"):open()]])
+  local before_last = child.lua_get([[require("loft.ui")._last_buf_before_loft]])
+  eq(before_last, buf_a)
+  -- Cursor should be on the ● (buf_a) entry; delete it
+  child.lua([[
+    local ui = require("loft.ui")
+    local n = #ui.registry_instance:get_registry()
+    local reg_idx = require("loft.utils").get_index(ui.registry_instance:get_registry(), ui._last_buf_before_loft) or 1
+    local idx = ui:_reg_idx_to_line(reg_idx, n)
+    vim.api.nvim_win_set_cursor(ui._win_id, { idx, 0 })
+    ui:_delete_entry(false)
+  ]])
+  -- _last_buf_before_loft must have changed (buf_a was deleted)
+  local after_last = child.lua_get([[require("loft.ui")._last_buf_before_loft]])
+  eq(after_last ~= buf_a, true)
+  -- Loft window should still be open
+  eq(child.lua_get([[type(require("loft.ui")._win_id)]]), "number")
+  child.lua([[require("loft.ui"):close()]])
+  -- buf_a should now be gone from Neovim
+  eq(child.api.nvim_buf_is_valid(buf_a), false)
+end
+
+test_set["delete_entry: respects allow_delete_current_buffer = false"] = function()
+  child.lua([[require("loft").setup({ allow_delete_current_buffer = false })]])
+  local buf_a = child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_set_current_buf(buf_a)
+  child.lua([[require("loft.ui"):open()]])
+  -- Try to delete the current entry
+  child.lua([[
+    local ui = require("loft.ui")
+    local n = #ui.registry_instance:get_registry()
+    local reg_idx = require("loft.utils").get_index(ui.registry_instance:get_registry(), ui._last_buf_before_loft) or 1
+    local idx = ui:_reg_idx_to_line(reg_idx, n)
+    vim.api.nvim_win_set_cursor(ui._win_id, { idx, 0 })
+    ui:_delete_entry(false)
+  ]])
+  -- buf_a must still exist
+  eq(child.api.nvim_buf_is_valid(buf_a), true)
+  -- _last_buf_before_loft unchanged
+  eq(child.lua_get([[require("loft.ui")._last_buf_before_loft]]), buf_a)
+  child.lua([[require("loft.ui"):close()]])
+end
+
 return test_set

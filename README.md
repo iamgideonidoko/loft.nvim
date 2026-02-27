@@ -96,6 +96,10 @@ require("loft").setup({
   -- Set to false to skip the prompt (useful for advanced users or CI environments).
   confirm_force_delete = true,
 
+  -- Whether deleting the current buffer (marked ●) from the Loft UI is allowed.
+  -- Set to false to prevent the current buffer from being deleted via the UI, which can be a helpful safeguard against accidental closures.
+  allow_delete_current_buffer = true,
+
   -- ── Main UI window ───────────────────────────────────────────────────────
   window = {
     width = nil,   -- Explicit width; defaults to 80% of editor columns

@@ -56,6 +56,7 @@ loft.setup = function(opts)
       timeout_on_curr_buf_move = config.all.ui_timeout_on_curr_buf_move,
       reverse_order = config.all.reverse_order,
       confirm_force_delete = config.all.confirm_force_delete,
+      allow_delete_current_buffer = config.all.allow_delete_current_buffer,
     },
   })
   setup_general_keymap(config.all.keymaps.general)
