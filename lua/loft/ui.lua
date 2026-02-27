@@ -5,6 +5,9 @@ local actions = require("loft.actions")
 --- Extmark namespace used for all Loft highlight decorations.
 local hl_ns = vim.api.nvim_create_namespace("loft_ui")
 
+--- Cached Neovim version (major, minor) — checked once at load time.
+local _nvim_major, _nvim_minor = utils.get_nvim_version()
+
 ---@class (exact) loft.UIOtherOpts
 ---@field show_marked_mapping_num boolean
 ---@field marked_mapping_num_style 'solid'|'outline'
@@ -226,15 +229,14 @@ function UI:open()
     zindex = self._window.zindex,
   }
   -- Title / footer (version-gated)
-  local major, minor = utils.get_nvim_version()
-  if major > 0 or minor >= 9 then
+  if _nvim_major > 0 or _nvim_minor >= 9 then
     win_opts.title = self._window.title or self._get_title()
     win_opts.title_pos = self._window.title_pos
   end
-  if major > 0 or minor >= 10 then
+  if _nvim_major > 0 or _nvim_minor >= 10 then
     win_opts.footer = self._window.footer or self:_get_footer()
     win_opts.footer_pos = self._window.footer_pos or self._window.title_pos
-  elseif major > 0 or minor >= 9 then
+  elseif _nvim_major > 0 or _nvim_minor >= 9 then
     -- Fold footer into title for 0.9
     if not self._window.title then
       win_opts.title = self._get_title(self:_get_footer())
@@ -242,7 +244,7 @@ function UI:open()
   end
   self._win_id = vim.api.nvim_open_win(self._buf_id, true, win_opts)
   vim.api.nvim_set_option_value("cursorline", true, { win = self._win_id })
-  vim.api.nvim_set_option_value("modifiable", false, { buf = self._buf_id })
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = self._buf_id })
   vim.api.nvim_set_option_value("wrap", false, { win = self._win_id })
   -- Disable spell-checking and column highlights in the Loft buffer
   vim.api.nvim_set_option_value("spell", false, { win = self._win_id })
@@ -262,6 +264,8 @@ function UI:open()
     vim.api.nvim_win_set_cursor(self._win_id, { display_line, 1 })
   end
   self:_setup_autocmd()
+  -- Lockdown must come before _setup_keymaps so Loft's own maps override nops.
+  self:_lockdown_buffer(self._buf_id, true)
   self:_setup_keymaps()
 end
 
@@ -322,6 +326,105 @@ function UI:_setup_autocmd()
       end)
     end,
   })
+end
+
+--- Apply full keymap lockdown to a Loft buffer, blocking all destructive/editing
+--- keys that aren't explicitly set by Loft. Call this BEFORE _setup_keymaps so
+--- Loft's own maps can override individual nops.
+---@param buf integer Buffer to lock down.
+---@param include_visual boolean When true also lock destructive visual-mode keys.
+---@private
+function UI._lockdown_buffer(_, buf, include_visual)
+  local opts = { silent = true, noremap = true }
+
+  -- Normal mode: every key that can modify buffer content or cause side-effects.
+  -- v / V / <C-v> are intentionally NOT locked so the user can enter visual mode
+  -- and reach Loft's visual-mode keymaps (d / D for delete_selected).
+  local normal_lock = {
+    -- Insert / append / open
+    "i",
+    "I",
+    "a",
+    "A",
+    "o",
+    "O",
+    -- Replace / substitute
+    "r",
+    "R",
+    "s",
+    "S",
+    -- Change operator (c + motion, C = c$)
+    "c",
+    "C",
+    -- Single-char delete
+    "x",
+    "X",
+    -- d prefix  ── Loft maps "dd" and "D", so those sequences still work;
+    -- any other d+motion (dw, d$, …) is swallowed by the nop on bare "d"
+    "d",
+    -- Put / paste
+    "p",
+    "P",
+    "gp",
+    "gP",
+    -- Undo / redo
+    "u",
+    "<C-r>",
+    -- Join lines
+    "J",
+    "gJ",
+    -- Increment / decrement numbers
+    "<C-a>",
+    "<C-x>",
+    -- Case change
+    "~",
+    -- Macro recording / replay (q is kept — Loft uses it to close)
+    "@",
+    "Q",
+    -- Write / quit shortcuts
+    "ZZ",
+    "ZQ",
+    -- Command-line (blocks :w, :q, etc.)
+    ":",
+    -- Middle-click paste
+    "<MiddleMouse>",
+  }
+
+  for _, key in ipairs(normal_lock) do
+    vim.api.nvim_buf_set_keymap(buf, "n", key, "", opts)
+  end
+
+  if include_visual then
+    -- Visual mode: lock ops that modify content.
+    -- "d" and "D" are NOT listed here – Loft maps them to delete_selected actions.
+    local visual_lock = {
+      "c",
+      "C",
+      "s",
+      "S",
+      "x",
+      "X",
+      "p",
+      "P",
+      "gp",
+      "gP",
+      "r",
+      "R",
+      "u",
+      "<C-r>",
+      "~",
+      "J",
+      "gJ",
+      "<C-a>",
+      "<C-x>",
+      ":",
+      "@",
+      "<MiddleMouse>",
+    }
+    for _, key in ipairs(visual_lock) do
+      vim.api.nvim_buf_set_keymap(buf, "v", key, "", opts)
+    end
+  end
 end
 
 ---@private
@@ -644,14 +747,13 @@ function UI:toggle_smart_order()
   if utils.window_exists(self._win_id) then
     ---@type vim.api.keyset.win_config
     local win_opts = {}
-    local major, minor = utils.get_nvim_version()
     -- Only update the dynamic smart-order indicator when no custom title/footer was set
-    if major > 0 or minor >= 10 then
+    if _nvim_major > 0 or _nvim_minor >= 10 then
       if not self._window.footer then
         win_opts.footer = self:_get_footer()
         win_opts.footer_pos = self._window.footer_pos or self._window.title_pos
       end
-    elseif major > 0 or minor >= 9 then
+    elseif _nvim_major > 0 or _nvim_minor >= 9 then
       if not self._window.title then
         win_opts.title = self._get_title(self:_get_footer())
       end
@@ -760,9 +862,11 @@ function UI:_show_help()
     zindex = help_zindex,
   }
   self._help_win_id = vim.api.nvim_open_win(self._help_buf_id, true, opts)
+  utils.buffer_modifiable(self._help_buf_id, true)
   vim.api.nvim_buf_set_lines(self._help_buf_id, 0, -1, false, content)
+  utils.buffer_modifiable(self._help_buf_id, false)
   vim.api.nvim_set_option_value("wrap", false, { win = self._help_win_id })
-  vim.api.nvim_set_option_value("modifiable", false, { buf = self._help_buf_id })
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = self._help_buf_id })
   vim.api.nvim_set_option_value("spell", false, { win = self._help_win_id })
   vim.api.nvim_set_option_value("cursorcolumn", false, { win = self._help_win_id })
   -- Fortify: no swap file, wipe on hide, disable undo
@@ -770,6 +874,8 @@ function UI:_show_help()
   vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = self._help_buf_id })
   vim.api.nvim_set_option_value("undolevels", -1, { buf = self._help_buf_id })
   vim.api.nvim_set_option_value("filetype", "loft-help", { buf = self._help_buf_id })
+  -- Lockdown: no visual keymaps needed in the help window
+  self:_lockdown_buffer(self._help_buf_id, false)
   for _, key in ipairs({ "?", "q", "<CR>", "<Esc>" }) do
     vim.api.nvim_buf_set_keymap(self._help_buf_id, "n", key, "", {
       noremap = true,

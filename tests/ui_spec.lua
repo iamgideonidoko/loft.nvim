@@ -1142,4 +1142,115 @@ test_set["loft closes (including help) when focus leaves from help window"] = fu
   eq(child.lua_get([[require("loft.ui")._help_win_id]]), vim.NIL)
 end
 
+-- ── keymap lockdown ────────────────────────────────────────────────────
+
+test_set["main buffer: destructive normal keys are nop'd"] = function()
+  child.lua([[require("loft").setup({})]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  local buf_id = child.lua_get([[require("loft.ui")._buf_id]])
+  local keymaps = child.api.nvim_buf_get_keymap(buf_id, "n")
+  local locked = {}
+  for _, km in ipairs(keymaps) do
+    if km.rhs == "" or km.rhs == "<Nop>" then
+      locked[km.lhs] = true
+    end
+  end
+  -- Spot-check a representative sample
+  eq(locked["i"], true)
+  eq(locked["a"], true)
+  eq(locked["u"], true)
+  eq(locked["p"], true)
+  eq(locked[":"], true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["main buffer: visual destructive keys are nop'd"] = function()
+  child.lua([[require("loft").setup({})]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  local buf_id = child.lua_get([[require("loft.ui")._buf_id]])
+  local keymaps = child.api.nvim_buf_get_keymap(buf_id, "v")
+  local locked = {}
+  for _, km in ipairs(keymaps) do
+    if km.rhs == "" or km.rhs == "<Nop>" then
+      locked[km.lhs] = true
+    end
+  end
+  eq(locked["c"], true)
+  eq(locked["p"], true)
+  eq(locked["x"], true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["main buffer: Loft d normal key is NOT locked (dd overrides)"] = function()
+  child.lua([[require("loft").setup({})]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  local buf_id = child.lua_get([[require("loft.ui")._buf_id]])
+  local keymaps = child.api.nvim_buf_get_keymap(buf_id, "n")
+  local has_dd = false
+  for _, km in ipairs(keymaps) do
+    if km.lhs == "dd" and (km.rhs == "" or km.callback ~= nil) and km.rhs ~= "<Nop>" then
+      has_dd = true
+    end
+  end
+  eq(has_dd, true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["main buffer: Loft visual d is NOT locked"] = function()
+  child.lua([[require("loft").setup({})]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  local buf_id = child.lua_get([[require("loft.ui")._buf_id]])
+  local keymaps = child.api.nvim_buf_get_keymap(buf_id, "x")
+  local has_d = false
+  for _, km in ipairs(keymaps) do
+    if km.lhs == "d" and km.rhs ~= "<Nop>" then
+      has_d = true
+    end
+  end
+  eq(has_d, true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["help buffer: destructive normal keys are nop'd"] = function()
+  child.lua([[require("loft").setup({})]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  child.lua([[require("loft.ui"):_show_help()]])
+  local buf_id = child.lua_get([[require("loft.ui")._help_buf_id]])
+  local keymaps = child.api.nvim_buf_get_keymap(buf_id, "n")
+  local locked = {}
+  for _, km in ipairs(keymaps) do
+    if km.rhs == "" or km.rhs == "<Nop>" then
+      locked[km.lhs] = true
+    end
+  end
+  eq(locked["i"], true)
+  eq(locked["u"], true)
+  eq(locked["p"], true)
+  child.lua([[require("loft.ui"):_close_help()]])
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["main buffer has buftype=nofile"] = function()
+  child.lua([[require("loft").setup({})]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  local bt = child.lua_get([[vim.api.nvim_get_option_value("buftype", { buf = require("loft.ui")._buf_id })]])
+  eq(bt, "nofile")
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["main buffer has readonly=true"] = function()
+  child.lua([[require("loft").setup({})]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  local ro = child.lua_get([[vim.api.nvim_get_option_value("readonly", { buf = require("loft.ui")._buf_id })]])
+  eq(ro, true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
 return test_set

@@ -63,6 +63,7 @@ end
 ---@param buf integer
 ---@param modifiable boolean
 utils.buffer_modifiable = function(buf, modifiable)
+  vim.api.nvim_set_option_value("readonly", not modifiable, { buf = buf })
   vim.api.nvim_set_option_value("modifiable", modifiable, { buf = buf })
 end
 

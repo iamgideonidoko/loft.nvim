@@ -481,6 +481,9 @@ Monkey-patch `MiniTest.new_child_neovim` with helpful wrappers
 Extmark namespace used for all Loft highlight decorations.
 
 ------------------------------------------------------------------------------
+Cached Neovim version (major, minor) — checked once at load time.
+
+------------------------------------------------------------------------------
 Class ~
 {(exact)} loft.UIOtherOpts
 Fields ~
