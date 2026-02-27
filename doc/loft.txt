@@ -527,6 +527,7 @@ Fields ~
 {private} _`(window)` loft.WinOpts|nil
 {private} _`(help_window)` loft.HelpWinOpts|nil
 {private} _`(help_content_height)` integer|nil
+{private} _`(saved_cursor_line)` integer|nil
 {private} _`(marked_nums_solid)` string[]
 {private} _`(marked_nums_outline)` string[]
 {private} _`(other_opts)` loft.UIOtherOpts

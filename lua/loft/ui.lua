@@ -38,6 +38,7 @@ local _nvim_major, _nvim_minor = utils.get_nvim_version()
 ---@field private _window loft.WinOpts|nil
 ---@field private _help_window loft.HelpWinOpts|nil
 ---@field private _help_content_height integer|nil
+---@field private _saved_cursor_line integer|nil
 ---@field private _marked_nums_solid string[]
 ---@field private _marked_nums_outline string[]
 ---@field private _other_opts loft.UIOtherOpts
@@ -88,6 +89,12 @@ function UI:_render_entries()
   local hl_specs = {}
   local registry = self.registry_instance:get_registry()
   local n = #registry
+  if n == 0 then
+    local placeholder = "  No buffers — press q to close"
+    vim.api.nvim_buf_set_lines(self._buf_id, 0, -1, false, { placeholder })
+    utils.buffer_modifiable(self._buf_id, false)
+    return
+  end
   for display_pos = 1, n do
     local reg_idx = self:_line_to_reg_idx(display_pos, n)
     local lnum = display_pos - 1 -- 0-indexed extmark row
@@ -258,12 +265,23 @@ function UI:open()
   -- Correct filetype so syntax engines don't accidentally activate
   vim.api.nvim_set_option_value("filetype", "loft", { buf = self._buf_id })
   self:_render_entries()
-  -- Move cursor to current entry
+  -- Restore saved cursor position (from last close), clamped to valid range.
+  -- Fall back to the ● current-buffer entry when no saved position exists.
   local registry = self.registry_instance:get_registry()
-  local last_buf_index = utils.get_index(registry, self._last_buf_before_loft)
-  if last_buf_index then
-    local display_line = self:_reg_idx_to_line(last_buf_index, #registry)
-    vim.api.nvim_win_set_cursor(self._win_id, { display_line, 1 })
+  local n = #registry
+  if n > 0 then
+    local target_line
+    if self._saved_cursor_line and self._saved_cursor_line >= 1 then
+      target_line = math.min(self._saved_cursor_line, n)
+    else
+      local last_buf_index = utils.get_index(registry, self._last_buf_before_loft)
+      if last_buf_index then
+        target_line = self:_reg_idx_to_line(last_buf_index, n)
+      end
+    end
+    if target_line then
+      vim.api.nvim_win_set_cursor(self._win_id, { target_line, 1 })
+    end
   end
   self:_setup_autocmd()
   -- Lockdown must come before _setup_keymaps so Loft's own maps override nops.
@@ -273,6 +291,7 @@ end
 
 function UI:close()
   if utils.window_exists(self._win_id) then
+    self._saved_cursor_line = vim.fn.line(".")
     vim.api.nvim_win_close(self._win_id, true)
   end
   self._win_id = nil
@@ -682,10 +701,14 @@ function UI:_delete_entry(force)
   end
   -- Guard: deleting the current buffer (●) requires allow_delete_current_buffer
   if buf == self._last_buf_before_loft and not self._other_opts.allow_delete_current_buffer then
-    vim.api.nvim_err_writeln("Loft: deleting the current buffer is disabled (allow_delete_current_buffer = false)")
+    vim.notify(
+      "Loft: deleting the current buffer is disabled (allow_delete_current_buffer = false)",
+      vim.log.levels.WARN
+    )
     return
   end
   if force and not self:_confirm_force_delete(1) then
+    vim.notify("Loft: force delete cancelled.", vim.log.levels.INFO)
     return
   end
   local is_current = buf == self._last_buf_before_loft
@@ -695,7 +718,7 @@ function UI:_delete_entry(force)
     self._last_buf_before_loft = vim.api.nvim_win_get_buf(self._last_win_before_loft)
   end
   self:_render_entries()
-  self:_resize_win()
+  self:_reposition_wins()
   -- Clamp cursor to valid range after deletion
   local new_n = #self.registry_instance:get_registry()
   if new_n > 0 and utils.window_exists(self._win_id) then
@@ -727,7 +750,10 @@ function UI:_delete_selected_entries(force, start_line, end_line)
     if buf then
       -- Skip the current buffer if deletion of it is not allowed
       if buf == self._last_buf_before_loft and not self._other_opts.allow_delete_current_buffer then
-        vim.api.nvim_err_writeln("Loft: deleting the current buffer is disabled (allow_delete_current_buffer = false)")
+        vim.notify(
+          "Loft: deleting the current buffer is disabled (allow_delete_current_buffer = false)",
+          vim.log.levels.WARN
+        )
       else
         table.insert(bufs_to_delete, buf)
       end
@@ -737,6 +763,7 @@ function UI:_delete_selected_entries(force, start_line, end_line)
     return
   end
   if force and not self:_confirm_force_delete(#bufs_to_delete) then
+    vim.notify("Loft: force delete cancelled.", vim.log.levels.INFO)
     return
   end
   local deleted_current = false
@@ -751,7 +778,7 @@ function UI:_delete_selected_entries(force, start_line, end_line)
     self._last_buf_before_loft = vim.api.nvim_win_get_buf(self._last_win_before_loft)
   end
   self:_render_entries()
-  self:_resize_win()
+  self:_reposition_wins()
   -- Clamp cursor to valid range after deletion
   local new_n = #self.registry_instance:get_registry()
   if new_n > 0 and utils.window_exists(self._win_id) then

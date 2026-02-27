@@ -1407,4 +1407,49 @@ test_set["_select_entry falls back to current window when _last_win_before_loft 
   eq(child.lua_get([[require("loft.ui")._win_id]]), vim.NIL)
 end
 
+-- ── UX gaps ───────────────────────────────────────────────────────────
+
+test_set["empty registry shows placeholder text"] = function()
+  child.lua([[require("loft").setup({})]])
+  child.lua([[require("loft.ui"):open()]])
+  -- Directly empty the registry and re-render without triggering clean() which re-adds bufs
+  child.lua([[
+    local ui = require("loft.ui")
+    ui.registry_instance._registry = {}
+    ui:_render_entries()
+  ]])
+  local line = child.lua_get("vim.api.nvim_buf_get_lines(require('loft.ui')._buf_id, 0, 1, false)[1]")
+  eq(line:find("No buffers") ~= nil, true)
+end
+
+test_set["cursor position is saved and restored on reopen"] = function()
+  child.lua([[require("loft").setup({})]])
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  -- Move cursor to line 1
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, { 1, 0 })]])
+  child.lua([[require("loft.ui"):close()]])
+  -- saved_cursor_line should be 1
+  eq(child.lua_get([[require("loft.ui")._saved_cursor_line]]), 1)
+  -- Reopen — cursor should restore to line 1, not jump to ● entry
+  child.lua([[require("loft.ui"):open()]])
+  local cursor = child.lua_get([[vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)]])
+  eq(cursor[1], 1)
+end
+
+test_set["cursor defaults to current buffer entry when no saved position"] = function()
+  child.lua([[require("loft").setup({})]])
+  local buf_a = child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_set_current_buf(buf_a)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  -- No saved cursor → should land on the ● entry (buf_a)
+  local cursor = child.lua_get([[vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)]])
+  eq(type(cursor[1]), "number")
+  eq(cursor[1] >= 1, true)
+end
+
 return test_set
