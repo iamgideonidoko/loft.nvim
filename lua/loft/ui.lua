@@ -268,12 +268,12 @@ end
 function UI:close()
   if utils.window_exists(self._win_id) then
     vim.api.nvim_win_close(self._win_id, true)
-    self._win_id = nil
   end
+  self._win_id = nil
   if utils.buffer_exists(self._buf_id) then
     vim.api.nvim_buf_delete(self._buf_id, { force = true })
-    self._buf_id = nil
   end
+  self._buf_id = nil
 end
 
 ---@private
@@ -300,6 +300,26 @@ function UI:_setup_autocmd()
           end)
         end
       end
+    end,
+  })
+  -- Close all Loft windows when focus leaves both the main and help windows.
+  vim.api.nvim_create_autocmd("WinLeave", {
+    group = utils.get_augroup("CloseLoftOnFocusLost", true),
+    callback = function()
+      local leaving_win = vim.api.nvim_get_current_win()
+      local is_loft_win = leaving_win == self._win_id or leaving_win == self._help_win_id
+      if not is_loft_win then
+        return
+      end
+      -- Defer so that the new focused window is known before we decide.
+      vim.schedule(function()
+        local new_win = vim.api.nvim_get_current_win()
+        local focused_on_loft = new_win == self._win_id or new_win == self._help_win_id
+        if not focused_on_loft then
+          self:_close_help()
+          self:close()
+        end
+      end)
     end,
   })
 end
@@ -765,12 +785,12 @@ end
 function UI:_close_help()
   if utils.buffer_exists(self._help_buf_id) then
     vim.api.nvim_buf_delete(self._help_buf_id, { force = true })
-    self._help_buf_id = nil
   end
+  self._help_buf_id = nil
   if utils.window_exists(self._help_win_id) then
     vim.api.nvim_win_close(self._help_win_id, true)
-    self._help_win_id = nil
   end
+  self._help_win_id = nil
 end
 
 --- Toggle the main UI window

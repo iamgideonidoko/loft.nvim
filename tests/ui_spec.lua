@@ -1096,4 +1096,50 @@ test_set["disabled keymap (false) does not prevent other keymaps from being set"
   child.lua([[require("loft.ui"):close()]])
 end
 
+-- ── close on focus lost ────────────────────────────────────────────────
+
+test_set["loft closes when focus moves outside both windows"] = function()
+  child.lua([[require("loft").setup({})]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  eq(child.lua_get([[type(require("loft.ui")._win_id)]]), "number")
+  -- Open a regular split and focus it; loft should auto-close
+  child.lua([[
+    vim.cmd("split")
+    -- WinLeave fires when leaving the loft window; schedule runs after focus settles
+    vim.wait(50, function() return false end)
+  ]])
+  eq(child.lua_get([[require("loft.ui")._win_id]]), vim.NIL)
+end
+
+test_set["loft does NOT close when focus moves between main and help windows"] = function()
+  child.lua([[require("loft").setup({})]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  child.lua([[require("loft.ui"):_show_help()]])
+  -- Both windows open; focus is on help – go back to main
+  child.lua([[
+    vim.api.nvim_set_current_win(require("loft.ui")._win_id)
+    vim.wait(50, function() return false end)
+  ]])
+  -- Main window should still be open
+  eq(child.lua_get([[type(require("loft.ui")._win_id)]]), "number")
+  child.lua([[require("loft.ui"):_close_help()]])
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["loft closes (including help) when focus leaves from help window"] = function()
+  child.lua([[require("loft").setup({})]])
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.ui"):open()]])
+  child.lua([[require("loft.ui"):_show_help()]])
+  -- Move focus to a non-loft split; both windows should close
+  child.lua([[
+    vim.cmd("split")
+    vim.wait(50, function() return false end)
+  ]])
+  eq(child.lua_get([[require("loft.ui")._win_id]]), vim.NIL)
+  eq(child.lua_get([[require("loft.ui")._help_win_id]]), vim.NIL)
+end
+
 return test_set
