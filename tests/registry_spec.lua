@@ -402,4 +402,110 @@ test_set["_quick_clean removes deleted buffers without touching filesystem"] = f
   eq(after, before - 1)
 end
 
+-- ── smart ordering: non-registry buffer interaction ────────────────────
+
+test_set["smart order: entering non-registry buffer does not reorder registry"] = function()
+  child.lua([[require("loft").setup({ enable_smart_order_by_default = true })]])
+  local buf_a = child.api.nvim_create_buf(true, false)
+  local buf_b = child.api.nvim_create_buf(true, false)
+  -- Both are in the registry
+  child.lua([[require("loft.registry"):clean()]])
+  local before = child.lua_get([[require("loft.registry"):get_registry()]])
+  -- Create a new buffer NOT yet in the registry and call _update for it.
+  -- This simulates entering a brand-new buffer (it will be added, but registry
+  -- buffers should NOT be reordered).
+  child.lua([[
+    local reg = require("loft.registry")
+    local new_buf = vim.api.nvim_create_buf(true, false)
+    -- Force it to appear valid but NOT yet in registry (skip clean so it isn't added)
+    reg:_update(new_buf)
+  ]])
+  local after = child.lua_get([[require("loft.registry"):get_registry()]])
+  -- buf_a and buf_b should still be at their original positions (not moved to end)
+  local a_before, b_before
+  for i, b in ipairs(before) do
+    if b == buf_a then
+      a_before = i
+    end
+    if b == buf_b then
+      b_before = i
+    end
+  end
+  local a_after, b_after
+  for i, b in ipairs(after) do
+    if b == buf_a then
+      a_after = i
+    end
+    if b == buf_b then
+      b_after = i
+    end
+  end
+  eq(a_before, a_after)
+  eq(b_before, b_after)
+end
+
+test_set["smart order: entering registry buffer from non-registry buf reorders correctly"] = function()
+  child.lua([[require("loft").setup({ enable_smart_order_by_default = true, smart_order_alt_bufs = false })]])
+  local buf_a = child.api.nvim_create_buf(true, false)
+  local buf_b = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  -- Registry is now [initial, buf_a, buf_b] or similar.
+  -- Simulate: manually set buf_a as already in registry, then call _update(buf_a)
+  -- with a non-registry alt_buf. buf_a should move to last, others stay put.
+  child.lua([[
+    local reg = require("loft.registry")
+    -- Fake alt_buf as a buffer NOT in the registry
+    local non_reg_buf = vim.api.nvim_create_buf(false, true)
+    -- Override alt buf by calling _update directly with buf_a as current buf
+    -- and the non-registry buf would be the "previous" in the real scenario.
+    -- We simulate by removing buf_a, expecting it ends up last.
+    reg:_update(]] .. buf_a .. [[)
+  ]])
+  local after = child.lua_get([[require("loft.registry"):get_registry()]])
+  -- buf_a should be last (moved to end by smart order)
+  eq(after[#after], buf_a)
+  -- buf_b's position should be before buf_a
+  local b_pos
+  for i, b in ipairs(after) do
+    if b == buf_b then
+      b_pos = i
+    end
+  end
+  eq(b_pos ~= nil, true)
+  eq(b_pos < #after, true)
+end
+
+test_set["smart order: alt_buf only reordered when both buf and alt_buf are in registry"] = function()
+  child.lua([[require("loft").setup({ enable_smart_order_by_default = true, smart_order_alt_bufs = true })]])
+  local buf_a = child.api.nvim_create_buf(true, false)
+  local buf_b = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  -- Confirm both are in registry
+  local reg_before = child.lua_get([[require("loft.registry"):get_registry()]])
+  local a_in, b_in = false, false
+  for _, b in ipairs(reg_before) do
+    if b == buf_a then
+      a_in = true
+    end
+    if b == buf_b then
+      b_in = true
+    end
+  end
+  eq(a_in, true)
+  eq(b_in, true)
+  -- Now call _update for buf_a (which IS in registry), with alt_buf = buf_b (also in registry).
+  -- Both should be reordered: buf_b second-to-last, buf_a last.
+  child.lua([[
+    local reg = require("loft.registry")
+    -- Patch alt_buf lookup by directly manipulating: simulate BufEnter buf_a with # = buf_b
+    -- We use the internal path: set current buf to buf_a, previous to buf_b
+    vim.api.nvim_set_current_buf(]] .. buf_b .. [[)
+    vim.api.nvim_set_current_buf(]] .. buf_a .. [[)
+    reg:_update()
+  ]])
+  local after = child.lua_get([[require("loft.registry"):get_registry()]])
+  eq(after[#after], buf_a)
+  eq(after[#after - 1], buf_b)
+end
+
 return test_set

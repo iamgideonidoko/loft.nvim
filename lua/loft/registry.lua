@@ -65,43 +65,58 @@ function Registry:_update(buffer)
   local is_window_switch = self._prev_win_id ~= nil and current_win ~= self._prev_win_id
   self._prev_win_id = current_win
   self:_quick_clean()
-  local is_buffer_in_registry = false
-  local is_alt_buffer_in_registry = false
-  -- Suppress smart-reordering when the user just moved focus to a different
-  -- split/tab (and smart_order_on_window_switch is false).
+
+  -- Snapshot registry membership BEFORE any mutation.
+  local is_buffer_in_registry = utils.get_index(self._registry, buf) ~= nil
+  local is_alt_in_registry = utils.get_index(self._registry, alt_buf) ~= nil
+
   local allow_smart_order = not is_window_switch or self.opts.smart_order_on_window_switch
-  local should_smart_order_buf = self._is_smart_order_on
+
+  -- Smart-order buf only when it is ALREADY in the registry.
+  -- Entering a buffer that isn't tracked yet should not reorder anything.
+  local should_smart_order_buf = is_buffer_in_registry
+    and self._is_smart_order_on
     and allow_smart_order
     and (not self.is_buffer_marked(buf) or (self.opts.smart_order_marked_bufs and self.is_buffer_marked(buf)))
-  local should_smart_order_alt_buf = self._is_smart_order_on
-    and allow_smart_order
+
+  -- Smart-order alt_buf only when buf itself is being smart-ordered.
+  -- This ensures that navigating to/from a non-registry buffer never
+  -- displaces registry buffers from their current positions.
+  local should_smart_order_alt_buf = should_smart_order_buf
     and self.opts.smart_order_alt_bufs
-    and (not self.is_buffer_marked(alt_buf) or (self.opts.smart_order_marked_bufs and self.is_buffer_marked(alt_buf)))
+    and is_alt_in_registry
     and utils.is_buffer_valid(alt_buf)
-  for i, b in ipairs(self._registry) do
-    if b == buf then
-      is_buffer_in_registry = true
-      if should_smart_order_buf then
-        table.remove(self._registry, i)
-      end
-      break
-    end
-  end
-  for i, b in ipairs(self._registry) do
-    if b == alt_buf then
-      is_alt_buffer_in_registry = true
-      if should_smart_order_alt_buf then
-        table.remove(self._registry, i)
-      end
-      break
-    end
-  end
+    and (not self.is_buffer_marked(alt_buf) or (self.opts.smart_order_marked_bufs and self.is_buffer_marked(alt_buf)))
+
+  -- If buf is already in the registry but smart-ordering is off/not applicable,
+  -- there is nothing to do — keep the existing position.
   if is_buffer_in_registry and not should_smart_order_buf then
     return
   end
-  if is_alt_buffer_in_registry and should_smart_order_buf then
+
+  -- Remove buf from its current slot (smart-order reposition).
+  if should_smart_order_buf then
+    for i, b in ipairs(self._registry) do
+      if b == buf then
+        table.remove(self._registry, i)
+        break
+      end
+    end
+  end
+
+  -- Remove alt_buf from its current slot and re-insert it just before buf
+  -- (second-to-last = "previous buffer" position).
+  if should_smart_order_alt_buf then
+    for i, b in ipairs(self._registry) do
+      if b == alt_buf then
+        table.remove(self._registry, i)
+        break
+      end
+    end
     table.insert(self._registry, alt_buf)
   end
+
+  -- Append buf as the most-recent (last) entry.
   table.insert(self._registry, buf)
   self:on_change()
 end
