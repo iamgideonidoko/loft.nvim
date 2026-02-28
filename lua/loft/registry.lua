@@ -287,14 +287,18 @@ function Registry:setup(opts)
       self:_update()
     end,
   })
-  local prevent_update_after_floating_window = utils.greedy_debounce(function()
-    if utils.is_floating_window() then
-      self._update_paused_once = true
-    end
-  end, 1000)
   vim.api.nvim_create_autocmd("WinClosed", {
     group = utils.get_augroup("PreventUpdateAfterFloatingWindow", true),
-    callback = prevent_update_after_floating_window,
+    callback = function(ev)
+      -- ev.match is the window ID of the window being closed.
+      -- Check THAT window's config (not the current window) so we correctly
+      -- identify floats even during rapid open/close cycles where the current
+      -- window has already changed to the underlying normal window.
+      local win_id = tonumber(ev.match)
+      if win_id and utils.is_floating_window(win_id) then
+        self._update_paused_once = true
+      end
+    end,
   })
   self:clean()
 end
