@@ -58,6 +58,7 @@ loft.setup = function(opts)
       reverse_order = config.all.reverse_order,
       confirm_force_delete = config.all.confirm_force_delete,
       allow_delete_current_buffer = config.all.allow_delete_current_buffer,
+      open_at = config.all.open_at,
     },
   })
   setup_general_keymap(config.all.keymaps.general)

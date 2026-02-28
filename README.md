@@ -109,6 +109,14 @@ require("loft").setup({
   -- Defaults to {} (track all buftypes).
   exclude_buftypes = {},
 
+  --[[ Where to position the cursor when the Loft UI opens:
+    "cursor"  — restore the last cursor line from the previous close (falls back to "current" on first open)
+    "top"     — always start at the first entry in the list
+    "current" — always jump to the ● active-buffer entry (default)
+    "middle"  — always start at the middle entry
+    "bottom"  — always start at the last entry ]]
+  open_at = "current",
+
   -- ── Main UI window ───────────────────────────────────────────────────────
   window = {
     width = nil,   -- Explicit width; defaults to 80% of editor columns

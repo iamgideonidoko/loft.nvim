@@ -173,4 +173,8 @@ test_set["default exclude_buftypes is empty table"] = function()
   eq(#v, 0)
 end
 
+test_set["default open_at is current"] = function()
+  eq(child.lua_get([[require("loft.config").all.open_at]]), "current")
+end
+
 return test_set

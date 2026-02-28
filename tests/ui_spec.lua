@@ -1452,4 +1452,101 @@ test_set["cursor defaults to current buffer entry when no saved position"] = fun
   eq(cursor[1] >= 1, true)
 end
 
+-- ── open_at config ────────────────────────────────────────────────────
+
+test_set["open_at=current jumps to active buffer entry"] = function()
+  child.lua([[require("loft").setup({ open_at = "current" })]])
+  local buf_a = child.api.nvim_create_buf(true, false)
+  local buf_b = child.api.nvim_create_buf(true, false)
+  -- Make buf_b current so it's the ● entry
+  child.api.nvim_set_current_buf(buf_b)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local reg = child.lua_get([[require("loft.registry"):get_registry()]])
+  local n = #reg
+  local cursor = child.lua_get([[vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)]])
+  -- The cursor should be on the line that displays buf_b
+  local buf_b_idx
+  for i, b in ipairs(reg) do
+    if b == buf_b then
+      buf_b_idx = i
+      break
+    end
+  end
+  local expected_line = child.lua_get([[
+    require("loft.ui"):_reg_idx_to_line(]] .. buf_b_idx .. [[, ]] .. n .. [[)
+  ]])
+  eq(cursor[1], expected_line)
+  child.lua([[require("loft.ui"):close()]])
+  -- suppress unused warning
+  local _ = buf_a
+end
+
+test_set["open_at=top always starts at line 1"] = function()
+  child.lua([[require("loft").setup({ open_at = "top" })]])
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local cursor = child.lua_get([[vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)]])
+  eq(cursor[1], 1)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["open_at=bottom starts at last line"] = function()
+  child.lua([[require("loft").setup({ open_at = "bottom" })]])
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local n = child.lua_get([[#require("loft.registry"):get_registry()]])
+  local cursor = child.lua_get([[vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)]])
+  eq(cursor[1], n)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["open_at=middle starts at middle line"] = function()
+  child.lua([[require("loft").setup({ open_at = "middle" })]])
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  local n = child.lua_get([[#require("loft.registry"):get_registry()]])
+  local cursor = child.lua_get([[vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)]])
+  eq(cursor[1], math.ceil(n / 2))
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["open_at=cursor restores last closed position"] = function()
+  child.lua([[require("loft").setup({ open_at = "cursor" })]])
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua([[require("loft.ui"):open()]])
+  -- Move cursor to line 1, close, reopen — should restore to 1
+  child.lua([[vim.api.nvim_win_set_cursor(require("loft.ui")._win_id, { 1, 0 })]])
+  child.lua([[require("loft.ui"):close()]])
+  child.lua([[require("loft.ui"):open()]])
+  local cursor = child.lua_get([[vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)]])
+  eq(cursor[1], 1)
+  child.lua([[require("loft.ui"):close()]])
+end
+
+test_set["open_at=cursor falls back to current entry on first open"] = function()
+  child.lua([[require("loft").setup({ open_at = "cursor" })]])
+  child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  -- Force no saved position
+  child.lua([[require("loft.ui")._saved_cursor_line = nil]])
+  child.lua([[require("loft.ui"):open()]])
+  local cursor = child.lua_get([[vim.api.nvim_win_get_cursor(require("loft.ui")._win_id)]])
+  eq(cursor[1] >= 1, true)
+  child.lua([[require("loft.ui"):close()]])
+end
+
 return test_set

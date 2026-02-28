@@ -142,6 +142,7 @@ Fields ~
 {confirm_force_delete} `(optional)` `(boolean)` Whether to show a confirmation prompt before force-deleting buffers. Defaults to true.
 {allow_delete_current_buffer} `(optional)` `(boolean)` Whether deleting the current buffer (marked ●) from the Loft UI is allowed. Defaults to true.
 {exclude_buftypes} `(optional)` `(string[])` List of `buftype` values whose buffers are never tracked by Loft (e.g. `{"terminal","quickfix"}`). Defaults to `{}`.
+{open_at} `(optional)` '`(cursor)`'|'top'|'current'|'middle'|'bottom' Where to position the cursor when the Loft UI opens. `cursor` restores the last cursor line, `top` goes to the first entry, `current` goes to the active buffer entry (●), `middle` goes to the middle entry, `bottom` goes to the last entry. Defaults to `"current"`.
 {window} `(optional)` `(loft.WinOpts)`
 {help_window} `(optional)` `(loft.HelpWinOpts)`
 {persistence} `(optional)` `(loft.PersistenceConfig)`
@@ -496,6 +497,7 @@ Fields ~
 {reverse_order} `(boolean)`
 {confirm_force_delete} `(boolean)`
 {allow_delete_current_buffer} `(boolean)`
+{open_at} '`(cursor)`'|'top'|'current'|'middle'|'bottom'
 
 ------------------------------------------------------------------------------
 Class ~

@@ -15,6 +15,7 @@ local _nvim_major, _nvim_minor = utils.get_nvim_version()
 ---@field reverse_order boolean
 ---@field confirm_force_delete boolean
 ---@field allow_delete_current_buffer boolean
+---@field open_at 'cursor'|'top'|'current'|'middle'|'bottom'
 
 ---@class (exact) loft.UIOpts
 ---@field keymaps loft.UIKeymapsConfig
@@ -270,18 +271,37 @@ function UI:open()
   -- Correct filetype so syntax engines don't accidentally activate
   vim.api.nvim_set_option_value("filetype", "loft", { buf = self._buf_id })
   self:_render_entries()
-  -- Restore saved cursor position (from last close), clamped to valid range.
-  -- Fall back to the ● current-buffer entry when no saved position exists.
+  -- Position cursor according to open_at config.
+  -- `cursor`  — restore last saved line (clamped); falls back to `current` on first open
+  -- `top`     — first display line
+  -- `current` — line of the ● active-buffer entry
+  -- `middle`  — middle display line
+  -- `bottom`  — last display line
   local registry = self.registry_instance:get_registry()
   local n = #registry
   if n > 0 then
+    local open_at = self._other_opts.open_at or "current"
     local target_line
-    if self._saved_cursor_line and self._saved_cursor_line >= 1 then
-      target_line = math.min(self._saved_cursor_line, n)
-    else
+    if open_at == "cursor" then
+      if self._saved_cursor_line and self._saved_cursor_line >= 1 then
+        target_line = math.min(self._saved_cursor_line, n)
+      else
+        -- No saved position yet — fall back to current entry
+        open_at = "current"
+      end
+    end
+    if open_at == "top" then
+      target_line = 1
+    elseif open_at == "bottom" then
+      target_line = n
+    elseif open_at == "middle" then
+      target_line = math.ceil(n / 2)
+    elseif open_at == "current" then
       local last_buf_index = utils.get_index(registry, self._last_buf_before_loft)
       if last_buf_index then
         target_line = self:_reg_idx_to_line(last_buf_index, n)
+      else
+        target_line = 1
       end
     end
     if target_line then
