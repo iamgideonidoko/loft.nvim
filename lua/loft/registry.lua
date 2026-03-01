@@ -43,7 +43,7 @@ end
 function Registry:_update(buffer)
   local current_buf = vim.api.nvim_get_current_buf()
   local buf = buffer or current_buf
-  local alt_buf = buf == current_buf and vim.fn.bufnr("#") or -1
+
   if utils.is_floating_window() or self._update_paused then
     self._update_paused_once = false
     return
@@ -52,73 +52,80 @@ function Registry:_update(buffer)
     self._update_paused_once = false
     return
   end
-  local is_buf_valid = utils.is_buffer_valid(buf)
-  if not is_buf_valid then
-    return
-  end
-  -- Skip buffers whose type is explicitly excluded (e.g. terminal, quickfix)
-  if self:_is_buftype_excluded(buf) then
-    return
-  end
-  -- Detect a window-focus change (split/tab navigation) vs. a buffer switch.
-  local current_win = vim.api.nvim_get_current_win()
-  local is_window_switch = self._prev_win_id ~= nil and current_win ~= self._prev_win_id
-  self._prev_win_id = current_win
-  self:_quick_clean()
 
-  -- Snapshot registry membership BEFORE any mutation.
-  local is_buffer_in_registry = utils.get_index(self._registry, buf) ~= nil
-  local is_alt_in_registry = utils.get_index(self._registry, alt_buf) ~= nil
+  -- Defer to the next event-loop tick so that plugins that, for example,
+  -- set buftype asynchronously after BufEnter have already done so before the next block of code runs.
+  -- This is zero-latency from a user perspective.
+  vim.schedule(function()
+    local is_buf_valid = utils.is_buffer_valid(buf)
+    if not is_buf_valid then
+      return
+    end
+    -- Skip buffers whose type is explicitly excluded (e.g. terminal, quickfix)
+    if self:_is_buftype_excluded(buf) then
+      return
+    end
+    -- Detect a window-focus change (split/tab navigation) vs. a buffer switch.
+    local current_win = vim.api.nvim_get_current_win()
+    local is_window_switch = self._prev_win_id ~= nil and current_win ~= self._prev_win_id
+    self._prev_win_id = current_win
 
-  local allow_smart_order = not is_window_switch or self.opts.smart_order_on_window_switch
+    -- Snapshot registry membership BEFORE any mutation.
+    current_buf = vim.api.nvim_get_current_buf()
+    buf = buffer or current_buf
+    local alt_buf = buf == current_buf and vim.fn.bufnr("#") or -1
+    local is_buffer_in_registry = utils.get_index(self._registry, buf) ~= nil
+    local is_alt_in_registry = utils.get_index(self._registry, alt_buf) ~= nil
 
-  -- Smart-order buf only when it is ALREADY in the registry.
-  -- Entering a buffer that isn't tracked yet should not reorder anything.
-  local should_smart_order_buf = is_buffer_in_registry
-    and self._is_smart_order_on
-    and allow_smart_order
-    and (not self.is_buffer_marked(buf) or (self.opts.smart_order_marked_bufs and self.is_buffer_marked(buf)))
+    local allow_smart_order = not is_window_switch or self.opts.smart_order_on_window_switch
 
-  -- Smart-order alt_buf only when buf itself is being smart-ordered.
-  -- This ensures that navigating to/from a non-registry buffer never
-  -- displaces registry buffers from their current positions.
-  local should_smart_order_alt_buf = should_smart_order_buf
-    and self.opts.smart_order_alt_bufs
-    and is_alt_in_registry
-    and utils.is_buffer_valid(alt_buf)
-    and (not self.is_buffer_marked(alt_buf) or (self.opts.smart_order_marked_bufs and self.is_buffer_marked(alt_buf)))
+    -- Smart-order buf only when it is ALREADY in the registry.
+    -- Entering a buffer that isn't tracked yet should not reorder anything.
+    local should_smart_order_buf = self._is_smart_order_on
+      and allow_smart_order
+      and (not self.is_buffer_marked(buf) or (self.opts.smart_order_marked_bufs and self.is_buffer_marked(buf)))
 
-  -- If buf is already in the registry but smart-ordering is off/not applicable,
-  -- there is nothing to do — keep the existing position.
-  if is_buffer_in_registry and not should_smart_order_buf then
-    return
-  end
+    -- Smart-order alt_buf only when buf itself is being smart-ordered.
+    -- This ensures that navigating to/from a non-registry buffer never
+    -- displaces registry buffers from their current positions.
+    local should_smart_order_alt_buf = should_smart_order_buf
+      and self.opts.smart_order_alt_bufs
+      and is_alt_in_registry
+      and utils.is_buffer_valid(alt_buf)
+      and (not self.is_buffer_marked(alt_buf) or (self.opts.smart_order_marked_bufs and self.is_buffer_marked(alt_buf)))
 
-  -- Remove buf from its current slot (smart-order reposition).
-  if should_smart_order_buf then
-    for i, b in ipairs(self._registry) do
-      if b == buf then
-        table.remove(self._registry, i)
-        break
+    -- If buf is already in the registry but smart-ordering is off/not applicable,
+    -- there is nothing to do — keep the existing position.
+    if is_buffer_in_registry and not should_smart_order_buf then
+      return
+    end
+
+    -- Remove buf from its current slot (smart-order reposition).
+    if should_smart_order_buf then
+      for i, b in ipairs(self._registry) do
+        if b == buf then
+          table.remove(self._registry, i)
+          break
+        end
       end
     end
-  end
 
-  -- Remove alt_buf from its current slot and re-insert it just before buf
-  -- (second-to-last = "previous buffer" position).
-  if should_smart_order_alt_buf then
-    for i, b in ipairs(self._registry) do
-      if b == alt_buf then
-        table.remove(self._registry, i)
-        break
+    -- Remove alt_buf from its current slot and re-insert it just before buf
+    -- (second-to-last = "previous buffer" position).
+    if should_smart_order_alt_buf and alt_buf ~= buf then
+      for i, b in ipairs(self._registry) do
+        if b == alt_buf then
+          table.remove(self._registry, i)
+          break
+        end
       end
+      table.insert(self._registry, alt_buf)
     end
-    table.insert(self._registry, alt_buf)
-  end
 
-  -- Append buf as the most-recent (last) entry.
-  table.insert(self._registry, buf)
-  self:on_change()
+    -- Append buf as the most-recent (last) entry.
+    table.insert(self._registry, buf)
+    self:clean()
+  end)
 end
 
 function Registry:pause_update()
@@ -127,20 +134,6 @@ end
 
 function Registry:resume_update()
   self._update_paused = false
-end
-
---- Fast in-place filter: removes buffers that are no longer valid without
---- touching the filesystem or firing on_change. Used inside _update() to avoid
---- repeated full clean() calls in a single event cycle.
----@private
-function Registry:_quick_clean()
-  local kept = {}
-  for _, buf in ipairs(self._registry) do
-    if vim.api.nvim_buf_is_valid(buf) and vim.fn.buflisted(buf) == 1 then
-      table.insert(kept, buf)
-    end
-  end
-  self._registry = kept
 end
 
 --- Returns true if the buffer's buftype is in the exclude list

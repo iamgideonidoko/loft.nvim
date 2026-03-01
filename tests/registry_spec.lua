@@ -385,23 +385,6 @@ test_set["exclude_buftypes empty list allows all buftypes (default)"] = function
   eq(#default_excludes, 0)
 end
 
--- ── _quick_clean ────────────────────────────────────────────────────────
-
-test_set["_quick_clean removes deleted buffers without touching filesystem"] = function()
-  child.api.nvim_create_buf(true, false)
-  child.lua([[require("loft.registry"):clean()]])
-  local before = child.lua_get([[#require("loft.registry"):get_registry()]])
-  -- Wipe a buffer from outside the registry mechanism
-  child.lua([[
-    local reg = require("loft.registry"):get_registry()
-    local buf = reg[1]
-    vim.api.nvim_buf_delete(buf, { force = true })
-    require("loft.registry"):_quick_clean()
-  ]])
-  local after = child.lua_get([[#require("loft.registry"):get_registry()]])
-  eq(after, before - 1)
-end
-
 -- ── smart ordering: non-registry buffer interaction ────────────────────
 
 test_set["smart order: entering non-registry buffer does not reorder registry"] = function()

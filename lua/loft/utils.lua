@@ -32,7 +32,7 @@ utils.is_buffer_valid = function(buf)
   if not buf or buf < 1 then
     return false
   end
-  return 1 == vim.fn.buflisted(buf) and not utils.buf_has_deleted_file(buf)
+  return vim.api.nvim_buf_is_valid(buf) and 1 == vim.fn.buflisted(buf) and not utils.buf_has_deleted_file(buf)
 end
 
 --- Check if the given or current or window is a floating
