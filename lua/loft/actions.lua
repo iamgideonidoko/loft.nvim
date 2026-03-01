@@ -51,7 +51,10 @@ actions.close_buffer = {
     -- Replace current buffer with alt or next or empty buffer in all windows
     for _, win in ipairs(vim.fn.win_findbuf(current_buf)) do
       -- alt_buf must differ from current_buf (e.g. from inside a Loft float, # == current_buf)
-      if utils.is_buffer_valid(alt_buf) and alt_buf ~= current_buf then
+      if
+        utils.is_buffer_valid(alt_buf, not registry_instance.opts.auto_delete_missing_file_bufs)
+        and alt_buf ~= current_buf
+      then
         vim.api.nvim_win_set_buf(win, alt_buf)
       elseif next_buf then
         vim.api.nvim_win_set_buf(win, next_buf)
@@ -74,7 +77,10 @@ actions.switch_to_next_buffer = {
     local next_buf = registry_instance:get_next_buffer()
     if next_buf == nil then
       local current_buf = vim.api.nvim_get_current_buf()
-      if not utils.is_buffer_valid(current_buf) and registry_instance.opts.close_invalid_buf_on_switch then
+      if
+        not utils.is_buffer_valid(current_buf, not registry_instance.opts.auto_delete_missing_file_bufs)
+        and registry_instance.opts.close_invalid_buf_on_switch
+      then
         actions.close_buffer({ force = true })
       end
       return
@@ -95,7 +101,10 @@ actions.switch_to_prev_buffer = {
     local prev_buf = registry_instance:get_prev_buffer()
     if prev_buf == nil then
       local current_buf = vim.api.nvim_get_current_buf()
-      if not utils.is_buffer_valid(current_buf) and registry_instance.opts.close_invalid_buf_on_switch then
+      if
+        not utils.is_buffer_valid(current_buf, not registry_instance.opts.auto_delete_missing_file_bufs)
+        and registry_instance.opts.close_invalid_buf_on_switch
+      then
         actions.close_buffer({ force = true })
       end
       return
@@ -160,7 +169,7 @@ actions.toggle_mark_current_buffer = {
       opts.notify = true -- Default to true
     end
     local current_buf = vim.api.nvim_get_current_buf()
-    if utils.is_buffer_valid(current_buf) then
+    if utils.is_buffer_valid(current_buf, not registry_instance.opts.auto_delete_missing_file_bufs) then
       local new_mark_state = registry_instance:toggle_mark_buffer(current_buf)
       if opts.notify then
         if new_mark_state then

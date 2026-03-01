@@ -21,6 +21,7 @@ local actions = require("loft.actions")
 ---@field reverse_order? boolean Whether to display the buffer list in reverse order (first registry entry at the bottom). Defaults to false.
 ---@field confirm_force_delete? boolean Whether to show a confirmation prompt before force-deleting buffers. Defaults to true.
 ---@field allow_delete_current_buffer? boolean Whether deleting the current buffer (marked ●) from the Loft UI is allowed. Defaults to true.
+---@field auto_delete_missing_file_bufs? boolean Whether to automatically delete (from Neovim) buffers whose backing file no longer exists on disk. Defaults to true.
 ---@field exclude_buftypes? string[] List of `buftype` values whose buffers are never tracked by Loft (e.g. `{"terminal","quickfix"}`). Defaults to `{}`.
 ---@field open_at? 'cursor'|'top'|'current'|'middle'|'bottom' Where to position the cursor when the Loft UI opens. `cursor` restores the last cursor line, `top` goes to the first entry, `current` goes to the active buffer entry (●), `middle` goes to the middle entry, `bottom` goes to the last entry. Defaults to `"current"`.
 ---@field window? loft.WinOpts
@@ -76,6 +77,7 @@ local default_config = {
   reverse_order = false,
   confirm_force_delete = true,
   allow_delete_current_buffer = true,
+  auto_delete_missing_file_bufs = true,
   exclude_buftypes = {},
   open_at = "current",
   window = {

@@ -44,6 +44,7 @@ loft.setup = function(opts)
     post_leader_marked_mapping = config.all.post_leader_marked_mapping,
     reverse_order = config.all.reverse_order,
     exclude_buftypes = config.all.exclude_buftypes,
+    auto_delete_missing_file_bufs = config.all.auto_delete_missing_file_bufs,
   })
   ui_instance:setup({
     keymaps = config.all.keymaps.ui,

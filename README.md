@@ -104,6 +104,13 @@ require("loft").setup({
   -- Set to false to prevent the current buffer from being deleted via the UI, which can be a helpful safeguard against accidental closures.
   allow_delete_current_buffer = true,
 
+  -- Whether to automatically force-delete (from Neovim) any buffer whose backing
+  -- file no longer exists on disk. When true (default) Loft removes such buffers
+  -- during every clean() call, preventing navigation to missing files. Set to false
+  -- to keep those buffers open — useful if you manage deletion yourself or work
+  -- with remote/virtual file systems where files may temporarily disappear.
+  auto_delete_missing_file_bufs = true,
+
   -- List of `buftype` values whose buffers are never tracked by Loft.
   -- e.g. { "terminal", "quickfix", "nofile" }
   -- Defaults to {} (track all buftypes).

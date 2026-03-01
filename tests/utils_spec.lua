@@ -220,6 +220,53 @@ test_set["is_buffer_valid returns false for 0"] = function()
   eq(child.lua_get([[require("loft.utils").is_buffer_valid(0)]]), false)
 end
 
+test_set["is_buffer_valid skip_deleted_check=false includes deleted-file check (default)"] = function()
+  -- Default behaviour: a buffer with a missing backing file is invalid.
+  local buf = child.api.nvim_create_buf(true, false)
+  -- Give it a fake file path that does not exist on disk.
+  child.lua(string.format([[vim.api.nvim_buf_set_name(%d, "/nonexistent_loft_test_file_xyz.lua")]], buf))
+  local result = child.lua_get(string.format([[require("loft.utils").is_buffer_valid(%d)]], buf))
+  eq(result, false)
+  child.api.nvim_buf_delete(buf, { force = true })
+end
+
+test_set["is_buffer_valid skip_deleted_check=true skips deleted-file check"] = function()
+  -- When skip_deleted_check is true a buffer with a missing file is still valid
+  -- (as far as is_buffer_valid is concerned).
+  local buf = child.api.nvim_create_buf(true, false)
+  child.lua(string.format([[vim.api.nvim_buf_set_name(%d, "/nonexistent_loft_test_file_xyz.lua")]], buf))
+  local result = child.lua_get(string.format([[require("loft.utils").is_buffer_valid(%d, true)]], buf))
+  eq(result, true)
+  child.api.nvim_buf_delete(buf, { force = true })
+end
+
+test_set["get_all_valid_buffers skip_deleted_check includes missing-file buffers"] = function()
+  -- With skip_deleted_check=true, buffers with missing files are included.
+  local buf = child.api.nvim_create_buf(true, false)
+  child.lua(string.format([[vim.api.nvim_buf_set_name(%d, "/nonexistent_loft_test_file_xyz.lua")]], buf))
+  local with_skip = child.lua_get([[
+    (function()
+      local found = false
+      for _, b in ipairs(require("loft.utils").get_all_valid_buffers(true)) do
+        if b == ]] .. buf .. [[ then found = true end
+      end
+      return found
+    end)()
+  ]])
+  local without_skip = child.lua_get([[
+    (function()
+      local found = false
+      for _, b in ipairs(require("loft.utils").get_all_valid_buffers()) do
+        if b == ]] .. buf .. [[ then found = true end
+      end
+      return found
+    end)()
+  ]])
+  eq(with_skip, true)
+  eq(without_skip, false)
+  child.api.nvim_buf_delete(buf, { force = true })
+end
+
 test_set["buf_has_deleted_file caches fs_stat result for the same path"] = function()
   -- Two rapid calls for the same no-name buffer should return the same result
   -- (exercises the cache path without needing a real file on disk).

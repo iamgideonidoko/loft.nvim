@@ -12,6 +12,7 @@ local constants = require("loft.constants")
 ---@field post_leader_marked_mapping string
 ---@field reverse_order boolean
 ---@field exclude_buftypes string[]
+---@field auto_delete_missing_file_bufs boolean
 
 ---@class loft.Registry
 ---@field private _registry integer[]
@@ -57,7 +58,8 @@ function Registry:_update(buffer)
   -- set buftype asynchronously after BufEnter have already done so before the next block of code runs.
   -- This is zero-latency from a user perspective.
   vim.schedule(function()
-    local is_buf_valid = utils.is_buffer_valid(buf)
+    local skip_deleted = not self.opts.auto_delete_missing_file_bufs
+    local is_buf_valid = utils.is_buffer_valid(buf, skip_deleted)
     if not is_buf_valid then
       return
     end
@@ -91,7 +93,7 @@ function Registry:_update(buffer)
     local should_smart_order_alt_buf = should_smart_order_buf
       and self.opts.smart_order_alt_bufs
       and is_alt_in_registry
-      and utils.is_buffer_valid(alt_buf)
+      and utils.is_buffer_valid(alt_buf, skip_deleted)
       and (not self.is_buffer_marked(alt_buf) or (self.opts.smart_order_marked_bufs and self.is_buffer_marked(alt_buf)))
 
     -- If buf is already in the registry but smart-ordering is off/not applicable,
@@ -153,26 +155,37 @@ function Registry:_is_buftype_excluded(buf)
   return false
 end
 
---- Clean up invalid buffers from registry
-function Registry:clean()
+--- Clean up invalid buffers from registry.
+---@param delete_missing? boolean Override for `auto_delete_missing_file_bufs`. When true, buffers
+---   whose backing file no longer exists are force-deleted from Neovim. Defaults to `self.opts.auto_delete_missing_file_bufs`.
+function Registry:clean(delete_missing)
+  local do_delete
+  if delete_missing ~= nil then
+    do_delete = delete_missing
+  else
+    do_delete = self.opts.auto_delete_missing_file_bufs
+  end
+  local skip_deleted = not do_delete
   local valid_buffers = {}
   for _, buf in ipairs(self._registry) do
-    if utils.is_buffer_valid(buf) and not self:_is_buftype_excluded(buf) then
+    if utils.is_buffer_valid(buf, skip_deleted) and not self:_is_buftype_excluded(buf) then
       table.insert(valid_buffers, buf)
     end
   end
 
-  -- Delete buffers with missing files to prevent them from being switched to and causing issues
-  -- This is a safety net in case such buffers are not closed by autocmds
-  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-    if utils.buf_has_deleted_file(buf) then
-      pcall(vim.api.nvim_buf_delete, buf, { force = true })
+  -- Optionally delete buffers with missing files to prevent them from being
+  -- switched to and causing issues. Controlled by auto_delete_missing_file_bufs.
+  if do_delete then
+    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+      if utils.buf_has_deleted_file(buf) then
+        pcall(vim.api.nvim_buf_delete, buf, { force = true })
+      end
     end
   end
 
   -- Merge with all valid buffers, excluding any that are in the excluded buftypes list
   local all_valid = {}
-  for _, buf in ipairs(utils.get_all_valid_buffers()) do
+  for _, buf in ipairs(utils.get_all_valid_buffers(skip_deleted)) do
     if not self:_is_buftype_excluded(buf) then
       table.insert(all_valid, buf)
     end
@@ -415,7 +428,7 @@ function Registry:keymap_recent_marked_buffers()
   local count = 1
   for i = #marked_buffers, math.max(1, #marked_buffers - 8), -1 do
     local buf = marked_buffers[i]
-    if utils.is_buffer_valid(buf) then
+    if utils.is_buffer_valid(buf, not self.opts.auto_delete_missing_file_bufs) then
       local buffer = vim.fn.getbufinfo(buf)[1]
       local bufname = buffer.name ~= "" and buffer.name or "[No Name]"
       local relative_path = vim.fn.fnamemodify(bufname, ":.")

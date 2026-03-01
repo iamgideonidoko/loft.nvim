@@ -26,22 +26,31 @@ end
 
 --- Check if the given buffer is valid (listed)
 ---@param buf number
-utils.is_buffer_valid = function(buf)
+---@param skip_deleted_check? boolean When true, skip the deleted-file check. Defaults to false.
+utils.is_buffer_valid = function(buf, skip_deleted_check)
   -- Guard against nil or invalid buffer numbers (e.g. bufnr("#") == -1 when there
   -- is no alternate buffer, or nil passed by callers that haven't checked yet).
   if not buf or buf < 1 then
     return false
   end
-  return vim.api.nvim_buf_is_valid(buf) and 1 == vim.fn.buflisted(buf) and not utils.buf_has_deleted_file(buf)
+  if not (vim.api.nvim_buf_is_valid(buf) and 1 == vim.fn.buflisted(buf)) then
+    return false
+  end
+  if skip_deleted_check then
+    return true
+  end
+  return not utils.buf_has_deleted_file(buf)
 end
 
---- Check if the given or current or window is a floating
-utils.get_all_valid_buffers = function()
+--- Returns all currently valid (listed, non-deleted) buffers.
+---@param skip_deleted_check? boolean When true, include buffers whose backing file is missing. Defaults to false.
+---@return integer[]
+utils.get_all_valid_buffers = function(skip_deleted_check)
   ---@type integer[]
   local all_valid_buffers = {}
   local buffers = vim.api.nvim_list_bufs()
   for _, buf in ipairs(buffers) do
-    if utils.is_buffer_valid(buf) then
+    if utils.is_buffer_valid(buf, skip_deleted_check) then
       table.insert(all_valid_buffers, buf)
     end
   end

@@ -385,7 +385,59 @@ test_set["exclude_buftypes empty list allows all buftypes (default)"] = function
   eq(#default_excludes, 0)
 end
 
--- ── smart ordering: non-registry buffer interaction ────────────────────
+-- ── auto_delete_missing_file_bufs ────────────────────────────────────────
+
+test_set["auto_delete_missing_file_bufs defaults to true"] = function()
+  eq(child.lua_get([[require("loft.config").all.auto_delete_missing_file_bufs]]), true)
+end
+
+test_set["clean() deletes missing-file buffers when auto_delete_missing_file_bufs=true"] = function()
+  child.lua([[require("loft").setup({ auto_delete_missing_file_bufs = true })]])
+  -- Create a buffer with a non-existent file path so buf_has_deleted_file returns true.
+  local buf = child.api.nvim_create_buf(true, false)
+  child.lua(string.format([[vim.api.nvim_buf_set_name(%d, "/nonexistent_loft_clean_test.lua")]], buf))
+  -- Confirm buf_has_deleted_file sees it as deleted
+  local is_deleted = child.lua_get(string.format([[require("loft.utils").buf_has_deleted_file(%d)]], buf))
+  eq(is_deleted, true)
+  -- clean() should force-delete the buffer from Neovim
+  child.lua([[require("loft.registry"):clean()]])
+  local still_valid = child.lua_get(string.format([[vim.api.nvim_buf_is_valid(%d)]], buf))
+  eq(still_valid, false)
+end
+
+test_set["clean() keeps missing-file buffers when auto_delete_missing_file_bufs=false"] = function()
+  child.lua([[require("loft").setup({ auto_delete_missing_file_bufs = false })]])
+  local buf = child.api.nvim_create_buf(true, false)
+  child.lua(string.format([[vim.api.nvim_buf_set_name(%d, "/nonexistent_loft_clean_test.lua")]], buf))
+  local is_deleted = child.lua_get(string.format([[require("loft.utils").buf_has_deleted_file(%d)]], buf))
+  eq(is_deleted, true)
+  -- clean() must NOT delete the buffer from Neovim
+  child.lua([[require("loft.registry"):clean()]])
+  local still_valid = child.lua_get(string.format([[vim.api.nvim_buf_is_valid(%d)]], buf))
+  eq(still_valid, true)
+  child.api.nvim_buf_delete(buf, { force = true })
+end
+
+test_set["clean(true) deletes missing-file buffers regardless of config"] = function()
+  -- Explicit delete_missing=true overrides the config option.
+  child.lua([[require("loft").setup({ auto_delete_missing_file_bufs = false })]])
+  local buf = child.api.nvim_create_buf(true, false)
+  child.lua(string.format([[vim.api.nvim_buf_set_name(%d, "/nonexistent_loft_clean_test.lua")]], buf))
+  child.lua([[require("loft.registry"):clean(true)]])
+  local still_valid = child.lua_get(string.format([[vim.api.nvim_buf_is_valid(%d)]], buf))
+  eq(still_valid, false)
+end
+
+test_set["clean(false) keeps missing-file buffers regardless of config"] = function()
+  -- Explicit delete_missing=false overrides the config option.
+  child.lua([[require("loft").setup({ auto_delete_missing_file_bufs = true })]])
+  local buf = child.api.nvim_create_buf(true, false)
+  child.lua(string.format([[vim.api.nvim_buf_set_name(%d, "/nonexistent_loft_clean_test.lua")]], buf))
+  child.lua([[require("loft.registry"):clean(false)]])
+  local still_valid = child.lua_get(string.format([[vim.api.nvim_buf_is_valid(%d)]], buf))
+  eq(still_valid, true)
+  child.api.nvim_buf_delete(buf, { force = true })
+end
 
 test_set["smart order: entering non-registry buffer does not reorder registry"] = function()
   child.lua([[require("loft").setup({ enable_smart_order_by_default = true })]])
