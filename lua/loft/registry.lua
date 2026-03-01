@@ -61,6 +61,9 @@ function Registry:_update(buffer)
   local paths_to_stat = {}
   local seen_paths = {}
   local function add_stat_path(b)
+    if not vim.api.nvim_buf_is_valid(b) then
+      return
+    end
     local p = vim.api.nvim_buf_get_name(b)
     if p ~= "" and not p:match("^%a[%w+.-]+://") and not seen_paths[p] then
       seen_paths[p] = true

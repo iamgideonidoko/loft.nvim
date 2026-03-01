@@ -86,7 +86,7 @@ actions.switch_to_next_buffer = {
       return
     end
     registry_instance:pause_update()
-    vim.api.nvim_set_current_buf(next_buf)
+    pcall(vim.api.nvim_set_current_buf, next_buf)
     registry_instance:resume_update()
     events.buffer_switch(next_buf, "next")
   end,
@@ -110,7 +110,7 @@ actions.switch_to_prev_buffer = {
       return
     end
     registry_instance:pause_update()
-    vim.api.nvim_set_current_buf(prev_buf)
+    pcall(vim.api.nvim_set_current_buf, prev_buf)
     registry_instance:resume_update()
     events.buffer_switch(prev_buf, "prev")
   end,
@@ -135,7 +135,7 @@ actions.switch_to_next_marked_buffer = {
       return
     end
     registry_instance:pause_update()
-    vim.api.nvim_set_current_buf(next_marked_buf)
+    pcall(vim.api.nvim_set_current_buf, next_marked_buf)
     registry_instance:resume_update()
     events.buffer_switch(next_marked_buf, "marked_next")
   end,
@@ -152,7 +152,7 @@ actions.switch_to_prev_marked_buffer = {
       return
     end
     registry_instance:pause_update()
-    vim.api.nvim_set_current_buf(prev_marked_buf)
+    pcall(vim.api.nvim_set_current_buf, prev_marked_buf)
     registry_instance:resume_update()
     events.buffer_switch(prev_marked_buf, "marked_prev")
   end,
