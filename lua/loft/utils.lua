@@ -8,6 +8,22 @@ local utils = {}
 local _stat_cache = {}
 local _STAT_CACHE_TTL_NS = 2000000000 -- 2 seconds in nanoseconds
 
+--- Asynchronously stat a file path and warm the cache used by buf_has_deleted_file.
+--- Callers that care about UI responsiveness (e.g. autocmds) use this so the
+--- synchronous fallback in buf_has_deleted_file is already served from cache.
+---@param file_path string
+---@param callback fun(file_exists: boolean) Called on the main thread with the result.
+utils.async_stat = function(file_path, callback)
+  local uv = vim.uv or vim.loop
+  uv.fs_stat(file_path, function(err, stat)
+    local file_exists = err == nil and stat ~= nil
+    _stat_cache[file_path] = { exists = file_exists, t = uv.hrtime() }
+    vim.schedule(function()
+      callback(file_exists)
+    end)
+  end)
+end
+
 utils.is_dev = function()
   local lazy_config_ok, lazy_config = pcall(require, "lazy.core.config")
   if not lazy_config_ok then
@@ -165,7 +181,10 @@ utils.in_temp_directory = function(file_path)
   return false
 end
 
---- Check if the given or current buffer has a deleted or missing file
+--- Check if the given or current buffer has a deleted or missing file.
+--- The first call for a given path triggers a non-blocking async stat and
+--- returns false (optimistically "file exists") until the result is cached.
+--- Subsequent calls within the TTL window are served from cache instantly.
 ---@param buffer? integer
 utils.buf_has_deleted_file = function(buffer)
   local buf = buffer or vim.api.nvim_get_current_buf()
@@ -189,13 +208,14 @@ utils.buf_has_deleted_file = function(buffer)
   local uv = vim.uv or vim.loop
   local now = uv.hrtime()
   local cached = _stat_cache[file_path]
-  local file_exists
   if cached and (now - cached.t) < _STAT_CACHE_TTL_NS then
-    file_exists = cached.exists
-  else
-    file_exists = uv.fs_stat(file_path) ~= nil
-    _stat_cache[file_path] = { exists = file_exists, t = now }
+    return not cached.exists
   end
+  -- Cache miss: synchronous stat. This is the fallback used by clean() and
+  -- other guard checks where an accurate result is required. The autocmd path
+  -- avoids this by using async stat directly (see autocmds.lua).
+  local file_exists = uv.fs_stat(file_path) ~= nil
+  _stat_cache[file_path] = { exists = file_exists, t = now }
   return not file_exists
 end
 

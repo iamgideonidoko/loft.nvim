@@ -141,6 +141,7 @@ Fields ~
 {reverse_order} `(optional)` `(boolean)` Whether to display the buffer list in reverse order (first registry entry at the bottom). Defaults to false.
 {confirm_force_delete} `(optional)` `(boolean)` Whether to show a confirmation prompt before force-deleting buffers. Defaults to true.
 {allow_delete_current_buffer} `(optional)` `(boolean)` Whether deleting the current buffer (marked ●) from the Loft UI is allowed. Defaults to true.
+{auto_delete_missing_file_bufs} `(optional)` `(boolean)` Whether to automatically delete (from Neovim) buffers whose backing file no longer exists on disk. Defaults to true.
 {exclude_buftypes} `(optional)` `(string[])` List of `buftype` values whose buffers are never tracked by Loft (e.g. `{"terminal","quickfix"}`). Defaults to `{}`.
 {open_at} `(optional)` '`(cursor)`'|'top'|'current'|'middle'|'bottom' Where to position the cursor when the Loft UI opens. `cursor` restores the last cursor line, `top` goes to the first entry, `current` goes to the active buffer entry (●), `middle` goes to the middle entry, `bottom` goes to the last entry. Defaults to `"current"`.
 {window} `(optional)` `(loft.WinOpts)`
@@ -367,6 +368,7 @@ Fields ~
 {post_leader_marked_mapping} `(string)`
 {reverse_order} `(boolean)`
 {exclude_buftypes} `(string[])`
+{auto_delete_missing_file_bufs} `(boolean)`
 
 ------------------------------------------------------------------------------
                                                                       *Registry*
@@ -383,8 +385,11 @@ Fields ~
 
 ------------------------------------------------------------------------------
                                                               *Registry:clean()*
-                               `Registry:clean`()
-Clean up invalid buffers from registry
+                       `Registry:clean`({delete_missing})
+Clean up invalid buffers from registry.
+Parameters ~
+{delete_missing} `(optional)` `(boolean)` Override for `auto_delete_missing_file_bufs`. When true, buffers
+  whose backing file no longer exists are force-deleted from Neovim. Defaults to `self.opts.auto_delete_missing_file_bufs`.
 
 ------------------------------------------------------------------------------
                                                     *Registry:get_next_buffer()*
@@ -589,6 +594,16 @@ Move the current buffer down the registry in a cyclic manner while showing the U
 
 ==============================================================================
 ------------------------------------------------------------------------------
+                                                            *utils.async_stat()*
+                  `utils.async_stat`({file_path}, {callback})
+Asynchronously stat a file path and warm the cache used by buf_has_deleted_file.
+Callers that care about UI responsiveness (e.g. autocmds) use this so the
+synchronous fallback in buf_has_deleted_file is already served from cache.
+Parameters ~
+{file_path} `(string)`
+{callback} `(fun(file_exists: boolean))` Called on the main thread with the result.
+
+------------------------------------------------------------------------------
                                                     *utils.is_floating_window()*
                       `utils.is_floating_window`({window})
 Check if the given or current or window is a floating
@@ -597,15 +612,20 @@ Parameters ~
 
 ------------------------------------------------------------------------------
                                                        *utils.is_buffer_valid()*
-                         `utils.is_buffer_valid`({buf})
+              `utils.is_buffer_valid`({buf}, {skip_deleted_check})
 Check if the given buffer is valid (listed)
 Parameters ~
 {buf} `(number)`
+{skip_deleted_check} `(optional)` `(boolean)` When true, skip the deleted-file check. Defaults to false.
 
 ------------------------------------------------------------------------------
                                                  *utils.get_all_valid_buffers()*
-                        `utils.get_all_valid_buffers`()
-Check if the given or current or window is a floating
+              `utils.get_all_valid_buffers`({skip_deleted_check})
+Returns all currently valid (listed, non-deleted) buffers.
+Parameters ~
+{skip_deleted_check} `(optional)` `(boolean)` When true, include buffers whose backing file is missing. Defaults to false.
+Return ~
+`(integer[])`
 
 ------------------------------------------------------------------------------
                                                         *utils.merge_distinct()*
@@ -681,7 +701,10 @@ Parameters ~
 ------------------------------------------------------------------------------
                                                   *utils.buf_has_deleted_file()*
                      `utils.buf_has_deleted_file`({buffer})
-Check if the given or current buffer has a deleted or missing file
+Check if the given or current buffer has a deleted or missing file.
+The first call for a given path triggers a non-blocking async stat and
+returns false (optimistically "file exists") until the result is cached.
+Subsequent calls within the TTL window are served from cache instantly.
 Parameters ~
 {buffer} `(optional)` `(integer)`
 
