@@ -31,6 +31,7 @@ function Registry:new()
   instance._update_paused_once = false
   instance._is_smart_order_on = true
   instance._prev_win_id = nil
+  instance._update_gen = 0
   return instance
 end
 
@@ -53,6 +54,11 @@ function Registry:_update(buffer)
     self._update_paused_once = false
     return
   end
+
+  -- Bump generation so any in-flight callbacks from a previous _update call
+  -- (still waiting on async stats) see they've been superseded and bail out.
+  self._update_gen = self._update_gen + 1
+  local gen = self._update_gen
 
   -- Collect all file paths that need async-statting before the main logic runs.
   -- We stat the entering buffer AND every buffer already in the registry so that
@@ -79,6 +85,10 @@ function Registry:_update(buffer)
   -- When there are no file paths to stat we fall back to vim.schedule (same
   -- behaviour as before: defers one tick so async buftypes are already set).
   local function run_main_logic()
+    -- A newer _update() call has superseded this one; discard stale work.
+    if self._update_gen ~= gen then
+      return
+    end
     local skip_deleted = not self.opts.auto_delete_missing_file_bufs
     local is_buf_valid = utils.is_buffer_valid(buf, skip_deleted)
     if not is_buf_valid then
@@ -471,15 +481,16 @@ function Registry:keymap_recent_marked_buffers()
     local buf = marked_buffers[i]
     if utils.is_buffer_valid(buf, not self.opts.auto_delete_missing_file_bufs) then
       local buffer = vim.fn.getbufinfo(buf)[1]
-      local bufname = buffer.name ~= "" and buffer.name or "[No Name]"
-      local relative_path = vim.fn.fnamemodify(bufname, ":.")
-      local key = pre_key .. count
-      vim.keymap.set("n", key, function()
-        self:pause_update()
-        vim.api.nvim_set_current_buf(buf)
-        pcall(vim.api.nvim_set_current_buf, buf)
-        self:resume_update()
-      end, { desc = "⨳⨳ ➺ " .. relative_path, noremap = true, silent = true })
+      if buffer then
+        local bufname = buffer.name ~= "" and buffer.name or "[No Name]"
+        local relative_path = vim.fn.fnamemodify(bufname, ":.")
+        local key = pre_key .. count
+        vim.keymap.set("n", key, function()
+          self:pause_update()
+          pcall(vim.api.nvim_set_current_buf, buf)
+          self:resume_update()
+        end, { desc = "⨳⨳ ➺ " .. relative_path, noremap = true, silent = true })
+      end
     end
     count = count + 1
   end

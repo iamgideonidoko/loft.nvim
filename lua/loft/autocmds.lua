@@ -42,7 +42,7 @@ autocmds.setup = function()
       -- for the same path are served instantly.
       utils.async_stat(file_path, function(file_exists)
         if not file_exists then
-          actions.close_buffer({ buf = buf, force = true })
+          actions.close_buffer({ buffer = buf, force = true })
         end
       end)
     end,

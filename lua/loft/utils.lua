@@ -228,11 +228,16 @@ utils.debounce = function(func, timeout)
   return function(...)
     local args = { ... }
     if timer then
-      uv.timer_stop(timer)
-    else
-      timer = uv.new_timer()
+      timer:stop()
+      timer:close()
     end
+    timer = uv.new_timer()
     timer:start(timeout, 0, function()
+      local t = timer
+      timer = nil
+      if t then
+        t:close()
+      end
       vim.schedule(function()
         func(unpack(args))
       end)
