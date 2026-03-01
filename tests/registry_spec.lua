@@ -548,4 +548,221 @@ test_set["smart order: alt_buf only reordered when both buf and alt_buf are in r
   eq(after[#after - 1], buf_b)
 end
 
+-- ── invalid buffer id in registry must not crash _update ──────────
+
+test_set["_update with stale invalid buffer in registry does not crash"] = function()
+  -- nvim_buf_get_name on an invalid buf id raised "Invalid buffer id".
+  -- add_stat_path now guards with nvim_buf_is_valid before calling nvim_buf_get_name.
+  local buf = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  -- Inject the buffer into the registry, then delete it (making the id stale).
+  child.lua(string.format([[table.insert(require("loft.registry")._registry, %d)]], buf))
+  child.api.nvim_buf_delete(buf, { force = true })
+  -- _update must not throw "Invalid buffer id"
+  local ok = child.lua_get([[
+    pcall(function() require("loft.registry"):_update() end)
+  ]])
+  eq(ok, true)
+end
+
+-- ── Regression: rapid _update calls must not produce duplicate entries ────────
+
+test_set["rapid _update calls produce no duplicate registry entries"] = function()
+  -- Regression: before the generation counter, multiple overlapping async-stat
+  -- batches would each call run_main_logic and insert the same buffer multiple times.
+  child.lua([[require("loft").setup({ enable_smart_order_by_default = false })]])
+  local buf = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  -- Fire three _update calls without yielding so all share the same event-loop tick.
+  child.lua(string.format(
+    [[
+    local reg = require("loft.registry")
+    reg:_update(%d)
+    reg:_update(%d)
+    reg:_update(%d)
+  ]],
+    buf,
+    buf,
+    buf
+  ))
+  -- Let all pending vim.schedule callbacks drain.
+  child.lua([[vim.wait(150, function() return false end)]])
+  local registry = child.lua_get([[require("loft.registry"):get_registry()]])
+  local count = 0
+  for _, b in ipairs(registry) do
+    if b == buf then
+      count = count + 1
+    end
+  end
+  eq(count, 1)
+  child.api.nvim_buf_delete(buf, { force = true })
+end
+
+-- ── Regression: keymap_recent_marked_buffers must not crash on deleted buf ───
+
+test_set["keymap_recent_marked_buffers does not crash when marked buffer is deleted"] = function()
+  -- Regression: getbufinfo(buf)[1] returned nil for a deleted buffer, causing
+  -- "attempt to index a nil value" in keymap_recent_marked_buffers.
+  child.lua([[require("loft").setup({ enable_recent_marked_mapping = true })]])
+  local buf = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua(string.format([[require("loft.registry"):toggle_mark_buffer(%d)]], buf))
+  -- Delete the buffer while it remains in the marked list.
+  child.api.nvim_buf_delete(buf, { force = true })
+  -- on_change → keymap_recent_marked_buffers must not crash.
+  local ok = child.lua_get([[
+    pcall(function() require("loft.registry"):on_change() end)
+  ]])
+  eq(ok, true)
+end
+
+-- ── get_next/prev_buffer when current not in registry ─────────────────────────
+
+test_set["get_next_buffer returns nil when current buffer not in registry"] = function()
+  child.lua([[require("loft.registry"):clean()]])
+  -- Create a buffer and set it as current WITHOUT adding it to the registry.
+  local buf = child.api.nvim_create_buf(false, true)
+  child.api.nvim_set_current_buf(buf)
+  -- Force-remove it from registry in case clean() added it.
+  child.lua(string.format(
+    [[
+    local reg = require("loft.registry")._registry
+    for i = #reg, 1, -1 do
+      if reg[i] == %d then table.remove(reg, i) end
+    end
+  ]],
+    buf
+  ))
+  eq(child.lua_get([[require("loft.registry"):get_next_buffer() == nil]]), true)
+  child.api.nvim_buf_delete(buf, { force = true })
+end
+
+test_set["get_prev_buffer returns nil when current buffer not in registry"] = function()
+  child.lua([[require("loft.registry"):clean()]])
+  local buf = child.api.nvim_create_buf(false, true)
+  child.api.nvim_set_current_buf(buf)
+  child.lua(string.format(
+    [[
+    local reg = require("loft.registry")._registry
+    for i = #reg, 1, -1 do
+      if reg[i] == %d then table.remove(reg, i) end
+    end
+  ]],
+    buf
+  ))
+  eq(child.lua_get([[require("loft.registry"):get_prev_buffer() == nil]]), true)
+  child.api.nvim_buf_delete(buf, { force = true })
+end
+
+-- ── move_buffer_up / move_buffer_down edge cases ──────────────────────────────
+
+test_set["move_buffer_up at index 1 without cyclic is a no-op"] = function()
+  local buf1 = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  local before = child.lua_get([[require("loft.registry"):get_registry()]])
+  -- Move the first element up without cyclic — nothing should change.
+  child.lua([[require("loft.registry"):move_buffer_up(1, false)]])
+  local after = child.lua_get([[require("loft.registry"):get_registry()]])
+  eq(after[1], before[1])
+  eq(#after, #before)
+  child.api.nvim_buf_delete(buf1, { force = true })
+end
+
+test_set["move_buffer_down at last index without cyclic is a no-op"] = function()
+  local buf1 = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  local before = child.lua_get([[require("loft.registry"):get_registry()]])
+  local last = #before
+  child.lua(string.format([[require("loft.registry"):move_buffer_down(%d, false)]], last))
+  local after = child.lua_get([[require("loft.registry"):get_registry()]])
+  eq(after[last], before[last])
+  eq(#after, #before)
+  child.api.nvim_buf_delete(buf1, { force = true })
+end
+
+test_set["move_buffer_up with cyclic moves first buffer to last"] = function()
+  local buf1 = child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  local before = child.lua_get([[require("loft.registry"):get_registry()]])
+  -- Move index 1 up cyclically → it should wrap to last position.
+  child.lua([[require("loft.registry"):move_buffer_up(1, true)]])
+  local after = child.lua_get([[require("loft.registry"):get_registry()]])
+  eq(after[#after], before[1])
+  child.api.nvim_buf_delete(buf1, { force = true })
+end
+
+test_set["move_buffer_down with cyclic moves last buffer to first"] = function()
+  local buf1 = child.api.nvim_create_buf(true, false)
+  child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  local before = child.lua_get([[require("loft.registry"):get_registry()]])
+  local last = #before
+  child.lua(string.format([[require("loft.registry"):move_buffer_down(%d, true)]], last))
+  local after = child.lua_get([[require("loft.registry"):get_registry()]])
+  eq(after[1], before[last])
+  child.api.nvim_buf_delete(buf1, { force = true })
+end
+
+-- ── _is_buftype_excluded ──────────────────────────────────────────────────────
+
+test_set["_is_buftype_excluded returns true when buftype matches exclude list"] = function()
+  child.lua([[require("loft").setup({ exclude_buftypes = { "nofile" } })]])
+  local buf = child.api.nvim_create_buf(false, true) -- scratch: buftype="nofile"
+  eq(child.lua_get(string.format([[require("loft.registry"):_is_buftype_excluded(%d)]], buf)), true)
+  child.api.nvim_buf_delete(buf, { force = true })
+end
+
+test_set["_is_buftype_excluded returns false when buftype not in exclude list"] = function()
+  child.lua([[require("loft").setup({ exclude_buftypes = { "quickfix" } })]])
+  local buf = child.api.nvim_create_buf(true, false) -- normal listed buffer
+  eq(child.lua_get(string.format([[require("loft.registry"):_is_buftype_excluded(%d)]], buf)), false)
+  child.api.nvim_buf_delete(buf, { force = true })
+end
+
+-- ── toggle_smart_order return value ──────────────────────────────────────────
+
+test_set["toggle_smart_order returns new state"] = function()
+  -- Returns false when turning off, true when turning back on.
+  local state1 = child.lua_get([[require("loft.registry"):toggle_smart_order()]])
+  eq(state1, false)
+  local state2 = child.lua_get([[require("loft.registry"):toggle_smart_order()]])
+  eq(state2, true)
+end
+
+-- ── pause/resume_update expose correct flags ──────────────────────────────────
+
+test_set["pause_update sets _update_paused and resume_update clears it"] = function()
+  child.lua([[require("loft.registry"):pause_update()]])
+  eq(child.lua_get([[require("loft.registry")._update_paused]]), true)
+  child.lua([[require("loft.registry"):resume_update()]])
+  eq(child.lua_get([[require("loft.registry")._update_paused]]), false)
+end
+
+-- ── get_marked_buffer when current buf not in registry ────────────────────────
+
+test_set["get_marked_buffer still finds marked buf when current not in registry"] = function()
+  local buf_a = child.api.nvim_create_buf(true, false)
+  local buf_b = child.api.nvim_create_buf(true, false)
+  child.lua([[require("loft.registry"):clean()]])
+  child.lua(string.format([[require("loft.registry"):toggle_mark_buffer(%d)]], buf_a))
+  -- Create a scratch buffer (not in registry) and make it current.
+  local scratch = child.api.nvim_create_buf(false, true)
+  child.api.nvim_set_current_buf(scratch)
+  child.lua(string.format(
+    [[
+    local reg = require("loft.registry")._registry
+    for i = #reg, 1, -1 do
+      if reg[i] == %d then table.remove(reg, i) end
+    end
+  ]],
+    scratch
+  ))
+  -- get_marked_buffer should still return buf_a from the registry.
+  eq(child.lua_get([[require("loft.registry"):get_marked_buffer("next")]]), buf_a)
+  child.api.nvim_buf_delete(buf_a, { force = true })
+  child.api.nvim_buf_delete(buf_b, { force = true })
+  child.api.nvim_buf_delete(scratch, { force = true })
+end
+
 return test_set

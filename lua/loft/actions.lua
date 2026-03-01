@@ -48,7 +48,6 @@ actions.close_buffer = {
       next_buf = nil
     end
     registry_instance:pause_update()
-    -- Replace current buffer with alt or next or empty buffer in all windows
     for _, win in ipairs(vim.fn.win_findbuf(current_buf)) do
       -- alt_buf must differ from current_buf (e.g. from inside a Loft float, # == current_buf)
       if

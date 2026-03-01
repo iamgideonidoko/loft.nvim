@@ -94,7 +94,6 @@ function Registry:_update(buffer)
     if not is_buf_valid then
       return
     end
-    -- Skip buffers whose type is explicitly excluded (e.g. terminal, quickfix)
     if self:_is_buftype_excluded(buf) then
       return
     end
@@ -133,7 +132,6 @@ function Registry:_update(buffer)
       return
     end
 
-    -- Remove buf from its current slot (smart-order reposition).
     if should_smart_order_buf then
       for i, b in ipairs(self._registry) do
         if b == buf then
@@ -155,7 +153,6 @@ function Registry:_update(buffer)
       table.insert(self._registry, alt_buf)
     end
 
-    -- Append buf as the most-recent (last) entry.
     table.insert(self._registry, buf)
     self:clean()
   end
@@ -234,7 +231,6 @@ function Registry:clean(delete_missing)
     end
   end
 
-  -- Merge with all valid buffers, excluding any that are in the excluded buftypes list
   local all_valid = {}
   for _, buf in ipairs(utils.get_all_valid_buffers(skip_deleted)) do
     if not self:_is_buftype_excluded(buf) then

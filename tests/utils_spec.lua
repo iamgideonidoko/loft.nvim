@@ -277,4 +277,47 @@ test_set["buf_has_deleted_file caches fs_stat result for the same path"] = funct
   child.api.nvim_buf_delete(buf, { force = true })
 end
 
+-- ── async_stat warms the cache consumed by buf_has_deleted_file ──
+
+test_set["async_stat warms stat cache so subsequent buf_has_deleted_file is cache-served"] = function()
+  helper.skip_in_ci()
+  -- async_stat should write to the shared _stat_cache so that the next
+  -- synchronous buf_has_deleted_file call for the same path skips disk I/O.
+  local path = "/nonexistent_loft_async_stat_cache_test.lua"
+  child.lua([[
+    _G.loft_async_stat_done = false
+    _G.loft_async_stat_exists = nil
+    require("loft.utils").async_stat("]] .. path .. [[", function(file_exists)
+      _G.loft_async_stat_done = true
+      _G.loft_async_stat_exists = file_exists
+    end)
+    vim.wait(500, function() return _G.loft_async_stat_done end)
+  ]])
+  eq(child.lua_get([[_G.loft_async_stat_done]]), true)
+  -- File does not exist → callback should report false
+  eq(child.lua_get([[_G.loft_async_stat_exists]]), false)
+  -- buf_has_deleted_file for a buffer named that path must now return true (from cache)
+  local buf = child.api.nvim_create_buf(true, false)
+  child.lua(string.format([[vim.api.nvim_buf_set_name(%d, "]] .. path .. [[")]], buf))
+  eq(child.lua_get(string.format([[require("loft.utils").buf_has_deleted_file(%d)]], buf)), true)
+  child.api.nvim_buf_delete(buf, { force = true })
+end
+
+-- ── debounce timer handle must be closed on each reset ───────────
+
+test_set["debounce closes old timer before creating a new one (no handle leak)"] = function()
+  helper.skip_in_ci()
+  -- Verify the fixed debounce correctly resets when called rapidly: the
+  -- function must fire exactly once (not zero times due to a leaked handle).
+  child.lua([[
+    _G.loft_debounce_reset_count = 0
+    local fn = require("loft.utils").debounce(function()
+      _G.loft_debounce_reset_count = _G.loft_debounce_reset_count + 1
+    end, 60)
+    fn(); fn(); fn(); fn(); fn()
+    vim.wait(500, function() return _G.loft_debounce_reset_count > 0 end)
+  ]])
+  eq(child.lua_get([[_G.loft_debounce_reset_count]]), 1)
+end
+
 return test_set
