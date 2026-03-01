@@ -342,10 +342,7 @@ function UI:_setup_autocmd()
           local prev_win = self._last_win_before_loft
           vim.schedule(function()
             self:close()
-            if
-              utils.window_exists(prev_win)
-              and vim.api.nvim_buf_is_valid(foreign_buf)
-            then
+            if utils.window_exists(prev_win) and vim.api.nvim_buf_is_valid(foreign_buf) then
               vim.api.nvim_win_set_buf(prev_win, foreign_buf)
               vim.api.nvim_set_current_win(prev_win)
             end
