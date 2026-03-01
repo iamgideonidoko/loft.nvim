@@ -335,10 +335,20 @@ function UI:_setup_autocmd()
       if utils.window_exists(self._win_id) and vim.api.nvim_get_current_win() == self._win_id then
         local current_buf = vim.api.nvim_get_current_buf()
         if current_buf ~= self._buf_id then
-          -- _buf_id was replaced in the loft window (e.g. it was wiped due to bufhidden=wipe).
-          -- Close the loft window gracefully instead of trying to restore the wiped buffer.
+          -- A foreign buffer opened inside the Loft float.
+          -- Close Loft gracefully and relocate the foreign buffer to the
+          -- previous real window so the plugin can open as intended.
+          local foreign_buf = current_buf
+          local prev_win = self._last_win_before_loft
           vim.schedule(function()
             self:close()
+            if
+              utils.window_exists(prev_win)
+              and vim.api.nvim_buf_is_valid(foreign_buf)
+            then
+              vim.api.nvim_win_set_buf(prev_win, foreign_buf)
+              vim.api.nvim_set_current_win(prev_win)
+            end
           end)
         end
       end
