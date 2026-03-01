@@ -54,10 +54,28 @@ function Registry:_update(buffer)
     return
   end
 
-  -- Defer to the next event-loop tick so that plugins that, for example,
-  -- set buftype asynchronously after BufEnter have already done so before the next block of code runs.
-  -- This is zero-latency from a user perspective.
-  vim.schedule(function()
+  -- Collect all file paths that need async-statting before the main logic runs.
+  -- We stat the entering buffer AND every buffer already in the registry so that
+  -- the subsequent clean() call (which calls buf_has_deleted_file for each) only
+  -- ever hits the in-memory cache — never blocks the main thread with a sync stat.
+  local paths_to_stat = {}
+  local seen_paths = {}
+  local function add_stat_path(b)
+    local p = vim.api.nvim_buf_get_name(b)
+    if p ~= "" and not p:match("^%a[%w+.-]+://") and not seen_paths[p] then
+      seen_paths[p] = true
+      table.insert(paths_to_stat, p)
+    end
+  end
+  add_stat_path(buf)
+  for _, b in ipairs(self._registry) do
+    add_stat_path(b)
+  end
+
+  -- The main logic runs on the main thread after all stats have been cached.
+  -- When there are no file paths to stat we fall back to vim.schedule (same
+  -- behaviour as before: defers one tick so async buftypes are already set).
+  local function run_main_logic()
     local skip_deleted = not self.opts.auto_delete_missing_file_bufs
     local is_buf_valid = utils.is_buffer_valid(buf, skip_deleted)
     if not is_buf_valid then
@@ -127,7 +145,24 @@ function Registry:_update(buffer)
     -- Append buf as the most-recent (last) entry.
     table.insert(self._registry, buf)
     self:clean()
-  end)
+  end
+
+  if #paths_to_stat == 0 then
+    -- No file buffers — just defer one tick for async buftype plugins.
+    vim.schedule(run_main_logic)
+  else
+    -- Fire all async stats. run_main_logic executes after the last one
+    -- completes (on the main thread, via vim.schedule inside async_stat).
+    local remaining = #paths_to_stat
+    for _, path in ipairs(paths_to_stat) do
+      utils.async_stat(path, function()
+        remaining = remaining - 1
+        if remaining == 0 then
+          run_main_logic()
+        end
+      end)
+    end
+  end
 end
 
 function Registry:pause_update()
@@ -173,10 +208,13 @@ function Registry:clean(delete_missing)
     end
   end
 
-  -- Optionally delete buffers with missing files to prevent them from being
-  -- switched to and causing issues. Controlled by auto_delete_missing_file_bufs.
+  -- Only scan registry buffers for deletion — not every open Neovim buffer.
+  -- Non-registry buffers are not Loft's responsibility, and scanning all of
+  -- nvim_list_bufs() adds O(N_all_bufs) sync stat calls on every clean().
+  -- The BufEnter/FocusGained autocmd in autocmds.lua handles the async
+  -- deletion of the buffer the user actually enters.
   if do_delete then
-    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    for _, buf in ipairs(self._registry) do
       if utils.buf_has_deleted_file(buf) then
         pcall(vim.api.nvim_buf_delete, buf, { force = true })
       end

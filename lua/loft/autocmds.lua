@@ -4,6 +4,21 @@ local registry_instance = require("loft.registry")
 local autocmds = {}
 
 autocmds.setup = function()
+  -- On focus return, warm the stat cache for every registry buffer asynchronously.
+  -- This runs before any BufEnter fires, so by the time _update()'s vim.schedule
+  -- callback calls clean(), all registry buffer stats are already cached.
+  vim.api.nvim_create_autocmd("FocusGained", {
+    group = utils.get_augroup("WarmStatCacheOnFocus", true),
+    callback = function()
+      for _, buf in ipairs(registry_instance:get_registry()) do
+        local path = vim.api.nvim_buf_get_name(buf)
+        if path ~= "" and not path:match("^%a[%w+.-]+://") then
+          utils.async_stat(path, function() end)
+        end
+      end
+    end,
+  })
+
   vim.api.nvim_create_autocmd({ "BufEnter", "FocusGained" }, {
     group = utils.get_augroup("DeleteMissingFileBuffer", true),
     callback = function()

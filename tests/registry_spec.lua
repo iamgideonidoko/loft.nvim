@@ -396,6 +396,8 @@ test_set["clean() deletes missing-file buffers when auto_delete_missing_file_buf
   -- Create a buffer with a non-existent file path so buf_has_deleted_file returns true.
   local buf = child.api.nvim_create_buf(true, false)
   child.lua(string.format([[vim.api.nvim_buf_set_name(%d, "/nonexistent_loft_clean_test.lua")]], buf))
+  -- Inject into registry so the deletion loop can find it.
+  child.lua(string.format([[table.insert(require("loft.registry")._registry, %d)]], buf))
   -- Confirm buf_has_deleted_file sees it as deleted
   local is_deleted = child.lua_get(string.format([[require("loft.utils").buf_has_deleted_file(%d)]], buf))
   eq(is_deleted, true)
@@ -409,6 +411,7 @@ test_set["clean() keeps missing-file buffers when auto_delete_missing_file_bufs=
   child.lua([[require("loft").setup({ auto_delete_missing_file_bufs = false })]])
   local buf = child.api.nvim_create_buf(true, false)
   child.lua(string.format([[vim.api.nvim_buf_set_name(%d, "/nonexistent_loft_clean_test.lua")]], buf))
+  child.lua(string.format([[table.insert(require("loft.registry")._registry, %d)]], buf))
   local is_deleted = child.lua_get(string.format([[require("loft.utils").buf_has_deleted_file(%d)]], buf))
   eq(is_deleted, true)
   -- clean() must NOT delete the buffer from Neovim
@@ -423,6 +426,7 @@ test_set["clean(true) deletes missing-file buffers regardless of config"] = func
   child.lua([[require("loft").setup({ auto_delete_missing_file_bufs = false })]])
   local buf = child.api.nvim_create_buf(true, false)
   child.lua(string.format([[vim.api.nvim_buf_set_name(%d, "/nonexistent_loft_clean_test.lua")]], buf))
+  child.lua(string.format([[table.insert(require("loft.registry")._registry, %d)]], buf))
   child.lua([[require("loft.registry"):clean(true)]])
   local still_valid = child.lua_get(string.format([[vim.api.nvim_buf_is_valid(%d)]], buf))
   eq(still_valid, false)
@@ -433,6 +437,7 @@ test_set["clean(false) keeps missing-file buffers regardless of config"] = funct
   child.lua([[require("loft").setup({ auto_delete_missing_file_bufs = true })]])
   local buf = child.api.nvim_create_buf(true, false)
   child.lua(string.format([[vim.api.nvim_buf_set_name(%d, "/nonexistent_loft_clean_test.lua")]], buf))
+  child.lua(string.format([[table.insert(require("loft.registry")._registry, %d)]], buf))
   child.lua([[require("loft.registry"):clean(false)]])
   local still_valid = child.lua_get(string.format([[vim.api.nvim_buf_is_valid(%d)]], buf))
   eq(still_valid, true)
