@@ -5,6 +5,21 @@ local actions = require("loft.actions")
 --- Extmark namespace used for all Loft highlight decorations.
 local hl_ns = vim.api.nvim_create_namespace("loft_ui")
 
+--- Resolve a window dimension value that may be a plain number or a function.
+--- Functions receive the already-resolved (height, width) so that `row`/`col`
+--- can be expressed as a function of the window's own dimensions:
+---   row = function(h) return vim.o.lines - vim.o.cmdheight - h - 3 end
+---@param val integer|fun(height: integer, width: integer): integer|nil
+---@param height? integer resolved height (passed to the function)
+---@param width? integer resolved width (passed to the function)
+---@return integer|nil
+local function resolve_dim(val, height, width)
+  if type(val) == "function" then
+    return val(height or 0, width or 0)
+  end
+  return val
+end
+
 --- Cached Neovim version (major, minor) — checked once at load time.
 local _nvim_major, _nvim_minor = utils.get_nvim_version()
 
@@ -222,14 +237,16 @@ function UI:open()
   if utils.window_exists(self._win_id) then
     return vim.api.nvim_set_current_win(self._win_id)
   end
-  local height = self._window.height
+  local height = resolve_dim(self._window.height)
     or math.min(
       #self.registry_instance:get_registry() > 0 and #self.registry_instance:get_registry() or 1,
       math.floor(vim.o.lines * 0.8)
     )
-  local width = self._window.width or math.floor(vim.o.columns * 0.8)
-  local row = (self._window.row or math.floor((vim.o.lines - height) * 0.5)) + (self._window.row_offset or 0)
-  local col = (self._window.col or math.floor((vim.o.columns - width) * 0.5)) + (self._window.col_offset or 0)
+  local width = resolve_dim(self._window.width, height) or math.floor(vim.o.columns * 0.8)
+  local row = (resolve_dim(self._window.row, height, width) or math.floor((vim.o.lines - height) * 0.5))
+    + (self._window.row_offset or 0)
+  local col = (resolve_dim(self._window.col, height, width) or math.floor((vim.o.columns - width) * 0.5))
+    + (self._window.col_offset or 0)
   self._buf_id = vim.api.nvim_create_buf(false, true)
   ---@type vim.api.keyset.win_config
   local win_opts = {
@@ -667,7 +684,16 @@ function UI:_resize_win()
   end
   local win_config = vim.api.nvim_win_get_config(self._win_id)
   local no_of_entries = #self.registry_instance:get_registry()
-  win_config.height = math.min(no_of_entries > 0 and no_of_entries or 1, vim.o.lines - 2)
+  local height = resolve_dim(self._window.height) or math.min(no_of_entries > 0 and no_of_entries or 1, vim.o.lines - 2)
+  local width = resolve_dim(self._window.width, height) or win_config.width
+  win_config.height = height
+  -- Recompute row/col when they are functions so dynamic layouts stay anchored.
+  if type(self._window.row) == "function" then
+    win_config.row = resolve_dim(self._window.row, height, width) + (self._window.row_offset or 0)
+  end
+  if type(self._window.col) == "function" then
+    win_config.col = resolve_dim(self._window.col, height, width) + (self._window.col_offset or 0)
+  end
   vim.api.nvim_win_set_config(self._win_id, win_config)
 end
 
@@ -677,14 +703,16 @@ end
 function UI:_reposition_wins()
   -- Main window
   if utils.window_exists(self._win_id) then
-    local height = self._window.height
+    local height = resolve_dim(self._window.height)
       or math.min(
         #self.registry_instance:get_registry() > 0 and #self.registry_instance:get_registry() or 1,
         math.floor(vim.o.lines * 0.8)
       )
-    local width = self._window.width or math.floor(vim.o.columns * 0.8)
-    local row = (self._window.row or math.floor((vim.o.lines - height) * 0.5)) + (self._window.row_offset or 0)
-    local col = (self._window.col or math.floor((vim.o.columns - width) * 0.5)) + (self._window.col_offset or 0)
+    local width = resolve_dim(self._window.width, height) or math.floor(vim.o.columns * 0.8)
+    local row = (resolve_dim(self._window.row, height, width) or math.floor((vim.o.lines - height) * 0.5))
+      + (self._window.row_offset or 0)
+    local col = (resolve_dim(self._window.col, height, width) or math.floor((vim.o.columns - width) * 0.5))
+      + (self._window.col_offset or 0)
     local cfg = { relative = "editor", width = width, height = height, row = row, col = col }
     vim.api.nvim_win_set_config(self._win_id, cfg)
   end

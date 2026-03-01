@@ -376,22 +376,38 @@ Both sit inside `require("loft").setup({})`.
 
 ### Main window (`window`)
 
-| Option       | Type                        | Default                           | Description                        |
-| ------------ | --------------------------- | --------------------------------- | ---------------------------------- |
-| `width`      | `integer\|nil`              | 80 % of columns                   | Explicit window width              |
-| `height`     | `integer\|nil`              | registry size (max 80 % of lines) | Explicit window height             |
-| `row`        | `integer\|nil`              | centred                           | Absolute row position (0-indexed)  |
-| `col`        | `integer\|nil`              | centred                           | Absolute col position (0-indexed)  |
-| `row_offset` | `integer`                   | `0`                               | Added to the computed/explicit row |
-| `col_offset` | `integer`                   | `0`                               | Added to the computed/explicit col |
-| `title`      | `string\|nil`               | auto (Loft name)                  | Custom title; Neovim ≥ 0.9 only    |
-| `title_pos`  | `"left"\|"center"\|"right"` | `"center"`                        | Title alignment                    |
-| `footer`     | `string\|nil`               | auto (smart-order indicator)      | Custom footer; Neovim ≥ 0.10 only  |
-| `footer_pos` | `"left"\|"center"\|"right"` | `"center"`                        | Footer alignment                   |
-| `zindex`     | `integer`                   | `100`                             | Float z-index                      |
-| `border`     | `string\|string[]`          | `"rounded"`                       | Border style                       |
+| Option       | Type                             | Default                           | Description                        |
+| ------------ | -------------------------------- | --------------------------------- | ---------------------------------- |
+| `width`      | `integer\|fun(h,w):integer\|nil` | 80 % of columns                   | Explicit window width              |
+| `height`     | `integer\|fun(h,w):integer\|nil` | registry size (max 80 % of lines) | Explicit window height             |
+| `row`        | `integer\|fun(h,w):integer\|nil` | centred                           | Absolute row position (0-indexed)  |
+| `col`        | `integer\|fun(h,w):integer\|nil` | centred                           | Absolute col position (0-indexed)  |
+| `row_offset` | `integer`                        | `0`                               | Added to the computed/explicit row |
+| `col_offset` | `integer`                        | `0`                               | Added to the computed/explicit col |
+| `title`      | `string\|nil`                    | auto (Loft name)                  | Custom title; Neovim ≥ 0.9 only    |
+| `title_pos`  | `"left"\|"center"\|"right"`      | `"center"`                        | Title alignment                    |
+| `footer`     | `string\|nil`                    | auto (smart-order indicator)      | Custom footer; Neovim ≥ 0.10 only  |
+| `footer_pos` | `"left"\|"center"\|"right"`      | `"center"`                        | Footer alignment                   |
+| `zindex`     | `integer`                        | `100`                             | Float z-index                      |
+| `border`     | `string\|string[]`               | `"rounded"`                       | Border style                       |
 
-**Positioning example** — pin the window to the bottom of the screen, slightly inset:
+`width`, `height`, `row`, and `col` each accept either a plain number **or a function**. Functions receive the already-resolved `(height, width)` and are re-evaluated on every open and resize, making fully dynamic layouts possible.
+
+**Pinned above the statusline** — the window hugs the bottom of the editor and auto-adjusts as the buffer count changes:
+
+```lua
+require("loft").setup({
+  window = {
+    width  = function() return vim.o.columns end,
+    col    = function() return 0 end,
+    -- h = resolved height; -3 accounts for top border + bottom border + statusline row
+    row    = function(h) return vim.o.lines - vim.o.cmdheight - h - 3 end,
+    border = "rounded",
+  },
+})
+```
+
+**Static positioning example** — pin near the bottom, slightly inset:
 
 ```lua
 require("loft").setup({
@@ -412,17 +428,17 @@ The help window is opened with the `show_help` keymap (default `?`). It inherits
 main window's `border` when its own `border` is not set, and its `zindex` is always
 clamped to be greater than the main window's `zindex` so it always floats on top.
 
-| Option       | Type               | Default                            | Description                                        |
-| ------------ | ------------------ | ---------------------------------- | -------------------------------------------------- |
-| `disable`    | `boolean`          | `false`                            | Set `true` to prevent the help window from opening |
-| `width`      | `integer\|nil`     | `70`                               | Explicit width                                     |
-| `height`     | `integer\|nil`     | content height (max 80 % of lines) | Explicit height                                    |
-| `row`        | `integer\|nil`     | centred                            | Absolute row position                              |
-| `col`        | `integer\|nil`     | centred                            | Absolute col position                              |
-| `row_offset` | `integer`          | `0`                                | Added to the computed/explicit row                 |
-| `col_offset` | `integer`          | `0`                                | Added to the computed/explicit col                 |
-| `border`     | `string\|string[]` | inherits `window.border`           | Border style                                       |
-| `zindex`     | `integer\|nil`     | `window.zindex + 10`               | Float z-index (always > main zindex)               |
+| Option       | Type                             | Default                            | Description                                        |
+| ------------ | -------------------------------- | ---------------------------------- | -------------------------------------------------- |
+| `disable`    | `boolean`                        | `false`                            | Set `true` to prevent the help window from opening |
+| `width`      | `integer\|fun(h,w):integer\|nil` | `70`                               | Explicit width                                     |
+| `height`     | `integer\|fun(h,w):integer\|nil` | content height (max 80 % of lines) | Explicit height                                    |
+| `row`        | `integer\|fun(h,w):integer\|nil` | centred                            | Absolute row position                              |
+| `col`        | `integer\|fun(h,w):integer\|nil` | centred                            | Absolute col position                              |
+| `row_offset` | `integer`                        | `0`                                | Added to the computed/explicit row                 |
+| `col_offset` | `integer`                        | `0`                                | Added to the computed/explicit col                 |
+| `border`     | `string\|string[]`               | inherits `window.border`           | Border style                                       |
+| `zindex`     | `integer\|nil`                   | `window.zindex + 10`               | Float z-index (always > main zindex)               |
 
 ```lua
 require("loft").setup({

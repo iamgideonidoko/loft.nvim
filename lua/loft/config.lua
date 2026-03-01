@@ -33,10 +33,10 @@ local actions = require("loft.actions")
 ---@field path? string Custom file path for persistence state; defaults to stdpath("data")/loft/<cwd_hash>.json
 
 ---@class (exact) loft.WinOpts
----@field width? integer Defaults to calculated width
----@field height? integer Defaults to calculated height
----@field row? integer Explicit row; overrides centered calculation
----@field col? integer Explicit col; overrides centered calculation
+---@field width? integer|fun(height: integer, width: integer): integer Defaults to calculated width
+---@field height? integer|fun(height: integer, width: integer): integer Defaults to calculated height
+---@field row? integer|fun(height: integer, width: integer): integer Explicit row; overrides centered calculation
+---@field col? integer|fun(height: integer, width: integer): integer Explicit col; overrides centered calculation
 ---@field row_offset? integer Value added to the computed row (default 0)
 ---@field col_offset? integer Value added to the computed col (default 0)
 ---@field title? string Custom title string; defaults to auto-generated Loft title
@@ -48,10 +48,10 @@ local actions = require("loft.actions")
 
 ---@class (exact) loft.HelpWinOpts
 ---@field disable? boolean Disable the help window entirely (default false)
----@field width? integer Defaults to calculated width
----@field height? integer Defaults to calculated height
----@field row? integer Explicit row; overrides centered calculation
----@field col? integer Explicit col; overrides centered calculation
+---@field width? integer|fun(height: integer, width: integer): integer Defaults to calculated width
+---@field height? integer|fun(height: integer, width: integer): integer Defaults to calculated height
+---@field row? integer|fun(height: integer, width: integer): integer Explicit row; overrides centered calculation
+---@field col? integer|fun(height: integer, width: integer): integer Explicit col; overrides centered calculation
 ---@field row_offset? integer Value added to the computed row (default 0)
 ---@field col_offset? integer Value added to the computed col (default 0)
 ---@field border? "none"|"single"|"double"|"rounded"|"solid"|"shadow"|string[] Defaults to main window border

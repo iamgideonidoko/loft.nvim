@@ -159,10 +159,10 @@ Fields ~
 Class ~
 {(exact)} loft.WinOpts
 Fields ~
-{width} `(optional)` `(integer)` Defaults to calculated width
-{height} `(optional)` `(integer)` Defaults to calculated height
-{row} `(optional)` `(integer)` Explicit row; overrides centered calculation
-{col} `(optional)` `(integer)` Explicit col; overrides centered calculation
+{width} `(optional)` `(integer|fun(height: integer, width: integer): integer)` Defaults to calculated width
+{height} `(optional)` `(integer|fun(height: integer, width: integer): integer)` Defaults to calculated height
+{row} `(optional)` `(integer|fun(height: integer, width: integer): integer)` Explicit row; overrides centered calculation
+{col} `(optional)` `(integer|fun(height: integer, width: integer): integer)` Explicit col; overrides centered calculation
 {row_offset} `(optional)` `(integer)` Value added to the computed row (default 0)
 {col_offset} `(optional)` `(integer)` Value added to the computed col (default 0)
 {title} `(optional)` `(string)` Custom title string; defaults to auto-generated Loft title
@@ -177,10 +177,10 @@ Class ~
 {(exact)} loft.HelpWinOpts
 Fields ~
 {disable} `(optional)` `(boolean)` Disable the help window entirely (default false)
-{width} `(optional)` `(integer)` Defaults to calculated width
-{height} `(optional)` `(integer)` Defaults to calculated height
-{row} `(optional)` `(integer)` Explicit row; overrides centered calculation
-{col} `(optional)` `(integer)` Explicit col; overrides centered calculation
+{width} `(optional)` `(integer|fun(height: integer, width: integer): integer)` Defaults to calculated width
+{height} `(optional)` `(integer|fun(height: integer, width: integer): integer)` Defaults to calculated height
+{row} `(optional)` `(integer|fun(height: integer, width: integer): integer)` Explicit row; overrides centered calculation
+{col} `(optional)` `(integer|fun(height: integer, width: integer): integer)` Explicit col; overrides centered calculation
 {row_offset} `(optional)` `(integer)` Value added to the computed row (default 0)
 {col_offset} `(optional)` `(integer)` Value added to the computed col (default 0)
 {border} `(optional)` "`(none)`"|"single"|"double"|"rounded"|"solid"|"shadow"|string[] Defaults to main window border
@@ -488,6 +488,20 @@ Monkey-patch `MiniTest.new_child_neovim` with helpful wrappers
                                                                          *hl_ns*
                                     `hl_ns`
 Extmark namespace used for all Loft highlight decorations.
+
+------------------------------------------------------------------------------
+                                                                 *resolve_dim()*
+                    `resolve_dim`({val}, {height}, {width})
+Resolve a window dimension value that may be a plain number or a function.
+Functions receive the already-resolved (height, width) so that `row`/`col`
+can be expressed as a function of the window's own dimensions:
+  row = function(h) return vim.o.lines - vim.o.cmdheight - h - 3 end
+Parameters ~
+{val} `(integer|fun(height: integer, width: integer): integer|nil)`
+{height} `(optional)` `(integer)` resolved height (passed to the function)
+{width} `(optional)` `(integer)` resolved width (passed to the function)
+Return ~
+`(integer|nil)`
 
 ------------------------------------------------------------------------------
 Cached Neovim version (major, minor) — checked once at load time.

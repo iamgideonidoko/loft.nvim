@@ -57,6 +57,7 @@ persistence.restore()	loft.txt	/*persistence.restore()*
 persistence.save()	loft.txt	/*persistence.save()*
 persistence.setup()	loft.txt	/*persistence.setup()*
 registry_instance	loft.txt	/*registry_instance*
+resolve_dim()	loft.txt	/*resolve_dim()*
 utils	loft.txt	/*utils*
 utils.async_stat()	loft.txt	/*utils.async_stat()*
 utils.buf_has_deleted_file()	loft.txt	/*utils.buf_has_deleted_file()*
