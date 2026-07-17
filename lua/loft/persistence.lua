@@ -115,9 +115,11 @@ function persistence.restore(registry, opts)
       mark_set[saved_path] = true
     end
     for _, buf in ipairs(registry:get_registry()) do
-      local name = vim.api.nvim_buf_get_name(buf)
-      if name ~= "" and mark_set[name] and not registry.is_buffer_marked(buf) then
-        registry:_mark_buffer(buf, true)
+      if vim.api.nvim_buf_is_valid(buf) then
+        local name = vim.api.nvim_buf_get_name(buf)
+        if name ~= "" and mark_set[name] and not registry.is_buffer_marked(buf) then
+          registry:_mark_buffer(buf, true)
+        end
       end
     end
   end
