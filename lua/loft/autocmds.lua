@@ -11,9 +11,11 @@ autocmds.setup = function()
     group = utils.get_augroup("WarmStatCacheOnFocus", true),
     callback = function()
       for _, buf in ipairs(registry_instance:get_registry()) do
-        local path = vim.api.nvim_buf_get_name(buf)
-        if path ~= "" and not path:match("^%a[%w+.-]+://") then
-          utils.async_stat(path, function() end)
+        if vim.api.nvim_buf_is_valid(buf) then
+          local path = vim.api.nvim_buf_get_name(buf)
+          if path ~= "" and not path:match("^%a[%w+.-]+://") then
+            utils.async_stat(path, function() end)
+          end
         end
       end
     end,
