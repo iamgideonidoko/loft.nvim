@@ -29,11 +29,13 @@ function persistence.save(registry, opts)
   local order = {}
   local marks = {}
   for _, buf in ipairs(registry:get_registry()) do
-    local name = vim.api.nvim_buf_get_name(buf)
-    if name ~= "" then
-      table.insert(order, name)
-      if registry.is_buffer_marked(buf) then
-        table.insert(marks, name)
+    if vim.api.nvim_buf_is_valid(buf) then
+      local name = vim.api.nvim_buf_get_name(buf)
+      if name ~= "" then
+        table.insert(order, name)
+        if registry.is_buffer_marked(buf) then
+          table.insert(marks, name)
+        end
       end
     end
   end
