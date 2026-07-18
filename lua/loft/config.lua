@@ -27,6 +27,7 @@ local logs = require("loft.logs")
 ---@field open_at? 'cursor'|'top'|'current'|'middle'|'bottom' Where to position the cursor when the Loft UI opens. `cursor` restores the last cursor line, `top` goes to the first entry, `current` goes to the active buffer entry (●), `middle` goes to the middle entry, `bottom` goes to the last entry. Defaults to `"current"`.
 ---@field window? loft.WinOpts
 ---@field help_window? loft.HelpWinOpts
+---@field logs? loft.LogsConfig
 ---@field persistence? loft.PersistenceConfig
 
 ---@class (exact) loft.PersistenceConfig
@@ -47,12 +48,17 @@ local logs = require("loft.logs")
 ---@field zindex? integer
 ---@field border? "none"|"single"|"double"|"rounded"|"solid"|"shadow"|string[]
 
+---@class (exact) loft.LogsConfig
+---@field height? integer Height of the Logs split (default 12)
+---@field refresh_interval? integer Milliseconds between automatic refreshes when the Logs panel is visible (default 1000)
+---@field follow? boolean Auto-scroll to the end when the cursor is already at the end (default true)
+
 ---@class (exact) loft.HelpWinOpts
 ---@field disable? boolean Disable the help window entirely (default false)
 ---@field width? integer|fun(height: integer, width: integer): integer Defaults to calculated width
 ---@field height? integer|fun(height: integer, width: integer): integer Defaults to calculated height
----@field row? integer|fun(height: integer, width: integer): integer Explicit row; overrides centered calculation
----@field col? integer|fun(height: integer, width: integer): integer Explicit col; overrides centered calculation
+---@field row? integer|fun(height: integer, width: integer): integer Explicit row; overrides centred calculation
+---@field col? integer|fun(height: integer, width: integer): integer Explicit col; overrides centred calculation
 ---@field row_offset? integer Value added to the computed row (default 0)
 ---@field col_offset? integer Value added to the computed col (default 0)
 ---@field border? "none"|"single"|"double"|"rounded"|"solid"|"shadow"|string[] Defaults to main window border
@@ -147,6 +153,11 @@ local default_config = {
       ["<S-M-i>"] = actions.move_buffer_up,
       ["<S-M-o>"] = actions.move_buffer_down,
     },
+  },
+  logs = {
+    height = 12,
+    refresh_interval = 1000,
+    follow = true,
   },
   persistence = {
     enabled = false,

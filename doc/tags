@@ -54,6 +54,7 @@ hl_ns	loft.txt	/*hl_ns*
 loft.nvim	loft.txt	/*loft.nvim*
 loft.setup()	loft.txt	/*loft.setup()*
 logs.close()	loft.txt	/*logs.close()*
+logs.focus()	loft.txt	/*logs.focus()*
 logs.is_open()	loft.txt	/*logs.is_open()*
 logs.open()	loft.txt	/*logs.open()*
 logs.refresh()	loft.txt	/*logs.refresh()*

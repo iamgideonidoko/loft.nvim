@@ -9,6 +9,14 @@ local state = {
   last_output = nil,
 }
 
+local function get_config()
+  local ok, cfg = pcall(require, "loft.config")
+  if ok and cfg and cfg.all and cfg.all.logs then
+    return cfg.all.logs
+  end
+  return { height = 12, refresh_interval = 1000, follow = true }
+end
+
 local function valid_buffer()
   return state.buf and state.buf > 0 and utils.buffer_exists(state.buf)
 end
@@ -75,10 +83,40 @@ local function ensure_buffer()
   vim.bo[buf].bufhidden = "hide"
   vim.bo[buf].swapfile = false
   vim.bo[buf].filetype = "messages"
-  utils.buffer_modifiable(buf, false)
+  vim.bo[buf].modifiable = false
+  vim.bo[buf].readonly = true
   vim.keymap.set("n", "q", logs.close, { buffer = buf, silent = true })
+  vim.api.nvim_buf_create_user_command(buf, "R", function()
+    logs.refresh()
+  end, { desc = "Refresh Loft Logs" })
 
   return buf
+end
+
+local function win_view(win)
+  local ok, view = pcall(vim.api.nvim_win_call, win, function()
+    return vim.fn.winsaveview()
+  end)
+  if ok and type(view) == "table" then
+    return vim.deepcopy(view)
+  end
+  return nil
+end
+
+local function restore_win_view(win, view)
+  if not view then
+    return
+  end
+  pcall(vim.api.nvim_win_call, win, function()
+    vim.fn.winrestview(view)
+  end)
+end
+
+local function is_at_end(_win, view, line_count)
+  if not view or not line_count or line_count <= 0 then
+    return true
+  end
+  return view.lnum ~= nil and view.lnum >= line_count
 end
 
 --- Refresh Logs panel from `:messages`.
@@ -102,6 +140,15 @@ function logs.refresh()
     return
   end
 
+  local windows = log_windows()
+  local views = {}
+  local line_counts = {}
+  for _, win in ipairs(windows) do
+    views[win] = win_view(win)
+    local count_ok, count = pcall(vim.api.nvim_buf_line_count, state.buf)
+    line_counts[win] = count_ok and count or 0
+  end
+
   local current_ok, current_lines = pcall(vim.api.nvim_buf_get_lines, state.buf, 0, -1, false)
   if current_ok and type(current_lines) == "table" and vim.deep_equal(current_lines, lines) then
     return
@@ -118,13 +165,23 @@ function logs.refresh()
 
   state.last_output = content
 
-  local count_ok, last_line = pcall(vim.api.nvim_buf_line_count, state.buf)
-  if not count_ok or last_line < 1 then
+  local count_ok, new_line_count = pcall(vim.api.nvim_buf_line_count, state.buf)
+  if not count_ok or new_line_count < 1 then
     return
   end
 
+  local follow = get_config().follow
   for _, win in ipairs(log_windows()) do
-    pcall(vim.api.nvim_win_set_cursor, win, { last_line, 0 })
+    local view = views[win]
+    if follow ~= false and is_at_end(win, view, line_counts[win]) then
+      pcall(vim.api.nvim_win_set_cursor, win, { new_line_count, 0 })
+    else
+      restore_win_view(win, view)
+      local cur_ok, cursor = pcall(vim.api.nvim_win_get_cursor, win)
+      if cur_ok and cursor[1] > new_line_count then
+        pcall(vim.api.nvim_win_set_cursor, win, { new_line_count, cursor[2] or 0 })
+      end
+    end
   end
 end
 
@@ -139,10 +196,11 @@ local function start_timer()
     return
   end
 
+  local refresh_interval = get_config().refresh_interval or 1000
   state.timer = timer
   timer:start(
     0,
-    1000,
+    refresh_interval,
     vim.schedule_wrap(function()
       if state.timer ~= timer then
         return
@@ -186,7 +244,8 @@ function logs.open()
   end
   state.last_win = last_win
 
-  local split_ok = pcall(vim.cmd, "botright 12split")
+  local height = get_config().height or 12
+  local split_ok = pcall(vim.cmd, "botright " .. height .. "split")
   if not split_ok then
     return
   end
@@ -205,6 +264,12 @@ function logs.open()
   if vim.fn.exists("+winfixbuf") == 1 then
     vim.wo[win].winfixbuf = true
   end
+  vim.wo[win].number = false
+  vim.wo[win].relativenumber = false
+  vim.wo[win].signcolumn = "no"
+  vim.wo[win].foldcolumn = "0"
+  vim.wo[win].spell = false
+  vim.wo[win].list = false
   logs.refresh()
   start_timer()
 end

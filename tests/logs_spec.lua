@@ -26,8 +26,15 @@ test_set["Logs opens a fixed-height non-editable messages split"] = function()
   eq(child.api.nvim_get_option_value("buftype", { buf = buf }), "nofile")
   eq(child.api.nvim_get_option_value("bufhidden", { buf = buf }), "hide")
   eq(child.api.nvim_get_option_value("modifiable", { buf = buf }), false)
+  eq(child.api.nvim_get_option_value("readonly", { buf = buf }), true)
   eq(child.api.nvim_get_option_value("filetype", { buf = buf }), "messages")
   eq(child.api.nvim_get_option_value("winfixheight", { win = win }), true)
+  eq(child.api.nvim_get_option_value("number", { win = win }), false)
+  eq(child.api.nvim_get_option_value("relativenumber", { win = win }), false)
+  eq(child.api.nvim_get_option_value("signcolumn", { win = win }), "no")
+  eq(child.api.nvim_get_option_value("foldcolumn", { win = win }), "0")
+  eq(child.api.nvim_get_option_value("spell", { win = win }), false)
+  eq(child.api.nvim_get_option_value("list", { win = win }), false)
   if child.fn.exists("+winfixbuf") == 1 then
     eq(child.lua_get([[vim.wo.winfixbuf]]), true)
   end
@@ -148,6 +155,77 @@ test_set["Logs window cannot be duplicated"] = function()
     ]]),
     1
   )
+  child.lua([[require("loft").logs.close()]])
+end
+
+test_set["Logs respects custom height"] = function()
+  child.lua([[require("loft").setup({ logs = { height = 8 } })]])
+  child.lua([[require("loft").logs.open()]])
+  eq(child.api.nvim_win_get_height(child.api.nvim_get_current_win()), 8)
+  child.lua([[require("loft").logs.close()]])
+end
+
+test_set["Logs refresh preserves view when not at end"] = function()
+  child.lua([[
+    for i = 1, 5 do
+      vim.notify("log message " .. i)
+    end
+    require("loft").logs.open()
+    require("loft").logs.refresh()
+    local win = vim.api.nvim_get_current_win()
+    local buf = vim.api.nvim_get_current_buf()
+    vim.api.nvim_win_set_cursor(win, { 2, 0 })
+    vim.notify("new message")
+    require("loft").logs.refresh()
+  ]])
+  eq(child.lua_get([=[vim.api.nvim_win_get_cursor(vim.api.nvim_get_current_win())[1]]=]), 2)
+  child.lua([[require("loft").logs.close()]])
+end
+
+test_set["Logs refresh auto-scrolls when at end"] = function()
+  child.lua([[
+    for i = 1, 5 do
+      vim.notify("log message " .. i)
+    end
+    require("loft").logs.open()
+    require("loft").logs.refresh()
+    local win = vim.api.nvim_get_current_win()
+    local buf = vim.api.nvim_get_current_buf()
+    local line_count = vim.api.nvim_buf_line_count(buf)
+    vim.api.nvim_win_set_cursor(win, { line_count, 0 })
+    vim.notify("new message")
+    require("loft").logs.refresh()
+    _G.loft_new_line_count = vim.api.nvim_buf_line_count(buf)
+  ]])
+  eq(
+    child.lua_get([=[vim.api.nvim_win_get_cursor(vim.api.nvim_get_current_win())[1]]=]),
+    child.lua_get([[_G.loft_new_line_count]])
+  )
+  child.lua([[require("loft").logs.close()]])
+end
+
+test_set["Logs refresh does not auto-scroll when follow is false"] = function()
+  child.lua([[require("loft").setup({ logs = { follow = false } })]])
+  child.lua([[
+    for i = 1, 5 do
+      vim.notify("log message " .. i)
+    end
+    require("loft").logs.open()
+    require("loft").logs.refresh()
+    local win = vim.api.nvim_get_current_win()
+    local buf = vim.api.nvim_get_current_buf()
+    vim.api.nvim_win_set_cursor(win, { 1, 0 })
+    vim.notify("new message")
+    require("loft").logs.refresh()
+  ]])
+  eq(child.lua_get([=[vim.api.nvim_win_get_cursor(vim.api.nvim_get_current_win())[1]]=]), 1)
+  child.lua([[require("loft").logs.close()]])
+end
+
+test_set["Logs buffer has R refresh command"] = function()
+  child.lua([[require("loft").logs.open()]])
+  local buf = child.api.nvim_get_current_buf()
+  eq(child.lua_get(([[vim.api.nvim_buf_get_commands(%d, {}).R ~= nil]]):format(buf)), true)
   child.lua([[require("loft").logs.close()]])
 end
 

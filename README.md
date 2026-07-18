@@ -206,11 +206,19 @@ require("loft").setup({
       ["<leader>lm"] = actions.toggle_mark_current_buffer, -- Mark or unmark the current buffer
       ["<leader>ls"] = actions.toggle_smart_order, -- Toggle Smart Order ON and OFF
       ["<leader>la"] = actions.switch_to_alt_buffer, -- Switch to alternate buffer without updating the registry
-      ["<leader>ll"] = require("loft").logs.toggle, -- Toggle Logs (:messages)
+      ["<leader>ll"] = require("loft").logs.focus, -- Open or focus Logs (:messages)
       ["<S-M-i>"] = actions.move_buffer_up, --  Move the current buffer up while showing the UI briefly
       ["<S-M-o>"] = actions.move_buffer_down, --  Move the current buffer down while showing the UI briefly
     },
   },
+  -- ── Logs panel ───────────────────────────────────────────────────────────
+  -- Fixed-height bottom split backed by `:messages`. Opened with `<leader>ll`.
+  logs = {
+    height = 12,           -- Height of the Logs split
+    refresh_interval = 1000, -- Milliseconds between automatic refreshes while visible
+    follow = true,         -- Auto-scroll to the end only when already at the end
+  },
+
   -- Session persistence: saves registry order, marks and smart order state to disk
   -- per working directory, and restores them on the next startup.
   persistence = {
@@ -596,8 +604,10 @@ vim.api.nvim_create_autocmd("User", {
 ### `Loft.logs`
 
 `require("loft").logs` provides a reusable **Logs** panel backed by `:messages`.
-`Loft.logs.toggle()` opens or closes its fixed-height bottom split. The panel is
-non-editable, updates while visible, and closes with `q`.
+`Loft.logs.focus()` opens or focuses its fixed-height bottom split, `q` closes
+it, and `:R` refreshes it manually. The panel is read-only, updates while
+visible, rejects foreign buffers, and preserves cursor/view unless the cursor is
+already at the end.
 
 ## Roadmap
 

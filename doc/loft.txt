@@ -148,6 +148,7 @@ Fields ~
 {open_at} `(optional)` '`(cursor)`'|'top'|'current'|'middle'|'bottom' Where to position the cursor when the Loft UI opens. `cursor` restores the last cursor line, `top` goes to the first entry, `current` goes to the active buffer entry (●), `middle` goes to the middle entry, `bottom` goes to the last entry. Defaults to `"current"`.
 {window} `(optional)` `(loft.WinOpts)`
 {help_window} `(optional)` `(loft.HelpWinOpts)`
+{logs} `(optional)` `(loft.LogsConfig)`
 {persistence} `(optional)` `(loft.PersistenceConfig)`
 
 ------------------------------------------------------------------------------
@@ -176,13 +177,21 @@ Fields ~
 
 ------------------------------------------------------------------------------
 Class ~
+{(exact)} loft.LogsConfig
+Fields ~
+{height} `(optional)` `(integer)` Height of the Logs split (default 12)
+{refresh_interval} `(optional)` `(integer)` Milliseconds between automatic refreshes when the Logs panel is visible (default 1000)
+{follow} `(optional)` `(boolean)` Auto-scroll to the end when the cursor is already at the end (default true)
+
+------------------------------------------------------------------------------
+Class ~
 {(exact)} loft.HelpWinOpts
 Fields ~
 {disable} `(optional)` `(boolean)` Disable the help window entirely (default false)
 {width} `(optional)` `(integer|fun(height: integer, width: integer): integer)` Defaults to calculated width
 {height} `(optional)` `(integer|fun(height: integer, width: integer): integer)` Defaults to calculated height
-{row} `(optional)` `(integer|fun(height: integer, width: integer): integer)` Explicit row; overrides centered calculation
-{col} `(optional)` `(integer|fun(height: integer, width: integer): integer)` Explicit col; overrides centered calculation
+{row} `(optional)` `(integer|fun(height: integer, width: integer): integer)` Explicit row; overrides centred calculation
+{col} `(optional)` `(integer|fun(height: integer, width: integer): integer)` Explicit col; overrides centred calculation
 {row_offset} `(optional)` `(integer)` Value added to the computed row (default 0)
 {col_offset} `(optional)` `(integer)` Value added to the computed col (default 0)
 {border} `(optional)` "`(none)`"|"single"|"double"|"rounded"|"solid"|"shadow"|string[] Defaults to main window border
@@ -315,6 +324,13 @@ Type ~
                                                                  *logs.toggle()*
                                 `logs.toggle`()
 Toggle Logs panel.
+Type ~
+`(fun())`
+
+------------------------------------------------------------------------------
+                                                                  *logs.focus()*
+                                 `logs.focus`()
+Open Logs panel or focus existing one.
 Type ~
 `(fun())`
 
