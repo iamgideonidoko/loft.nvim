@@ -104,6 +104,53 @@ test_set["Logs panel rejects foreign buffers"] = function()
   child.lua([[require("loft").logs.close()]])
 end
 
+test_set["Logs focus opens or navigates to panel"] = function()
+  child.lua([[require("loft").logs.focus()]])
+  eq(child.lua_get([[require("loft").logs.is_open()]]), true)
+  child.lua([[
+    _G.loft_logs_win = vim.api.nvim_get_current_win()
+    _G.loft_logs_foreign = vim.api.nvim_create_buf(true, false)
+    vim.cmd("split")
+    vim.api.nvim_win_set_buf(vim.api.nvim_get_current_win(), _G.loft_logs_foreign)
+    require("loft").logs.focus()
+  ]])
+  eq(child.lua_get([[vim.api.nvim_get_current_win() == _G.loft_logs_win]]), true)
+  child.lua([[require("loft").logs.close()]])
+end
+
+test_set["Logs window cannot be duplicated"] = function()
+  child.lua([[
+    require("loft").logs.open()
+    _G.loft_logs_buf = vim.api.nvim_get_current_buf()
+    vim.cmd("split")
+    vim.wait(100, function()
+      local n = 0
+      for _, w in ipairs(vim.fn.win_findbuf(_G.loft_logs_buf)) do
+        if vim.api.nvim_win_is_valid(w) then
+          n = n + 1
+        end
+      end
+      return n <= 1
+    end)
+  ]])
+  eq(child.lua_get([[require("loft").logs.is_open()]]), true)
+  eq(
+    child.lua_get([[
+      (function()
+        local n = 0
+        for _, w in ipairs(vim.fn.win_findbuf(_G.loft_logs_buf)) do
+          if vim.api.nvim_win_is_valid(w) then
+            n = n + 1
+          end
+        end
+        return n
+      end)()
+    ]]),
+    1
+  )
+  child.lua([[require("loft").logs.close()]])
+end
+
 test_set["default Logs mapping is <leader>ll"] = function()
   eq(child.lua_get([[vim.fn.maparg("<leader>ll", "n") ~= ""]]), true)
 end

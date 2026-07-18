@@ -231,6 +231,23 @@ function logs.toggle()
   end
 end
 
+--- Open Logs panel or focus existing one.
+---@type fun()
+function logs.focus()
+  local windows = log_windows()
+  if #windows == 0 then
+    logs.open()
+    return
+  end
+
+  local current_ok, current_win = pcall(vim.api.nvim_get_current_win)
+  if current_ok and current_win and current_win == windows[1] then
+    return
+  end
+
+  pcall(vim.api.nvim_set_current_win, windows[1])
+end
+
 function logs.setup()
   vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter" }, {
     group = utils.get_augroup("LogsPreventOverride", true),
@@ -278,6 +295,34 @@ function logs.setup()
       if not logs.is_open() then
         stop_timer()
       end
+    end,
+  })
+
+  local closing_duplicate = false
+  vim.api.nvim_create_autocmd("WinEnter", {
+    group = utils.get_augroup("LogsSingleton", true),
+    callback = function()
+      if closing_duplicate or not valid_buffer() then
+        return
+      end
+      local win_ok, win = pcall(vim.api.nvim_get_current_win)
+      if not win_ok or not win or win < 1 then
+        return
+      end
+      local buf_ok, buf = pcall(vim.api.nvim_win_get_buf, win)
+      if not buf_ok or buf ~= state.buf then
+        return
+      end
+      if #log_windows() <= 1 then
+        return
+      end
+      closing_duplicate = true
+      vim.schedule(function()
+        if utils.window_exists(win) then
+          pcall(vim.api.nvim_win_close, win, false)
+        end
+        closing_duplicate = false
+      end)
     end,
   })
 end

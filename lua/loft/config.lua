@@ -143,7 +143,7 @@ local default_config = {
       ["<leader>lm"] = actions.toggle_mark_current_buffer,
       ["<leader>ls"] = actions.toggle_smart_order,
       ["<leader>la"] = actions.switch_to_alt_buffer,
-      ["<leader>ll"] = { callback = logs.toggle, desc = "Toggle Logs" },
+      ["<leader>ll"] = { callback = logs.focus, desc = "Open or focus Logs" },
       ["<S-M-i>"] = actions.move_buffer_up,
       ["<S-M-o>"] = actions.move_buffer_down,
     },
