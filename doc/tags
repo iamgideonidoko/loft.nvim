@@ -77,6 +77,7 @@ utils.greedy_debounce()	loft.txt	/*utils.greedy_debounce()*
 utils.in_temp_directory()	loft.txt	/*utils.in_temp_directory()*
 utils.is_buffer_valid()	loft.txt	/*utils.is_buffer_valid()*
 utils.is_floating_window()	loft.txt	/*utils.is_floating_window()*
+utils.is_window_buffer_fixed()	loft.txt	/*utils.is_window_buffer_fixed()*
 utils.merge_distinct()	loft.txt	/*utils.merge_distinct()*
 utils.table_includes()	loft.txt	/*utils.table_includes()*
 utils.window_exists()	loft.txt	/*utils.window_exists()*

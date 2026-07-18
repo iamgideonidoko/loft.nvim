@@ -713,6 +713,15 @@ Parameters ~
 {win} `(integer|nil)`
 
 ------------------------------------------------------------------------------
+                                                *utils.is_window_buffer_fixed()*
+                     `utils.is_window_buffer_fixed`({win})
+Check whether a window prevents buffer switches.
+Parameters ~
+{win} `(integer)`
+Return ~
+`(boolean)`
+
+------------------------------------------------------------------------------
                                                              *utils.get_index()*
                        `utils.get_index`({table}, {item})
 Get the index of a given item in an table (array)

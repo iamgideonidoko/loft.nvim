@@ -112,6 +112,11 @@ function logs.is_open()
   return #log_windows() > 0
 end
 
+---@private
+function logs.is_buffer(buf)
+  return valid_buffer() and state.buf == buf
+end
+
 --- Open Logs panel.
 ---@type fun()
 function logs.open()
@@ -129,6 +134,9 @@ function logs.open()
   vim.cmd("botright 12split")
   local win = vim.api.nvim_get_current_win()
   state.win = win
+  if vim.fn.exists("+winfixbuf") == 1 then
+    vim.wo[win].winfixbuf = false
+  end
   vim.api.nvim_win_set_buf(win, buf)
   vim.wo[win].winfixheight = true
   if vim.fn.exists("+winfixbuf") == 1 then

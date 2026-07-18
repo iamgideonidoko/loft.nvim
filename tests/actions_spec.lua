@@ -86,6 +86,21 @@ test_set["close_buffer force closes modified buffer"] = function()
   eq(child.api.nvim_buf_is_valid(buf), false)
 end
 
+test_set["close_buffer respects winfixbuf"] = function()
+  if child.lua_get([[vim.fn.exists("+winfixbuf")]]) == 0 then
+    return
+  end
+  local buf = child.api.nvim_create_buf(true, false)
+  child.api.nvim_set_current_buf(buf)
+  child.lua([[
+    vim.wo.winfixbuf = true
+    require("loft.actions").close_buffer()
+  ]])
+  eq(child.api.nvim_buf_is_valid(buf), true)
+  eq(child.lua_get([[vim.api.nvim_get_current_buf()]]), buf)
+  eq(child.lua_get([[vim.wo.winfixbuf]]), true)
+end
+
 test_set["toggle_mark_current_buffer marks current buffer"] = function()
   local buf = child.api.nvim_create_buf(true, false)
   child.api.nvim_set_current_buf(buf)

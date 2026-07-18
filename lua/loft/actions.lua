@@ -18,6 +18,10 @@ actions.close_buffer = {
   func = function(opts)
     opts = opts or {}
     local current_buf = opts.buffer or vim.api.nvim_get_current_buf()
+    local logs = require("loft.logs")
+    if logs.is_buffer(current_buf) then
+      return logs.close()
+    end
     if not opts.force and vim.api.nvim_get_option_value("modified", { buf = current_buf }) then
       return vim.api.nvim_err_writeln("Buffer is modified. Force required.")
     end
@@ -25,6 +29,13 @@ actions.close_buffer = {
       return vim.api.nvim_err_writeln("Buffer is a terminal. Force required.")
     end
     registry_instance:clean()
+    local windows = vim.fn.win_findbuf(current_buf)
+    for _, win in ipairs(windows) do
+      if utils.is_window_buffer_fixed(win) then
+        vim.notify("Cannot close: winfixbuf is enabled.", vim.log.levels.WARN)
+        return
+      end
+    end
     -- bufnr("#") returns -1 when there is no alternate buffer; is_buffer_valid
     -- handles negative numbers gracefully so no extra guard is needed here.
     local alt_buf = vim.fn.bufnr("#")
@@ -48,7 +59,7 @@ actions.close_buffer = {
       next_buf = nil
     end
     registry_instance:pause_update()
-    for _, win in ipairs(vim.fn.win_findbuf(current_buf)) do
+    for _, win in ipairs(windows) do
       -- alt_buf must differ from current_buf (e.g. from inside a Loft float, # == current_buf)
       if
         utils.is_buffer_valid(alt_buf, not registry_instance.opts.auto_delete_missing_file_bufs)

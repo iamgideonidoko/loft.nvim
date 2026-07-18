@@ -115,6 +115,13 @@ utils.window_exists = function(win)
   return (win and vim.api.nvim_win_is_valid(win)) or false
 end
 
+--- Check whether a window prevents buffer switches.
+---@param win integer
+---@return boolean
+utils.is_window_buffer_fixed = function(win)
+  return vim.fn.exists("+winfixbuf") == 1 and vim.wo[win].winfixbuf
+end
+
 --- Get the index of a given item in an table (array)
 ---@param table any[]
 ---@param item any

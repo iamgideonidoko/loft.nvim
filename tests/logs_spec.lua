@@ -28,6 +28,9 @@ test_set["Logs opens a fixed-height non-editable messages split"] = function()
   eq(child.api.nvim_get_option_value("modifiable", { buf = buf }), false)
   eq(child.api.nvim_get_option_value("filetype", { buf = buf }), "messages")
   eq(child.api.nvim_get_option_value("winfixheight", { win = win }), true)
+  if child.fn.exists("+winfixbuf") == 1 then
+    eq(child.lua_get([[vim.wo.winfixbuf]]), true)
+  end
   child.lua([[require("loft").logs.close()]])
 end
 
@@ -62,6 +65,17 @@ test_set["Logs q mapping closes panel"] = function()
   child.lua([[require("loft").logs.open()]])
   child.cmd("normal q")
   eq(child.lua_get([[require("loft").logs.is_open()]]), false)
+end
+
+test_set["close action safely closes Logs panel"] = function()
+  child.lua([[
+    local logs = require("loft").logs
+    logs.open()
+    _G.loft_logs_buf = vim.api.nvim_get_current_buf()
+    require("loft.actions").close_buffer({ force = true })
+  ]])
+  eq(child.lua_get([[require("loft").logs.is_open()]]), false)
+  eq(child.lua_get([[vim.api.nvim_buf_is_valid(_G.loft_logs_buf)]]), true)
 end
 
 test_set["Logs panel rejects foreign buffers"] = function()
