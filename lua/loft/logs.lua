@@ -249,11 +249,7 @@ function logs.setup()
       if log_win == win and utils.window_exists(state.last_win) then
         local foreign_buf = vim.api.nvim_get_current_buf()
         vim.schedule(function()
-          if
-            not utils.window_exists(state.last_win)
-            or not utils.window_exists(log_win)
-            or not valid_buffer()
-          then
+          if not utils.window_exists(state.last_win) or not utils.window_exists(log_win) or not valid_buffer() then
             return
           end
           local log_buf_ok, log_buf = pcall(vim.api.nvim_win_get_buf, log_win)
