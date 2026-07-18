@@ -334,6 +334,7 @@ function logs.setup()
         return
       end
       pcall(vim.api.nvim_win_close, new_win, false)
+      pcall(vim.api.nvim_set_current_win, source)
     end,
   })
 
