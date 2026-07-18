@@ -53,6 +53,11 @@ highlights.setup()	loft.txt	/*highlights.setup()*
 hl_ns	loft.txt	/*hl_ns*
 loft.nvim	loft.txt	/*loft.nvim*
 loft.setup()	loft.txt	/*loft.setup()*
+logs.close()	loft.txt	/*logs.close()*
+logs.is_open()	loft.txt	/*logs.is_open()*
+logs.open()	loft.txt	/*logs.open()*
+logs.refresh()	loft.txt	/*logs.refresh()*
+logs.toggle()	loft.txt	/*logs.toggle()*
 persistence.restore()	loft.txt	/*persistence.restore()*
 persistence.save()	loft.txt	/*persistence.save()*
 persistence.setup()	loft.txt	/*persistence.setup()*

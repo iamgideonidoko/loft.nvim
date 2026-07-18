@@ -1,3 +1,5 @@
+==============================================================================
+------------------------------------------------------------------------------
 *loft.nvim* Streamlined plugin for productive buffer management
 *Loft*
 
@@ -278,6 +280,43 @@ Set up all Loft highlight groups.
 Safe to call multiple times (e.g. after a ColorScheme change).
 Uses `default = true` on Neovim 0.9+ so colorschemes can override any group.
 On 0.8 the flag is omitted (not supported) and groups are set unconditionally.
+
+
+==============================================================================
+------------------------------------------------------------------------------
+                                                                *logs.refresh()*
+                                `logs.refresh`()
+Refresh Logs panel from `:messages`.
+Type ~
+`(fun())`
+
+------------------------------------------------------------------------------
+                                                                *logs.is_open()*
+                                `logs.is_open`()
+Check whether Logs panel is visible.
+Type ~
+`(fun(): boolean)`
+
+------------------------------------------------------------------------------
+                                                                   *logs.open()*
+                                 `logs.open`()
+Open Logs panel.
+Type ~
+`(fun())`
+
+------------------------------------------------------------------------------
+                                                                  *logs.close()*
+                                 `logs.close`()
+Close Logs panel.
+Type ~
+`(fun())`
+
+------------------------------------------------------------------------------
+                                                                 *logs.toggle()*
+                                `logs.toggle`()
+Toggle Logs panel.
+Type ~
+`(fun())`
 
 
 ==============================================================================

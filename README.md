@@ -206,6 +206,7 @@ require("loft").setup({
       ["<leader>lm"] = actions.toggle_mark_current_buffer, -- Mark or unmark the current buffer
       ["<leader>ls"] = actions.toggle_smart_order, -- Toggle Smart Order ON and OFF
       ["<leader>la"] = actions.switch_to_alt_buffer, -- Switch to alternate buffer without updating the registry
+      ["<leader>ll"] = require("loft").logs.toggle, -- Toggle Logs (:messages)
       ["<S-M-i>"] = actions.move_buffer_up, --  Move the current buffer up while showing the UI briefly
       ["<S-M-o>"] = actions.move_buffer_down, --  Move the current buffer down while showing the UI briefly
     },
@@ -591,6 +592,12 @@ vim.api.nvim_create_autocmd("User", {
   callback = function() vim.cmd("redrawstatus") end,
 })
 ```
+
+### `Loft.logs`
+
+`require("loft").logs` provides a reusable **Logs** panel backed by `:messages`.
+`Loft.logs.toggle()` opens or closes its fixed-height bottom split. The panel is
+non-editable, updates while visible, and closes with `q`.
 
 ## Roadmap
 

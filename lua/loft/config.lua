@@ -1,4 +1,5 @@
 local actions = require("loft.actions")
+local logs = require("loft.logs")
 
 ---@alias loft.UIKeymapsActions 'move_up'|'move_down'|'move_entry_up'|'move_entry_down'|'delete_entry'|'force_delete_entry'|'select_entry'|'close'|'toggle_mark_entry'|'toggle_smart_order'|'show_help'|'move_up_to_marked_entry'|'move_down_to_marked_entry'
 ---@alias loft.UIKeymapsConfig table<string, loft.UIKeymapsActions|function|false>
@@ -142,6 +143,7 @@ local default_config = {
       ["<leader>lm"] = actions.toggle_mark_current_buffer,
       ["<leader>ls"] = actions.toggle_smart_order,
       ["<leader>la"] = actions.switch_to_alt_buffer,
+      ["<leader>ll"] = { callback = logs.toggle, desc = "Toggle Logs" },
       ["<S-M-i>"] = actions.move_buffer_up,
       ["<S-M-o>"] = actions.move_buffer_down,
     },

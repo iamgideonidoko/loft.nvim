@@ -13,8 +13,10 @@ local autocmds = require("loft.autocmds")
 local commands = require("loft.commands")
 local persistence = require("loft.persistence")
 local highlights = require("loft.highlights")
+local logs = require("loft.logs")
 
 local loft = {}
+loft.logs = logs
 
 ---@param keymaps loft.GeneralKeymapsConfig
 ---@private
@@ -66,6 +68,7 @@ loft.setup = function(opts)
   autocmds.setup()
   commands.setup()
   persistence.setup(registry_instance, config.all.persistence)
+  logs.setup()
   highlights.setup()
   vim.api.nvim_create_autocmd("ColorScheme", {
     group = utils.get_augroup("LoftHighlights", true),
