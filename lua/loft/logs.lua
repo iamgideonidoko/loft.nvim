@@ -298,6 +298,45 @@ function logs.setup()
     end,
   })
 
+  local last_left_win = nil
+  local source_group = utils.get_augroup("LogsTrackSource", true)
+  vim.api.nvim_create_autocmd("WinLeave", {
+    group = source_group,
+    callback = function()
+      local ok, win = pcall(vim.api.nvim_get_current_win)
+      if ok and win and win > 0 then
+        last_left_win = win
+      end
+    end,
+  })
+
+  vim.api.nvim_create_autocmd("WinEnter", {
+    group = source_group,
+    callback = function()
+      last_left_win = nil
+    end,
+  })
+
+  vim.api.nvim_create_autocmd("WinNew", {
+    group = utils.get_augroup("LogsPreventSplit", true),
+    callback = function()
+      local source = last_left_win
+      last_left_win = nil
+      if not valid_buffer() or not source then
+        return
+      end
+      local source_ok, source_buf = pcall(vim.api.nvim_win_get_buf, source)
+      if not source_ok or source_buf ~= state.buf then
+        return
+      end
+      local new_ok, new_win = pcall(vim.api.nvim_get_current_win)
+      if not new_ok or not new_win or new_win < 1 or new_win == source then
+        return
+      end
+      pcall(vim.api.nvim_win_close, new_win, false)
+    end,
+  })
+
   local closing_duplicate = false
   vim.api.nvim_create_autocmd("WinEnter", {
     group = utils.get_augroup("LogsSingleton", true),
